@@ -4,41 +4,109 @@ HOST: http://api.tube.xxx
 # tubexxx
 tube.xxx API is a *video upload management* service for tube paysite webmasters.
 
-## Video Collection [/v1/videos]
-### List all Videos [GET]
-+ Response 200 (application/json)
+# Group Video
+Video-related resources of *Video Fox API*.
 
-        [{
-          "id": 1, "title": "We love candy"
-        }, {
-          "id": 2, "title": "Debbie does Chocolate"
-        }]
+## Video [/Videos/{id}]
+A single Video object. The Video resource is the central resource in the Video API. It represents one paste - a single text note.
 
-### Create a Video [POST]
-+ Request (application/json)
+The Video resource has the following attributes:
 
-        { "title": "Chances and Tricks." }
+- id
+- created_at
+- description
+- content
 
-+ Response 201 (application/json)
+The states *id* and *created_at* are assigned by the Video API at the moment of creation.
 
-        { "id": 3, "title": "Chances and Tricks." }
-
-## Video [/v1/videos/{id}]
-A single video and it's metadata
 
 + Parameters
-    + id (required, number, `1`) ... Numeric `id` of the video to get.
+    + id (string) ... unique ID identifier of the Video
 
-### Retrieve a Note [GET]
-+ Response 200 (application/json)
++ Model (application/json)
 
-    + Header
+    JSON representation of Video Resource.
+    
+    + Headers
 
-            X-My-Header: Video
+            Link: <http:/api.tube.xxx/videos/42>;rel="self"
 
     + Body
 
-            { "id": 2, "title": "Debbie does Chocolate" }
+            {
+                "id": "42",
+                "created_at": "2014-04-14T02:15:15Z",
+                "description": "Description of Video",
+                "content": "String contents"
+            }
 
-### Remove a Note [DELETE]
+## Retrieve a Single Video [GET]
++ Response 200
+
+    [Video][]
+
+## Edit a Video [PATCH]
+To update a Video send a JSON with updated value for one or more of the Video resource attributes. All attributes values (states) from the previous version of this video.
+
++ Request (application/json)
+
+        {
+            "content": "Updated file contents"
+        }
+
++ Response 200
+
+    [Video][]
+
+## Delete a Video [DELETE]
 + Response 204
+
+## Videos Collection [/videos{?since}]
+Collection of all Gists.
+
+The Video Collection resource has the following attribute:
+
+- total
+
++ Model (application/json)
+
+    JSON representation of Video Collection Resource.
+
+    + Headers
+
+            Link: <http:/api.tube.xxx/videos>;rel="self"
+
+    + Body
+
+            {
+                "gists": [
+                    {
+                        "id": "42",
+                        "created_at": "2014-04-14T02:15:15Z",
+                        "description": "Description of Gist"
+                    }
+                ],
+                "total": 1
+            }
+
+### List All Videos [GET]
++ Parameters
+    + since (optional, string) ... Timestamp in ISO 8601 format: `YYYY-MM-DDTHH:MM:SSZ` Only Gists updated at or after this time are returned.
+
++ Response 200
+
+    [Videos Collection][]
+
+### Create a Video [POST]
+To create a new Video simply provide a JSON hash of the *title* and *description* attributes for the new Video.
+
++ Request (application/json)
+
+        {
+            "description": "Description of Video",
+            "title": "Debbie does chocolate"
+        }
+
++ Response 201 (application/json)
+
+    [Video][]
