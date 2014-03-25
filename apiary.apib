@@ -1,47 +1,44 @@
 FORMAT: 1A
-HOST: http://www.google.com
+HOST: http://api.tube.xxx
 
 # tubexxx
-Notes API is a *short texts saving* service similar to its physical paper presence on your table.
+tube.xxx API is a *video upload management* service for tube paysite webmasters.
 
-# Group Notes
-Notes related resources of the **Notes API**
-
-## Notes Collection [/notes]
-### List all Notes [GET]
+## Video Collection [/v1/videos]
+### List all Videos [GET]
 + Response 200 (application/json)
 
         [{
-          "id": 1, "title": "Jogging in park"
+          "id": 1, "title": "We love candy"
         }, {
-          "id": 2, "title": "Pick-up posters from post-office"
+          "id": 2, "title": "Debbie does Chocolate"
         }]
 
-### Create a Note [POST]
+### Create a Video [POST]
 + Request (application/json)
 
-        { "title": "Buy cheese and bread for breakfast." }
+        { "title": "Chances and Tricks." }
 
 + Response 201 (application/json)
 
-        { "id": 3, "title": "Buy cheese and bread for breakfast." }
+        { "id": 3, "title": "Chances and Tricks." }
 
-## Note [/notes/{id}]
-A single Note object with all its details
+## Video [/v1/videos/{id}]
+A single video and it's metadata
 
 + Parameters
-    + id (required, number, `1`) ... Numeric `id` of the Note to perform action with. Has example value.
+    + id (required, number, `1`) ... Numeric `id` of the video to get.
 
 ### Retrieve a Note [GET]
 + Response 200 (application/json)
 
     + Header
 
-            X-My-Header: The Value
+            X-My-Header: Video
 
     + Body
 
-            { "id": 2, "title": "Pick-up posters from post-office" }
+            { "id": 2, "title": "Debbie does Chocolate" }
 
 ### Remove a Note [DELETE]
 + Response 204
