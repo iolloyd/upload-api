@@ -1,0 +1,131 @@
+FORMAT: 1A
+HOST: http://api.cloud.xxx
+
+# cloudxxx
+cloud.xxx API is a *video upload management* service for tube paysite webmasters.
+
+# Group Video
+Video-related resources of *Video API*.
+
+## Video [/Videos/{id}]
+A single Video object. The Video resource is the central resource in the Video API. It represents one paste - a single text note.
+
+The Video resource has the following attributes:
+
+- id
+- created_at
+- description
+- content
+
+The states *id* and *created_at* are assigned by the Video API at the moment of creation.
+
+
++ Parameters
+    + id (string) ... unique ID identifier of the Video
+
++ Model (application/json)
+
+    JSON representation of Video Resource.
+    
+    + Headers
+
+            Link: <http:/api.cloud.xxx/videos/42>;rel="self"
+
+    + Body
+
+            {
+                "id": "42",
+                "created_at": "2014-04-14T02:15:15Z",
+                "description": "Description of Video",
+                "content": "String contents"
+            }
+
+## Retrieve a Single Video [GET]
++ Response 200
+
+    [Video][]
+
+## Edit a Video [PATCH]
+To update a Video send a JSON with updated value for one or more of the Video resource attributes. All attributes values (states) from the previous version of this video.
+
++ Request (application/json)
+
+        {
+            "content": "Updated file contents"
+        }
+
++ Response 200
+
+    [Video][]
+
+## Delete a Video [DELETE]
++ Response 204
+
+## Videos Collection [/videos{?since}]
+Collection of all Videos.
+
+The Video Collection resource has the following attribute:
+
+- total
+
++ Model (application/json)
+
+    JSON representation of Video Collection Resource.
+
+    + Headers
+
+            Link: <http:/api.cloud.xxx/videos>;rel="self"
+
+    + Body
+
+            {
+                "videos": [
+                    {
+                        "id": "42",
+                        "created_at": "2014-04-14T02:15:15Z",
+                        "description": "Description of Video"
+                    }
+                ],
+                "total": 1
+            }
+
+### List All Videos [GET]
++ Parameters
+    + since (optional, string) ... Timestamp in ISO 8601 format: `YYYY-MM-DDTHH:MM:SSZ` Only Videos updated at or after this time are returned.
+
++ Response 200
+
+    [Videos Collection][]
+
+### Create a Video [POST]
+To create a new Video simply provide a JSON hash of the *title* and *description* attributes for the new Video.
+
++ Request (application/json)
+
+        {
+            "description": "Description of Video",
+            "title": "Debbie does chocolate"
+        }
+
++ Response 201 (application/json)
+
+    [Video][]
+    
+# Group Authorization
+
+## Login [/v1/login]
+### Login [POST]
++ Request
+
+         {"username":"JohnDoe", "password": "IAmSecret"}
+         
++ Response 200 (application/json)
+
+        {}
+
+## Logout [/v1/logout]
+### Logout [GET]
++ Response 200 (application/json)
+
+        {}
+        
