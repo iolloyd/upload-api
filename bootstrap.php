@@ -2,9 +2,9 @@
 use Doctrine\ORM\Tools\Setup;
 use Doctrine\ORM\EntityManager;
 
-require_once '../vendor/autoload.php';
-$entities = array('../lib/entities');
-$config = parse_ini_file('../config/config.ini', true);
+require_once dirname(__FILE__).'/vendor/autoload.php';
+$entities = array('./lib/entities');
+$config = parse_ini_file(dirname(__FILE__).'/config/config.ini', true);
 $dbParams = array(
     'driver'   => $config['db']['driver'],
     'user'     => $config['db']['user'],
