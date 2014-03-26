@@ -1,0 +1,10 @@
+{% block title%}Videos{% endblock %}
+{% extends 'layout.html' %}
+{% block content %}
+<h1>Hey {{name}} your videos</h1>
+{% for video in videos %}
+<li>{{video}}</li>
+{% endfor %}
+{% endblock %}
+
+
