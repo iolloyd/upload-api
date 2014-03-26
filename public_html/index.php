@@ -1,28 +1,7 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-require '../vendor/autoload.php';
+error_reporting(E_ALL); ini_set('display_errors', true);
+require_once './bootstrap.php';
 
-////////////////
-// Doctrine setup
-////////////////
-use Doctrine\ORM\Tools\Setup;
-use Doctrine\ORM\EntityManager;
-$entities = array('../lib/entities');
-$dbParams = array(
-    'driver'   => 'pdo_mysql',
-    'user'     => 'root',
-    'password' => 'root',
-    'dbname'   => 'foo',
-);
-
-$isDevMode = true;
-$dbConfig = Setup::createAnnotationMetadataConfiguration($entities, $isDevMode);
-$entityManager = EntityManager::create($dbParams, $dbConfig);
-
-////////////////
-// App setup
-////////////////
 $config = array(
     'debug' => true,
     'mode' => 'development',
@@ -50,9 +29,6 @@ function getVideos() {
         );
 }
 
-////////////////
-// Routing setup
-////////////////
 $app->get('/videos', function() use ($app) {
     $videos = getVideos();
     $app->render('list.html', array('videos' => $videos));
