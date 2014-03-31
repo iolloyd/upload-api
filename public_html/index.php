@@ -1,15 +1,47 @@
 <?php
+session_start();
 error_reporting(E_ALL); ini_set('display_errors', true);
-require_once './bootstrap.php';
+function config($configFile) {
+    $info = parse_ini_file($configFile, true);
 
-$config = array(
+    return function($key) use ($info) {
+        if (isset($info[$key])) {
+            return $info[$key];
+        }
+        return "";
+    };
+}
+$configFile = dirname(dirname(__FILE__)).'/config/config.ini';
+$config = config($configFile);
+
+
+require_once '../vendor/autoload.php';
+require_once 'rb.phar';
+
+R::setup();
+
+class jsonSlim extends \Slim\Slim {
+    function json($data) {
+        $this->response->headers->set('Content-Type', 'application/json');
+        echo json_encode($data);        
+    } 
+}
+$app = new jsonSlim();
+$app->config(array(
     'debug' => true,
     'mode' => 'development',
     'view' => new \Slim\Views\Twig(),
-);
+));
+$app->hook('slim.before.router', function() use ($app) {
+    $uri = $_SERVER['REQUEST_URI']; 
+    if ($uri !== '/login') {
+        if (!(isset($_SESSION['user']))) {
+            $app->redirect('/login');
+            die;
+        }
+    }
+});
 
-$app = new \Slim\Slim();
-$app->config($config);
 $loader = new Twig_Loader_String();
 $twig = new Twig_Environment($loader);
 $view = $app->view();
@@ -18,35 +50,15 @@ $view->parserOptions = array(
     'cache' => dirname(dirname(__FILE__)).'/cache',
 );
 
-$env = array('app' => $app);
 $view->parserExtensions = array(
     new \Slim\Views\TwigExtension(),
 );
 
-function getVideos() {
-    return array(
-        'one', 'two', 'three'
-        );
-}
-
-$app->get('/videos', function() use ($app) {
-    $videos = getVideos();
-    $app->render('list.html', array('videos' => $videos));
+$app->get('/', function() use ($app) {
+    echo 'ok';
 });
 
-$app->get('/videos/new', function() use ($app) {
-    $app->render('new.html'); 
-});
+require_once "./routes/videos.php";
+require_once "./routes/auth.php";
 
-$app->get('/videos/:id', function($id) use ($app) {
-    $data = array('id' => $id);
-    $app->render('video.html', $data); 
-});
-
-$app->post('/videos/upload', function() use ($app) {
-    $video = $_FILES['video']['tmp_name'];
-    file_put_contents('./saved.jpg', file_get_contents($video));
-    echo 'You uploaded ...</br>';
-    echo "<img src='http://vm.cloud.xxx/saved.jpg'/>";
-});
 $app->run();
