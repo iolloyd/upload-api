@@ -5,7 +5,8 @@
         "twig/twig": "*",
         "doctrine/orm": "*",
         "symfony/event-dispatcher": "*",
-        "symfony/yaml": "*"
+        "symfony/yaml": "*",
+        "chrisboulton/php-resque": "1.2.x"
     }
 }
 
