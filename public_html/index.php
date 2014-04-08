@@ -1,6 +1,5 @@
 <?php
 session_start();
-error_reporting(E_ALL); ini_set('display_errors', true);
 function config($configFile) {
     $info = parse_ini_file($configFile, true);
 
