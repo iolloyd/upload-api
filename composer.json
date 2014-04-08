@@ -6,7 +6,8 @@
         "doctrine/orm": "*",
         "symfony/event-dispatcher": "*",
         "symfony/yaml": "*",
-        "chrisboulton/php-resque": "1.2.x"
+        "tpyo/amazon-s3-php-class": "dev-fix/safemode-redirect",
+        "chrisboulton/php-resque": "dev-master"
     }
 }
 
