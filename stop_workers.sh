@@ -1,3 +1,3 @@
 #!/bin/sh
 
-ps u|grep resque.php|awk '{print $2}'|xargs kill -9
+ps u|grep resque|awk '{print $2}'|xargs kill -9

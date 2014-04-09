@@ -1,7 +1,7 @@
 <?php
-require_once "../src/FileUploader.php";
+//require_once "../src/worker/FileUpload.php";
 
-use Cloud\FileUploader as FileUploader;
+use Cloud\Worker\FileUpload as FileUpload;
 
 function getVideos() {
     $videos = R::findAll('video');
@@ -34,9 +34,72 @@ function saveVideoFile($uploadDir, $info) {
     return $to;
 }
 
+function getAmazonEndpoint($config) {
+    $aws = $config('amazon');
+    $s3 = new S3($aws['access_key'], $aws['secret_key']);
+    /*
+    S3::putBucket($aws['bucket']);
+    $inputFile = S3::inputFile($file, false);
+    $contentType = getContentType($file);
+    S3::putObject($inputFile, $bucketName, $uploadName, S3::AUTHENTICATED_READ);
+     */
+}
+
+function getContentType($file) {
+    return 'video/mpeg';
+}
+
+function getEndpoint($bucket) {
+    return 'http://'.$bucket.'.amazonaws.com';
+}
+
+function getPolicy($bucket, $redirect, $contentType, $acl='public-read') {
+    $expires = "2015-12-01T12:00:00.000Z";
+    $policy = <<<POLICY
+        { "expiration": $expires,
+            "conditions": [
+                {"bucket": $bucket},
+                ["starts-with", "$key", "user/eric/"],
+                {"acl": $acl},
+                {"success_action_redirect": $redirect},
+                ["eq", "$Content-Type", $contentType]
+            ]
+        }
+POLICY;
+}
+
+function queueFileUpload($redisBackend, $video) {
+    $args = [
+        'source' => $video->source,
+        'destination' => $video->destination
+        ];
+    Resque::setBackend($redisBackend);
+    $token = Resque::enqueue('video_upload', 'Cloud\Worker\FileUpload', $args, true); 
+    $job = R::dispense('job');
+    $job->token = $token;
+    $status = new Resque_Job_Status($token);
+    $job->status = $status->get();
+    $job->created = date('Y-m-d h:i:s');
+    R::store($job); 
+    return $token;
+}
+
 // Dev helper form
 $app->get('/videos/new', function() use ($app) {
     $app->render('new.html'); 
+});
+
+$app->get('/video-upload-form', function() use ($app, $config) {
+    $aws = $config('amazon');
+    $bucket = $aws['bucket'];
+
+    $app->render('video-upload-form.html', [
+        'key' => '/users/iolloyd',
+        'acl' => 'public-read',
+        'success_redirect' => $_SERVER['HTTP_HOST'] . '/amazon_ok',
+        'amazonEndpoint' => getEndpoint($bucket),
+        'aws_access_key_id' => $aws['access_key'],
+    ]);
 });
 
 $app->get('/videos', function() use ($app) {
@@ -49,28 +112,14 @@ $app->get('/videos/:id', function($id) use ($app) {
     $app->json(getVideo($id));
 });
 
-$app->post('/videos/upload', function() use ($app, $config) {
-    $uploadDir = $config('upload')['dir'];
-    $path = saveVideoFile($uploadDir, $_FILES['video']);
-    if ($path) {
-        $id = saveVideoData($app, $_POST['title'], $_POST['description'], $path);
-
-        echo 'stored video info with id ' . $id . ' in ' . $path . '</br>';
-
-    } else {
-        echo 'Oops, upload no workie';
-    }
+$app->get('/admin/status', function() use ($app) {
+    $jobs = R::findAll('job');
+    $app->render('admin/status.html', ['jobs' => $jobs]);
 });
 
-$app->get('/videos/send/:id', function($id) use ($app, $config) {
+$app->get('/videos/:id/upload/process', function($id) use ($app, $config) {
     $video = R::load('video', $id);
-    $redisBackend = $config('redis')['backend'];
-    Resque::setBackend($redisBackend);
-    $args = ['paysite' => $video->path];
-    $token = Resque::enqueue('video_upload', 'FileUploader', $args, true); 
+    $backend = $config('redis')['backend'];
+    $token = queueFileUpload($backend, $video);
     echo $token;
 });
-
-$app->put('/videos/:id', function($id) use ($app) {
-});
-
