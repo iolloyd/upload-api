@@ -1,0 +1,15 @@
+<h2>Jobs</h2>
+<table cellspacing="0">
+    <tr>
+        <td>Token</td>
+        <td>Status</td>
+        <td>Start date</td>
+    </tr>
+    {% for j in jobs %}
+    <tr>
+        <td>{{j.token}}</td>
+        <td>{{j.status}}</td>
+        <td>{{j.created}}</td>
+    </tr>
+    {% endfor %}
+</table>
