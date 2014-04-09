@@ -1,18 +1,8 @@
 <?php
-use Doctrine\ORM\Tools\Setup;
-use Doctrine\ORM\EntityManager;
+require_once "vendor/autoload.php";
 
-require_once dirname(__FILE__).'/vendor/autoload.php';
-$entities = array('./lib/entities');
-$config = parse_ini_file(dirname(__FILE__).'/config/config.ini', true);
-$dbParams = array(
-    'driver'   => $config['db']['driver'],
-    'user'     => $config['db']['user'],
-    'password' => $config['db']['password'],
-    'dbname'   => $config['db']['dbname'],
-);
+use Symfony\Component\ClassLoader\UniversalClassLoader;
 
-$isDevMode = true;
-$dbConfig = Setup::createAnnotationMetadataConfiguration($entities, $isDevMode);
-$entityManager = EntityManager::create($dbParams, $dbConfig);
-
+$loader = new UniversalClassLoader();
+$loader->register();
+$loader->registerNamespace('Cloud', __DIR__.'/src');

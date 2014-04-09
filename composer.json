@@ -7,7 +7,8 @@
         "symfony/event-dispatcher": "*",
         "symfony/yaml": "*",
         "tpyo/amazon-s3-php-class": "dev-fix/safemode-redirect",
-        "chrisboulton/php-resque": "dev-master"
+        "chrisboulton/php-resque": "dev-master",
+        "symfony/class-loader": "~2.4.3"
     }
 }
 
