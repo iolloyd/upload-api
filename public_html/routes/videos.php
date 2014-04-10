@@ -35,7 +35,6 @@ function getUpdatedJobs() {
     return $jobs;
 }
 
-// show form
 $app->get('/videos/new', function() use ($app) {
     $app->render('new.html'); 
 });
@@ -50,7 +49,6 @@ $app->get('/videos/:id', function($id) use ($app) {
     $app->json(R::exportAll($video));
 });
 
-// Trigger upload to paysite
 $app->get('/videos/:id/upload/process', function($id) use ($app, $config) {
     $video = R::load('video', $id);
     $backend = $config('redis')['backend'];
@@ -58,11 +56,9 @@ $app->get('/videos/:id/upload/process', function($id) use ($app, $config) {
     echo $token;
 });
 
-// ADMIN
 $app->get('/admin/status', function() use ($app) {
     $jobs = getUpdatedJobs();
 
     $latestJobs = array_slice($jobs, -10);
     $app->render('admin/status.html', ['jobs' => $latestJobs]);
 });
-
