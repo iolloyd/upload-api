@@ -26,6 +26,7 @@ class jsonSlim extends \Slim\Slim {
     } 
 }
 $app = new jsonSlim();
+$app->add(new Slim_Middleware_ContentTypes());
 $app->config(array(
     'debug' => true,
     'mode' => 'development',
