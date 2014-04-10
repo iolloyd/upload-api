@@ -25,19 +25,19 @@ class jsonSlim extends \Slim\Slim {
         echo json_encode($data);        
     } 
 }
+
 $app = new jsonSlim();
-$app->add(new Slim_Middleware_ContentTypes());
 $app->config(array(
     'debug' => true,
     'mode' => 'development',
     'view' => new \Slim\Views\Twig(),
 ));
+
 $app->hook('slim.before.router', function() use ($app) {
     $uri = $_SERVER['REQUEST_URI']; 
     if ($uri !== '/login') {
         if (!(isset($_SESSION['user']))) {
             $app->redirect('/login');
-            die;
         }
     }
 });
