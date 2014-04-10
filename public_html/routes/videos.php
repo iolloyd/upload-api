@@ -1,7 +1,5 @@
 <?php
-//require_once "../src/worker/FileUpload.php";
-
-use Cloud\Worker\FileUpload as FileUpload;
+use Cloud\Worker\FileUpload;
 
 function getVideos() {
     $videos = R::findAll('video');
@@ -68,19 +66,22 @@ function getPolicy($bucket, $redirect, $contentType, $acl='public-read') {
 POLICY;
 }
 
+function createJob($token) {
+    $job = R::dispense('job');
+    $job->token   = $token;
+    $job->status  = (new Resque_Job_Status($token))->get();
+    $job->created = date('Y-m-d h:i:s');
+    R::store($job); 
+}
+
 function queueFileUpload($redisBackend, $video) {
+    Resque::setBackend($redisBackend);
     $args = [
         'source' => $video->source,
         'destination' => $video->destination
-        ];
-    Resque::setBackend($redisBackend);
+    ];
     $token = Resque::enqueue('video_upload', 'Cloud\Worker\FileUpload', $args, true); 
-    $job = R::dispense('job');
-    $job->token = $token;
-    $status = new Resque_Job_Status($token);
-    $job->status = $status->get();
-    $job->created = date('Y-m-d h:i:s');
-    R::store($job); 
+    createJob($token);
     return $token;
 }
 
@@ -108,13 +109,23 @@ $app->get('/videos', function() use ($app) {
 });
 
 $app->get('/videos/:id', function($id) use ($app) {
-    $data = array('id' => $id);
+    $data = ['id' => $id];
     $app->json(getVideo($id));
 });
 
 $app->get('/admin/status', function() use ($app) {
+    $states = [1 => 'waiting', 2 => 'running', 
+               3 => 'failed',  4 => 'complete' ];
+
     $jobs = R::findAll('job');
-    $app->render('admin/status.html', ['jobs' => $jobs]);
+    foreach ($jobs as $job) {
+        $status = new Resque_Job_Status($job->token);
+        $job->status = $states[$status->get()];
+        R::store($job);
+    }
+
+    $latestJobs = array_slice($jobs, -10);
+    $app->render('admin/status.html', ['jobs' => $latestJobs]);
 });
 
 $app->get('/videos/:id/upload/process', function($id) use ($app, $config) {
