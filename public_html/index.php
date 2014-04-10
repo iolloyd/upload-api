@@ -17,7 +17,7 @@ $config = config($configFile);
 require_once '../vendor/autoload.php';
 require_once 'rb.phar';
 
-R::setup();
+R::setup('mysql:host=localhost;dbname=cloud','root', 'root');
 
 class jsonSlim extends \Slim\Slim {
     function json($data) {
