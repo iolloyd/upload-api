@@ -72,16 +72,20 @@ function createJob($token) {
     $job->status  = (new Resque_Job_Status($token))->get();
     $job->created = date('Y-m-d h:i:s');
     R::store($job); 
+
+    return $job;
 }
 
-function queueFileUpload($redisBackend, $video) {
+function queueFileUpload($redisBackend, $video, $filename) {
     Resque::setBackend($redisBackend);
     $args = [
         'source' => $video->source,
-        'destination' => $video->destination
+        'destination' => $video->destination,
+        'filename' => $filename, 
     ];
     $token = Resque::enqueue('video_upload', 'Cloud\Worker\FileUpload', $args, true); 
     createJob($token);
+
     return $token;
 }
 
@@ -113,9 +117,22 @@ $app->get('/videos/:id', function($id) use ($app) {
     $app->json(getVideo($id));
 });
 
+// Trigger upload to paysite
+$app->get('/videos/:id/upload/process', function($id) use ($app, $config) {
+    $video = R::load('video', $id);
+    $backend = $config('redis')['backend'];
+    $token = queueFileUpload($backend, $video, 'ilove.mp4');
+    echo $token;
+});
+
+// ADMIN
 $app->get('/admin/status', function() use ($app) {
-    $states = [1 => 'waiting', 2 => 'running', 
-               3 => 'failed',  4 => 'complete' ];
+    $states = [
+        1 => 'waiting', 
+        2 => 'running', 
+        3 => 'failed',  
+        4 => 'complete'
+    ];
 
     $jobs = R::findAll('job');
     foreach ($jobs as $job) {
@@ -128,9 +145,3 @@ $app->get('/admin/status', function() use ($app) {
     $app->render('admin/status.html', ['jobs' => $latestJobs]);
 });
 
-$app->get('/videos/:id/upload/process', function($id) use ($app, $config) {
-    $video = R::load('video', $id);
-    $backend = $config('redis')['backend'];
-    $token = queueFileUpload($backend, $video);
-    echo $token;
-});
