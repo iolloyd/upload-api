@@ -1,0 +1,37 @@
+{% extends 'admin_layout.html' %}
+
+{% block content %}
+
+<form action="/videos/" method="post">
+    <fieldset><legend>Add video</legend>
+    <dl>
+        <dt>Title</dt>
+        <dd>
+            <input type="text" name="title" value="" />
+        </dt>
+        <dt>Description</dt>
+        <dd>
+            <input type="text" name="description" value="" />
+        </dd>
+            <dt></dt>
+            <dd>
+            <input type="submit" name="submit" value="Add" />
+        </dd>
+    </dl>
+</fieldset>
+</form>
+
+<h2>Your videos</h2>
+<table>
+{% for video in videos %}
+    <tr>
+        <td>Title</td>
+        <td>Description</td>
+    </tr>
+    <tr>
+        <td>{{video.title}}</td>
+        <td>{{video.description}}</td>
+    </tr>
+{% endfor %}
+</table>
+{% endblock %}
