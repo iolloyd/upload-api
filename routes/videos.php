@@ -3,8 +3,8 @@ use Cloud\Worker\FileUpload;
 
 function createJob($token) {
     $job = R::dispense('job');
-    $job->token   = $token;
-    $job->status  = (new Resque_Job_Status($token))->get();
+    $job->token = $token;
+    $job->status = (new Resque_Job_Status($token))->get();
     $job->created = date('Y-m-d h:i:s');
     R::store($job); 
 
@@ -35,11 +35,7 @@ function getUpdatedJobs() {
     return $jobs;
 }
 
-$app->get('/videos/new', function() use ($app) {
-    $app->render('new.html'); 
-});
-
-$app->get('/videos', function() use ($app) {
+$app->get('/videos/', function() use ($app) {
     $videos = R::findAll('video');
     $app->json(R::exportAll($videos));
 });
@@ -47,18 +43,38 @@ $app->get('/videos', function() use ($app) {
 $app->get('/videos/:id', function($id) use ($app) {
     $video = R::load('video', $id);
     $app->json(R::exportAll($video));
-});
+})->conditions(['id' => '\d']);
 
-$app->get('/videos/:id/upload/process', function($id) use ($app, $config) {
+$app->get('/videos/:id/process(/:name)', function($id, $name='test.mp4') use ($app, $config) {
     $video = R::load('video', $id);
     $backend = $config('redis')['backend'];
-    $token = queueFileUpload($backend, $app->user, $video, 'ilove.mp4');
-    echo $token;
+    $token = queueFileUpload($backend, $app->user, $video, $name);
+    $app->json(['token' => $token]);
 });
 
-$app->get('/admin/status', function() use ($app) {
-    $jobs = getUpdatedJobs();
+$app->get('/videos/:id/edit', function($id) use ($app) {
+    $video = R::load('video', $id);
+    $app->render('forms/video_edit.html', [
+        'video' => R::load('video', $id)
+    ]);
+});
 
-    $latestJobs = array_slice($jobs, -10);
-    $app->render('admin/status.html', ['jobs' => $latestJobs]);
+$app->post('/videos/edit', function() use ($app) {
+    $video = R::load('video', $_POST['id']);
+    $video->import($_POST);
+    R::store($video);
+    $app->redirect($app->request->getReferrer());
+});
+
+$app->post('/videos/', function() use ($app) {
+    $tags = (!empty($_POST['tag']))
+        ? array_keys($_POST['tag'])
+        : [];
+
+    $video = R::dispense('video');
+    $video->import($_POST, 'title,desc');
+    R::tag($video, $tags); 
+    R::store($video);
+
+    $app->json(R::exportAll($video));
 });
