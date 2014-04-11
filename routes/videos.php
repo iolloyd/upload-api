@@ -14,7 +14,7 @@ function createJob($token) {
 function queueFileUpload($redisBackend, $user, $video, $filename) {
     Resque::setBackend($redisBackend);
     $args = [
-        'source' => $video->source,
+        'source' => $video->path,
         'destination' => $video->destination,
         'filename' => $filename, 
     ];
@@ -24,26 +24,15 @@ function queueFileUpload($redisBackend, $user, $video, $filename) {
     return $token;
 }
 
-function getUpdatedJobs() {
-    $jobs = R::findAll('job');
-    foreach ($jobs as $job) {
-        $status = new Resque_Job_Status($job->token);
-        $job->status = $status->get();
-        R::store($job);
-    }
-
-    return $jobs;
-}
+$app->get('/videos/:id', function($id) use ($app) {
+    $video = R::load('video', $id);
+    $app->json(R::exportAll($video));
+})->conditions(['id' => '\d']);
 
 $app->get('/videos/', function() use ($app) {
     $videos = R::findAll('video');
     $app->json(R::exportAll($videos));
 });
-
-$app->get('/videos/:id', function($id) use ($app) {
-    $video = R::load('video', $id);
-    $app->json(R::exportAll($video));
-})->conditions(['id' => '\d']);
 
 $app->get('/videos/:id/process(/:name)', function($id, $name='test.mp4') use ($app, $config) {
     $video = R::load('video', $id);
@@ -55,7 +44,9 @@ $app->get('/videos/:id/process(/:name)', function($id, $name='test.mp4') use ($a
 $app->get('/videos/:id/edit', function($id) use ($app) {
     $video = R::load('video', $id);
     $app->render('forms/video_edit.html', [
-        'video' => R::load('video', $id)
+        'tags' => R::findAll('tag'),
+        'video' => R::load('video', $id),
+        'videoTags' => R::tag($video)
     ]);
 });
 
@@ -72,7 +63,7 @@ $app->post('/videos/', function() use ($app) {
         : [];
 
     $video = R::dispense('video');
-    $video->import($_POST, 'title,desc');
+    $video->import($_POST, 'title,description');
     R::tag($video, $tags); 
     R::store($video);
 
