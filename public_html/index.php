@@ -53,6 +53,7 @@ $view->parserExtensions = array(
     new \Slim\Views\TwigExtension(),
 );
 
+require_once ROUTES . "/main.php";
 require_once ROUTES . "/videos.php";
 require_once ROUTES . "/auth.php";
 require_once ROUTES . "/forms.php";
