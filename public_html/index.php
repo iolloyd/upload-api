@@ -1,23 +1,22 @@
 <?php
 session_start();
-function config($configFile) {
-    $info = parse_ini_file($configFile, true);
 
-    return function($key) use ($info) {
-        if (isset($info[$key])) {
-            return $info[$key];
-        }
-        return "";
-    };
-}
-$configFile = dirname(dirname(__FILE__)).'/config/config.ini';
-$config = config($configFile);
+define("ROOT", dirname(dirname(__FILE__)));
+define("LIB", ROOT . '/lib');
+define("ROUTES", ROOT . '/routes');
+define("CONFIG", ROOT . '/config');
 
+require_once ROOT . '/vendor/autoload.php';
+require_once LIB . '/rb.phar';
+require_once LIB . '/config.php';
 
-require_once '../vendor/autoload.php';
-require_once 'rb.phar';
-
-R::setup('mysql:host=localhost;dbname=cloud','root', 'root');
+$config = config(CONFIG . '/config.ini');
+$host = $config('db')['host'];
+$dbname = $config('db')['dbname'];
+R::setup(
+    "mysql:host=$host;dbname=$dbname",
+    $config('db')['user'], 
+    $config('db')['password']);
 
 class jsonSlim extends \Slim\Slim {
     function json($data) {
@@ -35,10 +34,10 @@ $app->config(array(
 
 $app->hook('slim.before.router', function() use ($app) {
     $uri = $_SERVER['REQUEST_URI']; 
-    if ($uri !== '/login') {
-        if (!(isset($_SESSION['user']))) {
-            $app->redirect('/login');
-        }
+    if ($uri !== '/login' 
+        && !(isset($_SESSION['user']))
+    ) {
+        $app->redirect('/login');
     }
 });
 
@@ -54,11 +53,10 @@ $view->parserExtensions = array(
     new \Slim\Views\TwigExtension(),
 );
 
-$app->get('/', function() use ($app) {
-    echo 'ok';
-});
-
-require_once "./routes/videos.php";
-require_once "./routes/auth.php";
+require_once ROUTES . "/videos.php";
+require_once ROUTES . "/auth.php";
+require_once ROUTES . "/forms.php";
+require_once ROUTES . "/admin.php";
+require_once ROUTES . "/tags.php";
 
 $app->run();
