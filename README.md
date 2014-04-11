@@ -25,3 +25,16 @@ When the app is deployed to production, we deploy
 the *composer.lock* file and then run `composer install`.
 
 Note: Never run `composer update` in production.
+
+PHP Resque workers
+------------------
+
+Workers wait for jobs to be put into the queue. As soon as a job 
+appears, the workers 'pop' the next job and do their work.
+
+Each job has the possibility of four states:
+
+    1 => Waiting 
+    2 => Running
+    3 => Failed
+    4 => Complete
