@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<form name='some' action='/videos/edit' method='post'>
+<ul>
+{% for k, v in video %}
+<li>
+{{k}}
+<input type='text' name='{{k}}' value='{{v}}'/>
+</li>
+{% endfor %}
+<li><input type='submit' type='submit' value='submit'/></li>
+</ul>
+</form>
+{% endblock %}
