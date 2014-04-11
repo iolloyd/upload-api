@@ -20,8 +20,8 @@
             <dt></dt>
             <dd> <input type="file" name="video" value="" /> </dd>
             {% for tag in tags %}
-            <input type='checkbox' name='tag[{{tag.label}}]' value='true'/>
-                {{tag.label}}
+            <input type='checkbox' name='tag[{{tag.title}}]' value='true'/>
+                {{tag.title}}
             {% endfor %}
 
             <dt></dt>
@@ -38,6 +38,8 @@
     <td>{{ video.description }}</td>
     <td>
         <a href="/videos/{{video.id}}/edit">Edit</a>
+        <a href="/videos/{{video.id}}/process">Trigger</a>
+    </td>
 </tr>
     
 {% endfor %}

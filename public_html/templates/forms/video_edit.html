@@ -9,6 +9,12 @@
 <input type='text' name='{{k}}' value='{{v}}'/>
 </li>
 {% endfor %}
+
+{% for tag in tags %}
+    {{tag.title}} 
+    <input type='checkbox' name='tag[{{tagName}}]' />
+{% endfor %}
+
 <li><input type='submit' type='submit' value='submit'/></li>
 </ul>
 </form>

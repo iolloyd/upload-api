@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    {% block head %}
+        <title>
+        {% block title%}Title here{% endblock %}
+        </title>
+    {% endblock %}
+
+    <link rel='stylesheet' type='text/css' src='css/bootstrap.min.css'/>
+    <link rel='stylesheet' type='text/css' src='css/app.css'/>
+    </head>
+
+    <body >
+        <div id='content' style='min-height:700px'>
+
+        {% block content %} {% endblock %}
+
+        </div>
+
+        <div id='footer'>
+
+        {% block footer %}
+
+        &copy; ReallyGoodCode 2014
+
+        {% endblock %}
+
+        </div> 
+
+    </body>
+</html>
