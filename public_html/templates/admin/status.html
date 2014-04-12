@@ -1,3 +1,6 @@
+{% extends 'admin_layout.html' %}
+
+{% block content %}
 <meta http-equiv="refresh" content="3"/>
 <style>
 .status_1 { background-color: grey; }
@@ -5,21 +8,26 @@
 .status_3 { background-color: red; }
 .status_4 { background-color: green; color: white;}
 </style>
+
 <h2>Jobs</h2>
 <p>
     1: Waiting, 2: Running, 3: Failed, <strong>4: Complete</strong>
 </p>
+
 <table cellspacing="0">
     <tr>
+        <td>Filename</td>
         <td>Token</td>
         <td>Status</td>
         <td>Start date</td>
     </tr>
     {% for j in jobs %}
     <tr>
+        <td>{{j.filename}}</td>
         <td>{{j.token}}</td>
         <td class='status_{{j.status}}'>{{j.status}}</td>
         <td>{{j.created}}</td>
     </tr>
     {% endfor %}
 </table>
+{% endblock %}
