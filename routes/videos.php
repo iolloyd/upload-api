@@ -1,8 +1,9 @@
 <?php
 use Cloud\Worker\FileUpload;
 
-function createJob($token) {
+function createJob($token, $filename) {
     $job = R::dispense('job');
+    $job->filename = $filename;
     $job->token = $token;
     $job->status = (new Resque_Job_Status($token))->get();
     $job->created = date('Y-m-d h:i:s');
@@ -19,7 +20,7 @@ function queueFileUpload($redisBackend, $user, $video, $filename) {
         'filename' => $filename, 
     ];
     $token = Resque::enqueue('video_upload', 'Cloud\Worker\FileUpload', $args, true); 
-    createJob($token);
+    createJob($token, $filename);
 
     return $token;
 }
@@ -38,7 +39,7 @@ $app->get('/videos/:id/process(/:name)', function($id, $name='test.mp4') use ($a
     $video = R::load('video', $id);
     $backend = $config('redis')['backend'];
     $token = queueFileUpload($backend, $app->user, $video, $name);
-    $app->json(['token' => $token]);
+    $app->redirect('/admin/status');
 });
 
 $app->get('/videos/:id/edit', function($id) use ($app) {
@@ -52,7 +53,7 @@ $app->get('/videos/:id/edit', function($id) use ($app) {
 
 $app->post('/videos/edit', function() use ($app) {
     $video = R::load('video', $_POST['id']);
-    $video->import($_POST);
+    $video->import($_POST, 'title,description,path,destination');
     R::store($video);
     $app->redirect($app->request->getReferrer());
 });
