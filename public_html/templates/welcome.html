@@ -3,9 +3,19 @@
 {% block content %}
 
 <h2>Dev environment</h2>
-<p>
-    <a href="/helper/setup">Setup test data</a>
-    </p>
-    <p> Add and list videos <a href='/video-upload-form'>here</a></p>
+<p> <a href="/helper/setup">Setup test data</a> </p>
+
+<p> Add, list and trigger upload of videos <a href='/video-upload-form'>here</a></p>
+
+<p> Retrieve information as json about a single video:<br/> <a href='/videos/1'>/videos/1</a></p>
+
+<p> Retrieve a list of all the videos:<br/> <a href='/videos'>/videos</a> </p>
+
+<p> Trigger an upload to the tube site:<br/> <a href='/videos/1/process/testname.mp4'>/videos/1/process/testname.mp4</a><br/>
+</p>
+
+<p> Monitor status of of triggered uploads:<br/>
+<a href='/admin/status'>/admin/status</a>
+</p>
 
 {% endblock %}
