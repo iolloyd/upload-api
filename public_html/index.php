@@ -19,13 +19,26 @@ R::setup(
     $config('db')['password']);
 
 class jsonSlim extends \Slim\Slim {
-    function json($data) {
+    function isJsonRequest() 
+    {
+        $uri = $this->request->getResourceUri();
+        $end = substr($uri, -4);
+        if ($end == 'json') {
+            return true;
+        }
+
+        return false;
+    }
+
+    function json($data) 
+    {
         $this->response->headers->set('Content-Type', 'application/json');
         echo json_encode($data);        
     } 
 }
 
 $app = new jsonSlim();
+$app->add(new \Slim\Middleware\ContentTypes());
 $app->config(array(
     'debug' => true,
     'mode' => 'development',
