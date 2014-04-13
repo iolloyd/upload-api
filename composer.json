@@ -3,13 +3,9 @@
         "slim/slim": "2.*",
         "slim/views": "0.1.*",
         "twig/twig": "*",
-        "doctrine/orm": "*",
-        "symfony/event-dispatcher": "*",
-        "symfony/yaml": "*",
         "tpyo/amazon-s3-php-class": "dev-fix/safemode-redirect",
         "chrisboulton/php-resque": "dev-master",
-        "symfony/class-loader": "~2.4.3",
-        "guzzlehttp/guzzle": "~4",
+        "guzzlehttp/guzzle": "~4.0",
         "guzzle/guzzle-aws": "dev-master"
     }
 }
