@@ -1,13 +1,13 @@
 FORMAT: 1A
 HOST: http://api.cloud.xxx
 
-# cloudxxx
-cloud.xxx API is a *video upload management* service for tube paysite webmasters.
+# cloud
+cloud API is a *video upload management* service for tube paysite webmasters.
 
 # Group Video
 Video-related resources of *Video API*.
 
-## Video [/Videos/{id}]
+## Video [/videos/{id}]
 A single Video object. The Video resource is the central resource in the Video API. It represents one paste - a single text note.
 
 The Video resource has the following attributes:
@@ -36,8 +36,8 @@ The states *id* and *created_at* are assigned by the Video API at the moment of 
             {
                 "id": "42",
                 "created_at": "2014-04-14T02:15:15Z",
-                "title": "Video Title",
-                "description": "Description of Video"
+                "description": "Description of Video",
+                "content": "String contents"
             }
 
 ## Retrieve a Single Video [GET]
@@ -51,7 +51,7 @@ To update a Video send a JSON with updated value for one or more of the Video re
 + Request (application/json)
 
         {
-            "description": "A new video description"
+            "content": "Updated file contents"
         }
 
 + Response 200
@@ -111,21 +111,229 @@ To create a new Video simply provide a JSON hash of the *title* and *description
 
     [Video][]
     
-# Group Authorization
+# Group Session and State
 
-## Login [/v1/login]
-### Login [POST]
+## Authorization [/v1/session]
+
+### Get state of session and global config [GET]
+
+`GET` the current session state.
+
+If a client is already authenticated, the response will have
+a `200` status and include user and account details as well as global
+options and endpoint information
+
+If the client is not authenticated, the response will have a `401` status
+only include global options and endpoint information. If this response is
+received, a login page should be shown.
+
 + Request
+    + Headers
 
-         {"username":"JohnDoe", "password": "IAmSecret"}
-         
+            Cookie: SID=pdteahqeuvo6nmikcokvbl0eq4
+
++ Response 401 (application/json)
+
+        {
+            "endpoints": {
+                "default": "https://private-fca8-cloudxxx.apiary-mock.com"
+            },
+            "options": {
+                "foo": "bar"
+            }
+        }
+
++ Response 200 (application/json)
+    + Headers
+    
+            Set-Cookie: SID=pdteahqeuvo6nmikcokvbl0eq4; Secure; HttpOnly
+    
+    + Body
+
+            {
+                "endpoints": {
+                    "default": "https://private-fca8-cloudxxx.apiary-mock.com"
+                },
+                "options": {
+                    "foo": "bar"
+                },
+                "user": {
+                    "name": "Igor Cumulus",
+                    "email": "igor@cloud.xxx"
+                },
+                "account": {
+                    "name": "Cumulus Inc."
+                }
+            }
+
+### Log In [POST]
+
+To authenticate, a `POST` request with the credentials is sent to the
+session endpoint. The server will verify the credentials and
+initiate a session.
+
+If validation or authentication fail, the response will have a `400` status
+and include details about the error. The response body is formatted according
+to http://tools.ietf.org/html/draft-ietf-oauth-v2-28#section-5.2
+
++ Request (application/json)
+
+        {
+            "email": "test@cloud.xxx",
+            "password": "foo"
+        }
+
++ Response 200 (application/json)
+    + Headers
+    
+            Set-Cookie: SID=pdteahqeuvo6nmikcokvbl0eq4; Secure; HttpOnly
+    
+    + Body
+    
+            {
+                "endpoints": {
+                    "default": "http://private-68adf-cloudxxxng.apiary-mock.com"
+                },
+                "options": {
+                    "foo": "bar"
+                },
+                "user": {
+                    "name": "Igor Cumulus",
+                    "email": "igor@cloud.xxx"
+                },
+                "account": {
+                    "name": "Cumulus Inc."
+                }
+            }
+
++ Response 400 (application/json)
+
+        {
+            "error": "invalid_grant",
+            "error_description": "Invalid username or password"
+        }
+
+### Log Out [DELETE]
+
+To end the session, a `DELETE` request is sent. The server invalidates the
+session and returns the anonymous session state.
+
++ Response 200 (application/json)
+    + Headers
+    
+            Set-Cookie: SID=deleted; Secure; HttpOnly; expires=Thu, 01 Jan 1970 00:00:00 GMT
+
+    + Body
+
+            {
+                "endpoints": {
+                    "default": "https://private-fca8-cloudxxx.apiary-mock.com"
+                },
+                "options": {
+                    "foo": "bar"
+                }
+            }
+
+# Group Videos
+
+## Videos [/v1/videos-x]
+
+### Get list of videos [GET]
+
 + Response 200 (application/json)
 
-        {}
+        x
 
-## Logout [/v1/logout]
-### Logout [GET]
+## Create New Video [/v1/videos]
+
+The upload process will be split into distinct steps:
+
+ * Client creates new video
+ * Client enters the video metadata
+ * Client uploads the raw video file to Amazon S3
+ * Server validates the metadata and raw video file
+ * Client starts the upload process
+ * Server converts the raw video for each Tube
+ * Server upload the converted video to each Tube
+ * Client shows progress and status overall and for each Tube
+
+### Create a new empty video [POST]
+
 + Response 200 (application/json)
 
-        {}
-        
+        {
+            "id": "293881",
+            "url": "https://private-fca8-cloudxxx.apiary-mock.com/v1/videos/293881",
+            ...
+        }
+
+## Group Create New Video Cont
+
+### PATCH /v1/videos/{video_id}
+
+Save draft
+
++ Response 200 (application/json)
+
+        {
+            "id": "293881",
+            "url": "https://private-fca8-cloudxxx.apiary-mock.com/v1/videos/293881",
+            ...
+        }
+
+### DELETE /v1/videos/{video_id}
+
+Delete draft
+
++ Response 204
+
+### POST /v1/videos/{video_id}/process
+
+When the video metadata is complete and the video file has been uploaded,
+the client notifies the server that the video can now be published to the
+Tube sites
+
++ Response 204
+
+## Group Create New Video : File Uploads
+
+To avoid unnecessary traffic through our network, video files are posted
+directly to Amazon S3. The client requests all necessary details and prepares
+an upload form with the received data.
+
+See http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-HTTPPOSTForms.html
+for more information.
+
+### POST /v1/videos/{video_id}/upload/prepare
+
+Prepare upload form
+
++ Response 200 (application/json)
+
+        {
+            "id": "DmqRpLQSNSoYjuXWm2",
+            "url": "https://private-fca8-cloudxxx.apiary-mock.com/v1/293881/uploads/DmqRpLQSNSoYjuXWm2",
+            "status": "pending",
+            "form": {
+                "action": "https://cldsys-dev.s3.amazonaws.com/",
+                "method": "post",
+                "enctype": "multipart/form-data"
+            },
+            "fields": {
+                "key": "/uploads/293881/DmqRpLQSNSoYjuXWm2/${filename}",
+                "x-aws-meta-video": "293881",
+                "x-aws-meta-upload": "DmqRpLQSNSoYjuXWm2",
+                "AWSAccessKeyId": "AKIAIOSFODNN7EXAMPLE",
+                "policy": "eyAiZXhwaXJhdGlvbiI6ICIyMDA3LTEyLTAxVDEyOjAwOjAwLjAw...",
+                "signature": "0RavWzkygo6QX9caELEqKi9kDbU="
+            },
+            "file_field": "file"
+        }
+
+### POST /v1/videos/{video_id}/upload/process
+
+Once the file is uploaded to S3, the client notifies the server that the
+upload is complete and should be finalized
+
++ Response 204
+

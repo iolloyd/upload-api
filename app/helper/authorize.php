@@ -9,6 +9,8 @@
 
 $authorize = function ($scope = null) use ($app) {
     return function () use ($app, $scope) {
+        return;
+
         if (!$app->session->isLoggedIn()) {
             $app->json(401, [
                 'error' => 'invalid_client',
