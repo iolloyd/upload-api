@@ -6,7 +6,8 @@
         "tpyo/amazon-s3-php-class": "dev-fix/safemode-redirect",
         "chrisboulton/php-resque": "dev-master",
         "guzzlehttp/guzzle": "~4.0",
-        "guzzle/guzzle-aws": "dev-master"
+        "guzzle/guzzle-aws": "dev-master",
+        "aws/aws-sdk-php": "2.*"
     }
 }
 

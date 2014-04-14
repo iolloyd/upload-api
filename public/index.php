@@ -15,6 +15,9 @@ require 'autoload.php';
  * Slim Application
  */
 
+ini_set('session.name', 'CLOUD');
+ini_set('session.cookie_httponly', true);
+
 session_cache_limiter(false);
 session_start();
 
@@ -30,6 +33,7 @@ $loader->load('config')
 
 // middleware
 $app->add(new \Cloud\Slim\Middleware\Session());
+$app->add(new \Slim\Middleware\ContentTypes());
 
 // run
 $app->run();
