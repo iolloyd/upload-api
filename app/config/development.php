@@ -18,4 +18,12 @@ $app->configureMode('development', function () use ($app) {
     $app->config([
         'app.baseurl' => $app->request->getUrl(),
     ]);
+
+    // amazon
+    $app->config([
+        's3.bucket' => 'cldsys-dev',
+        's3.key'    => 'AKIAJFJWKRRF6DGEPXCA',
+        's3.secret' => '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',
+        's3.region' => 'us-west-2',
+    ]);
 });
