@@ -49,16 +49,6 @@ abstract class AbstractModel
         return $class;
     }
 
-    protected function populate($bean)
-    {
-        $this->bean = $bean;
-    }
-
-    protected function export()
-    {
-        return $this->bean->export();
-    }
-
     public function save()
     {
         if ($this->bean == null) {
@@ -80,6 +70,16 @@ abstract class AbstractModel
         }
 
         return $output;
+    }
+
+    protected function populate($bean)
+    {
+        $this->bean = $bean;
+    }
+
+    protected function export()
+    {
+        return $this->bean->export();
     }
 
     protected function getColumns()
