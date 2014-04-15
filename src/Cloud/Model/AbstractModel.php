@@ -4,6 +4,8 @@ namespace Cloud\Model;
 
 abstract class AbstractModel 
 {
+    public $createdAt;
+
     protected $name;
 
     protected $id   = null;
@@ -30,7 +32,6 @@ abstract class AbstractModel
         return $output;
     }
 
-
     protected static function getName()
     {
         $name = get_class_vars(get_called_class())['name'];
@@ -53,13 +54,13 @@ abstract class AbstractModel
     {
         if ($this->bean == null) {
             $this->bean = \R::dispense($this->name);
+            $this->bean->created_at = time(); 
         }
         foreach ($this->getColumns() as $key) {
             $this->bean->{$key} = $this->{$key};
         }
+        $this->bean->updated_at = time();
         \R::store($this->bean);
-        return 4;
-        return $this->bean->id;
     }
 
     public function serialize()
