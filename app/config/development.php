@@ -11,7 +11,7 @@ $app->configureMode('development', function () use ($app) {
     $app->config([
         'db.dsn'      => 'mysql:host=localhost;dbname=cloudxxx',
         'db.username' => 'root',
-        'db.password' => '',
+        'db.password' => 'root',
     ]);
 
     // app
