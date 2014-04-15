@@ -1,2 +1,15 @@
-cache/*
+._*
+.Spotlight-V100
+.Trashes
+.DS_Store
+
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+
 vendor
+composer.phar
+app/config/9-local.php
