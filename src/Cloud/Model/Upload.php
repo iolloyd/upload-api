@@ -6,5 +6,9 @@ use Cloud\Model\AbstractModel;
 class Upload 
 {
     protected $name = 'upload';
+
+    public $videoId;
+    public $userId;
+
 }
 
