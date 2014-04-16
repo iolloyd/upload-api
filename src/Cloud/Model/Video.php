@@ -9,5 +9,8 @@ class Video extends AbstractModel
 
     public $path;
     public $title;
+    public $description;
+    public $tags;
+
 }
 
