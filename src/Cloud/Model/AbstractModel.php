@@ -12,14 +12,26 @@ abstract class AbstractModel
     protected $bean = null;
     protected $data = [];
 
+    /**
+     * Returns an instance of a subclass
+     *
+     * @param int $id The object id 
+     * @return Cloud\Model\AbstractModel $class subclass
+     */
     public static function find($id)
     {
         $name = self::getName();
         $bean = \R::load($name, $id);
         $class = self::makeObjectFromBean($bean);
+
         return $class;
     }
 
+    /**
+     * Returns a list of subclasses
+     *
+     * @return array $output subclass 
+     */
     public static function findAll()
     {
         $name = self::getName();
@@ -27,6 +39,36 @@ abstract class AbstractModel
         $output = [];
         foreach ($beans as $bean) {
             $output[] = self::makeObjectFromBean($bean);
+        }
+
+        return $output;
+    }
+
+    /**
+     * Stores object details
+     *
+     * @return void
+     */
+    public function save()
+    {
+        if ($this->bean == null) {
+            $this->bean = \R::dispense($this->name);
+            $this->bean->created_at = time(); 
+        }
+
+        foreach ($this->getColumnNames() as $key) {
+            $this->bean->{$key} = $this->{$key};
+        }
+
+        $this->bean->updated_at = time();
+        \R::store($this->bean);
+    }
+
+    public function serialize()
+    {
+        $output = [];
+        foreach ($this->getColumnNames() as $key) {
+            $output[$key] = $this->{$key};
         }
 
         return $output;
@@ -50,29 +92,6 @@ abstract class AbstractModel
         return $class;
     }
 
-    public function save()
-    {
-        if ($this->bean == null) {
-            $this->bean = \R::dispense($this->name);
-            $this->bean->created_at = time(); 
-        }
-        foreach ($this->getColumns() as $key) {
-            $this->bean->{$key} = $this->{$key};
-        }
-        $this->bean->updated_at = time();
-        \R::store($this->bean);
-    }
-
-    public function serialize()
-    {
-        $output = [];
-        foreach ($this->getColumns() as $key) {
-            $output[$key] = $this->{$key};
-        }
-
-        return $output;
-    }
-
     protected function populate($bean)
     {
         $this->bean = $bean;
@@ -83,17 +102,17 @@ abstract class AbstractModel
         return $this->bean->export();
     }
 
-    protected function getColumns()
+    protected function getColumnNames()
     {
-        $properties = $this->getProperties();
+        $properties = $this->getPublicProperties();
         $columns = array_map(function($x) {return $x->name;}, $properties);
         return $columns;
     }
 
-    protected function getProperties()
+    protected function getPublicProperties()
     {
-        $refl = new \ReflectionClass(get_called_class());
-        $properties = $refl->getProperties(\ReflectionProperty::IS_PUBLIC);
+        $reflector = new \ReflectionClass(get_called_class());
+        $properties = $reflector->getProperties(\ReflectionProperty::IS_PUBLIC);
         return $properties;
     }
 
