@@ -5,12 +5,11 @@ use Cloud\Model\AbstractModel;
 
 class Video extends AbstractModel 
 {
-    protected $name = 'video';
+    protected $tableName = 'video';
+    protected $manyToMany = ['tag'];
 
     public $path;
     public $title;
     public $description;
-    public $tags;
 
 }
-
