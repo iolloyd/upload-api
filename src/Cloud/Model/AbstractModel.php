@@ -4,13 +4,15 @@ namespace Cloud\Model;
 
 abstract class AbstractModel 
 {
-    public $createdAt;
-
-    protected $name;
+    protected $createdAt;
+    protected $tableName;
 
     protected $id   = null;
     protected $bean = null;
     protected $data = [];
+
+    protected $relatedOneToMany = [];
+    protected $relatedManyToMany = [];
 
     /**
      * Returns an instance of a subclass
@@ -20,8 +22,8 @@ abstract class AbstractModel
      */
     public static function find($id)
     {
-        $name = self::getName();
-        $bean = \R::load($name, $id);
+        $tableName = self::getTableName();
+        $bean = \R::load($tableName, $id);
         $class = self::makeObjectFromBean($bean);
 
         return $class;
@@ -34,8 +36,8 @@ abstract class AbstractModel
      */
     public static function findAll()
     {
-        $name = self::getName();
-        $beans = \R::findAll($name);
+        $tableName = self::getTableName();
+        $beans = \R::findAll($tableName);
         $output = [];
         foreach ($beans as $bean) {
             $output[] = self::makeObjectFromBean($bean);
@@ -52,7 +54,7 @@ abstract class AbstractModel
     public function save()
     {
         if ($this->bean == null) {
-            $this->bean = \R::dispense($this->name);
+            $this->bean = \R::dispense($this->tableName);
             $this->bean->created_at = time(); 
         }
 
@@ -60,8 +62,46 @@ abstract class AbstractModel
             $this->bean->{$key} = $this->{$key};
         }
 
+        $this->saveRelations();
         $this->bean->updated_at = time();
         \R::store($this->bean);
+    }
+
+    public function add($collection, $object)
+    {
+        if (isset($this->oneToMany)
+            && in_array($collection, $this->oneToMany)
+        ) {
+            if (!isset($this->relatedOneToMany[$collection])) {
+                $this->relatedOneToMany[$collection] = [];
+            }
+
+           $this->relatedOneToMany[$collection][] = $object;
+
+        } elseif (isset($this->manyToMany) 
+            && in_array($collection, $this->manyToMany)
+        ) {
+            if (!isset($this->relatedManyToMany[$collection])) {
+                $this->relatedManyToMany[$collection] = [];
+            }
+            $this->relatedManyToMany[$collection][] = $object;
+
+        } else {
+            throw new \Exception( "Tried to add a non-existent relationship: $collection");
+        }
+    }
+
+    protected function saveRelations()
+    {
+        $list = $this->relatedManyToMany;
+        foreach ($list as $tableName => $objects) {
+            $method = "shared" . ucfirst(strtolower($tableName)) . "List";
+            foreach ($objects as $object) {
+                $object->save();
+                $this->bean->{$method}[] = $object->bean;
+            }
+        }
+
     }
 
     public function serialize()
@@ -74,10 +114,20 @@ abstract class AbstractModel
         return $output;
     }
 
-    protected static function getName()
+    public function oneToMany($model)
     {
-        $name = get_class_vars(get_called_class())['name'];
-        return $name;
+        $this->oneToMany[] = $model;
+    }
+
+    public function manyToMany($model)
+    {
+        $this->manyToMany[] = $model;
+    }
+
+    protected static function getTableName()
+    {
+        $class = get_class_vars(get_called_class());
+        return $class['tableName'];
     }
 
     protected static function makeObjectFromBean($bean)
@@ -102,7 +152,7 @@ abstract class AbstractModel
         return $this->bean->export();
     }
 
-    protected function getColumnNames()
+    public function getColumnNames()
     {
         $properties = $this->getPublicProperties();
         $columns = array_map(function($x) {return $x->name;}, $properties);
@@ -115,7 +165,6 @@ abstract class AbstractModel
         $properties = $reflector->getProperties(\ReflectionProperty::IS_PUBLIC);
         return $properties;
     }
-
 
 }
 

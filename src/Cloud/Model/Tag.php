@@ -3,9 +3,9 @@
 namespace Cloud\Model;
 use Cloud\Model\AbstractModel;
 
-class Tag {
+class Tag extends AbstractModel {
 
-    protected $name = 'tag';
+    protected $tableName = 'tag';
 
     public $title;
 
