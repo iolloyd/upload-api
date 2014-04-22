@@ -17,6 +17,11 @@ abstract class AbstractModel
     protected $relatedOneToMany = [];
     protected $relatedManyToMany = [];
 
+    protected function getBean()
+    {
+        return $this->bean;
+    }
+
     /**
      * Returns an instance of a subclass
      *
@@ -129,8 +134,9 @@ abstract class AbstractModel
 
     protected static function getTableName()
     {
-        $class = get_class_vars(get_called_class());
-        return $class['tableName'];
+        $class = get_called_class();
+        $parts = explode('\\', $class);
+        return strtolower(end($parts));
     }
 
     protected static function makeObjectFromBean($bean)
