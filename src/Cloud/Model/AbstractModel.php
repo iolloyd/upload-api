@@ -11,6 +11,9 @@ abstract class AbstractModel
     protected $bean = null;
     protected $data = [];
 
+    protected $oneToMany = [];
+    protected $manyToMany = [];
+
     protected $relatedOneToMany = [];
     protected $relatedManyToMany = [];
 
