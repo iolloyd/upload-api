@@ -70,7 +70,6 @@ abstract class AbstractModel
             $this->bean->{$key} = $this->{$key};
         }
 
-        $this->saveRelations();
         $this->bean->updated_at = time();
         \R::store($this->bean);
     }
@@ -90,19 +89,6 @@ abstract class AbstractModel
             throw new \Exception( "Tried to add a non-existent relationship: $tableName");
         }
     }
-
-    protected function saveRelations()
-    {
-        $list = $this->relatedManyToMany;
-        foreach ($list as $tableName => $objects) {
-            $method = "shared" . ucfirst(strtolower($tableName)) . "List";
-            foreach ($objects as $object) {
-                $object->save();
-                $this->bean->{$method}[] = $object->bean;
-            }
-        }
-    }
-    */
 
     public function serialize()
     {
