@@ -5,12 +5,11 @@ use Cloud\Model\AbstractModel;
 
 class User extends AbstractModel
 {
-    protected $tableName = 'user';
+    protected $oneToMany = ['video'];
 
     public $username;
     public $email;
     public $password;
 
-    public $oneToMany = ['user'];
 }
 
