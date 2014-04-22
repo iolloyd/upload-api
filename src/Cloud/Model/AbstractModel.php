@@ -75,7 +75,7 @@ abstract class AbstractModel
         \R::store($this->bean);
     }
 
-    public function add($collection, $object)
+    public function add($object)
     {
         $tableName = $object->getTableName();
         if (in_array($tableName, $this->oneToMany)) {
