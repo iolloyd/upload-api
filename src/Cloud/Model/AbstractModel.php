@@ -62,7 +62,7 @@ abstract class AbstractModel
     public function save()
     {
         if ($this->bean == null) {
-            $this->bean = \R::dispense($this->tableName);
+            $this->bean = \R::dispense($this->getTableName());
             $this->bean->created_at = time(); 
         }
 
@@ -77,25 +77,17 @@ abstract class AbstractModel
 
     public function add($collection, $object)
     {
-        if (isset($this->oneToMany)
-            && in_array($collection, $this->oneToMany)
-        ) {
-            if (!isset($this->relatedOneToMany[$collection])) {
-                $this->relatedOneToMany[$collection] = [];
-            }
+        $tableName = $object->getTableName();
+        if (in_array($tableName, $this->oneToMany)) {
+            $list = 'own' . ucfirst($tableName) . 'List';
+            $this->bean->{$list}[] = $object->getBean();
 
-           $this->relatedOneToMany[$collection][] = $object;
-
-        } elseif (isset($this->manyToMany) 
-            && in_array($collection, $this->manyToMany)
-        ) {
-            if (!isset($this->relatedManyToMany[$collection])) {
-                $this->relatedManyToMany[$collection] = [];
-            }
-            $this->relatedManyToMany[$collection][] = $object;
+        } elseif (in_array($tableName, $this->manyToMany)) {
+            $list = 'shared' . ucfirst($tableName) . 'List';
+            $this->bean->{$list}[] = $object->getBean();
 
         } else {
-            throw new \Exception( "Tried to add a non-existent relationship: $collection");
+            throw new \Exception( "Tried to add a non-existent relationship: $tableName");
         }
     }
 
@@ -109,8 +101,8 @@ abstract class AbstractModel
                 $this->bean->{$method}[] = $object->bean;
             }
         }
-
     }
+    */
 
     public function serialize()
     {
