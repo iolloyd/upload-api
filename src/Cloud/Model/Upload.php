@@ -5,8 +5,6 @@ use Cloud\Model\AbstractModel;
 
 class Upload 
 {
-    protected $tableName = 'upload';
-
     public $videoId;
     public $userId;
 
