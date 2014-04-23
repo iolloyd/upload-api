@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `cloudxxx`.`user` (
     FOREIGN KEY (`company_id`)
     REFERENCES `cloudxxx`.`company` (`id`)
     ON DELETE CASCADE
-    ON UPDATE RESTRICT)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -74,12 +74,12 @@ CREATE TABLE IF NOT EXISTS `cloudxxx`.`role` (
     FOREIGN KEY (`app_id`)
     REFERENCES `cloudxxx`.`app` (`id`)
     ON DELETE CASCADE
-    ON UPDATE RESTRICT,
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_role_user`
     FOREIGN KEY (`user_id`)
     REFERENCES `cloudxxx`.`user` (`id`)
     ON DELETE CASCADE
-    ON UPDATE RESTRICT)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `cloudxxx`.`video` (
     FOREIGN KEY (`user_id`)
     REFERENCES `cloudxxx`.`user` (`id`)
     ON DELETE CASCADE
-    ON UPDATE RESTRICT)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -139,12 +139,12 @@ CREATE TABLE IF NOT EXISTS `cloudxxx`.`publish` (
     FOREIGN KEY (`video_id`)
     REFERENCES `cloudxxx`.`video` (`id`)
     ON DELETE CASCADE
-    ON UPDATE RESTRICT,
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_publish_site`
     FOREIGN KEY (`site_id`)
     REFERENCES `cloudxxx`.`site` (`id`)
     ON DELETE CASCADE
-    ON UPDATE RESTRICT)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -176,12 +176,12 @@ CREATE TABLE IF NOT EXISTS `cloudxxx`.`tag_video` (
     FOREIGN KEY (`tag_id`)
     REFERENCES `cloudxxx`.`tag` (`id`)
     ON DELETE CASCADE
-    ON UPDATE RESTRICT,
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_video`
     FOREIGN KEY (`video_id`)
     REFERENCES `cloudxxx`.`video` (`id`)
     ON DELETE CASCADE
-    ON UPDATE RESTRICT)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
