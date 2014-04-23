@@ -4,18 +4,12 @@ namespace Cloud\Model;
 
 abstract class AbstractModel 
 {
-    protected $createdAt;
-    protected $tableName;
-
     protected $id   = null;
     protected $bean = null;
     protected $data = [];
 
     protected $oneToMany = [];
     protected $manyToMany = [];
-
-    protected $relatedOneToMany = [];
-    protected $relatedManyToMany = [];
 
     protected function getBean()
     {
@@ -26,6 +20,7 @@ abstract class AbstractModel
      * Returns an instance of a subclass
      *
      * @param int $id The object id 
+     *
      * @return Cloud\Model\AbstractModel $class subclass
      */
     public static function find($id)
@@ -55,6 +50,67 @@ abstract class AbstractModel
     }
 
     /**
+     * Adds the object as a related item.
+     * This can be 1-M or M-M.
+     *
+     * @param AbstractModel $object
+     * @return void
+     */
+    public function add($object)
+    {
+        $tableName    = $object->getTableName();
+        $isOneToMany  = in_array($tableName, $this->oneToMany);
+        $isManyToMany = in_array($tableName, $this->manyToMany);
+
+        if (!($isOneToMany || $isManyToMany)) {
+            throw new \Exception( "Tried to add a non-existent relationship: $tableName");
+        }
+        if ($isOneToMany) {
+            $list = 'own' . ucfirst($tableName) . 'List';
+        } 
+        if ($isManyToMany) {
+            $list = 'shared' . ucfirst($tableName) . 'List';
+        }
+        $this->bean->{$list}[] = $object->getBean();
+    }
+
+    /**
+     * Returns available column names that relate to 
+     * table field names.
+     *
+     * @return array $columns column names
+     */
+    public function getColumnNames()
+    {
+        $properties = $this->getPublicProperties();
+        $columns = array_map(function($x) {return $x->name;}, $properties);
+
+        return $columns;
+    }
+
+    /**
+     * Relates an object via M:M
+     *
+     * @param AbstractModel $model
+     * @return void
+     */
+    public function manyToMany($model)
+    {
+        $this->manyToMany[] = $model;
+    }
+
+    /**
+     * Relates an object via 1:M
+     *
+     * @param AbstractModel $model
+     * @return void
+     */
+    public function oneToMany($model)
+    {
+        $this->oneToMany[] = $model;
+    }
+
+    /**
      * Stores object details
      *
      * @return void
@@ -74,40 +130,14 @@ abstract class AbstractModel
         \R::store($this->bean);
     }
 
-    public function add($object)
-    {
-        $tableName = $object->getTableName();
-        if (in_array($tableName, $this->oneToMany)) {
-            $list = 'own' . ucfirst($tableName) . 'List';
-            $this->bean->{$list}[] = $object->getBean();
-
-        } elseif (in_array($tableName, $this->manyToMany)) {
-            $list = 'shared' . ucfirst($tableName) . 'List';
-            $this->bean->{$list}[] = $object->getBean();
-
-        } else {
-            throw new \Exception( "Tried to add a non-existent relationship: $tableName");
-        }
-    }
-
     public function serialize()
     {
-        $output = [];
+        $objectAsArray = [];
         foreach ($this->getColumnNames() as $key) {
             $output[$key] = $this->{$key};
         }
 
-        return $output;
-    }
-
-    public function oneToMany($model)
-    {
-        $this->oneToMany[] = $model;
-    }
-
-    public function manyToMany($model)
-    {
-        $this->manyToMany[] = $model;
+        return $objectAsArray;
     }
 
     protected static function getTableName()
@@ -122,8 +152,9 @@ abstract class AbstractModel
         $class = get_called_class();
         $class = new $class();
         $class->populate($bean);
-        foreach ($class->export() as $key => $value) {
-            $class->{$key} = $value;
+
+        foreach ($class->export() as $property => $value) {
+            $class->{$property} = $value;
         }; 
 
         return $class;
@@ -137,13 +168,6 @@ abstract class AbstractModel
     protected function export()
     {
         return $this->bean->export();
-    }
-
-    public function getColumnNames()
-    {
-        $properties = $this->getPublicProperties();
-        $columns = array_map(function($x) {return $x->name;}, $properties);
-        return $columns;
     }
 
     protected function getPublicProperties()
