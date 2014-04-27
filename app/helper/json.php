@@ -1,12 +1,25 @@
 <?php
 /**
- * Route middleware to authorize a request
- *
- * $app->get('/protected', $app->authorize(), function () use ($app) {
- *    $app->json('yay, access granted...');
- * });
+ * JSON Utilities
  */
 
+/**
+ * Get a value from the request body
+ */
+$param = function ($key, $default = null) use ($app)
+{
+    $data = $app->request->getBody();
+
+    if (is_array($data) && isset($data[$key])) {
+        return $data[$key];
+    }
+
+    return $default;
+};
+
+/**
+ * Send a JSON response
+ */
 $json = function ($statusOrData, $data = null) use ($app)
 {
     if ($data) {
@@ -18,7 +31,9 @@ $json = function ($statusOrData, $data = null) use ($app)
     $app->response->body(json_encode($statusOrData));
 };
 
-
+/**
+ * Send a JSON error response
+ */
 $jsonError = function ($status, $error = null, $errorDescription = null) use ($app)
 {
     $app->json($status, [
@@ -29,5 +44,6 @@ $jsonError = function ($status, $error = null, $errorDescription = null) use ($a
     $app->stop();
 };
 
+$app->param = $app->container->protect($param);
 $app->json = $app->container->protect($json);
 $app->jsonError = $app->container->protect($jsonError);
