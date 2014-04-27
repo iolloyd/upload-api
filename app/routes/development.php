@@ -1,5 +1,9 @@
 <?php
 
+use Cloud\Dev\Bootstrap;
+use Cloud\Model\Video;
+use Cloud\Model\User;
+
 if (!$app->config('mode') == 'development') {
     return;
 }
@@ -11,18 +15,16 @@ $app->get('/dev/setup', function () use ($app)
 {
     R::nuke();
 
-    $user = R::dispense('user');
-    $user->import([
-        'email'    => 'dev@cloud.xxx',
-        'username' => 'dev',
-        'password' => 'secure',
-    ]);
-
-    R::store($user);
-
+    Bootstrap::createDevData();
     $app->json([
         'All systems are go. Yay!. The dev user credentials:',
-        R::exportAll(R::findOne('user'))[0],
-        'You only need to enter the email currently',
+        R::exportAll(R::find('user')),
+        R::exportAll(R::find('video')),
+        'You only need to enter the email',
     ]);
+});
+
+$app->get('/dev/test', function() use ($app) {
+    $video = Video::findAll();
+    $users = User::findAll();
 });
