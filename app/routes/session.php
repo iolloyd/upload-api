@@ -18,12 +18,9 @@ $app->get('/session', function () use ($app)
 $app->post('/session', function () use ($app)
 {
     $result = $app->session->login([
-        'email' => $app->request->post('email'),
-        'password' => $app->request->post('password'),
+        'email' => $app->param('email'),
+        'password' => $app->param('password'),
     ]);
-
-    $app->json($app->request->post());
-    $app->stop();
 
     if (!$result) {
         $app->jsonError(400, 'invalid_grant', 'Invalid username or password');
@@ -39,14 +36,6 @@ $app->delete('/session', function () use ($app)
 {
     $app->session->logout();
     $app->pass();
-});
-
-/**
- * Test Request
- */
-$app->get('/protected', $app->authorize(), function () use ($app)
-{
-    $app->json('yay, access granted...');
 });
 
 /**

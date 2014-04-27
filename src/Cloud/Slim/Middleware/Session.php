@@ -33,13 +33,15 @@ class Session extends Middleware
 
     public function login(array $data)
     {
-        $this->logout();
+        session_regenerate_id();
 
         if ($data['password'] != '123') {
             return false;
         }
 
         $user = $data;
+        $user['name'] = 'Igor Cumulus';
+
         $_SESSION['user'] = $user;
 
         return $user;
@@ -49,7 +51,6 @@ class Session extends Middleware
     {
         session_regenerate_id(true);
         session_destroy();
-        session_start();
         return true;
     }
 
