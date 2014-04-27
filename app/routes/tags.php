@@ -2,9 +2,12 @@
 
 $app->get('/tags/', function() use ($app) {
     $tags = R::findAll('tag');
+    $app->json(['tags' => $tags]);
+    /*
     $app->render('forms/tag.html', [
         'tags' => $tags
     ]);
+     */
 });
 
 $app->get('/label/remove/:id', function($id) use ($app) {
