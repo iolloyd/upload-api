@@ -1,15 +1,36 @@
 <?php
 
 namespace Cloud\Model;
-use Cloud\Model\AbstractModel;
+use Doctrine\Common\Collections\ArrayCollection;
 
-class Company extends AbstractModel
+/**
+ * @Entity #Table(name='company')
+ **/
+class Company
 {
-    protected $oneToMany = ['user'];
 
-    public $title;
-    public $contactName;
-    public $contactEmail;
+    /** 
+     * @Id @Column(type="integer") @GeneratedValue 
+     */
+    protected $id;
+
+    /** @Column(type="string") **/
+    protected $title;
+
+    /** @OneToMany(targetEntity="User", mappedBy="company")
+     */
+    protected $users;
+
+    public function __construct()
+    {
+        $this->users = new ArrayCollection;
+    }
+
+    public function addUser(User $user)
+    {
+        $this->users[] = $user;
+    }
+
 }
 
 
