@@ -11,15 +11,17 @@ if (!$app->config('mode') == 'development') {
 /**
  * Set up the dev database by nuking it and rebuilding it
  */
-$app->get('/dev/setup', function () use ($app)
+$app->get('/dev/setup', function() use ($app)
 {
-    R::nuke();
 
-    Bootstrap::createDevData();
+    Bootstrap::createDevData($app->entityManager);
+    $em = $app->entityManager;
+    $users = $em->getRepository("Cloud\Model\User")->findAll();
+    $videos = $em->getRepository("Cloud\Model\Video")->findAll();
     $app->json([
         'All systems are go. Yay!. The dev user credentials:',
-        R::exportAll(R::find('user')),
-        R::exportAll(R::find('video')),
+        'users' => $users,
+        'videos' => $videos,
         'You only need to enter the email',
     ]);
 });
