@@ -8,20 +8,18 @@ use Cloud\Model\Tag;
 
 class Bootstrap 
 {
-    public static function createDevData()
+    public static function createDevData($em)
     {
         $devData = self::getDevData();
-        $users = self::createDevUsers($devData['users']);
-        $videos = self::createDevVideos($devData['videos']);
+        $users = self::createDevUsers($em, $devData['users']);
+        $videos = self::createDevVideos($em, $devData['videos']);
         $tag = new Tag();
-        $tag->title = 'I am a tag';
-        $tag->save();
+        $tag->setTitle('I am a tag');
+        $em->persist($tag);
         $user = $users[0];
-        $users[0]->add($videos[0]);
-        $users[0]->save();
+        //$users[0]->add($videos[0]);
 
-        $videos[0]->add($tag);
-        $videos[0]->save();
+        //$videos[0]->add($tag);
     }
 
     protected static function getDevData()
@@ -33,32 +31,31 @@ class Bootstrap
         return ['users' => $devUsers, 'videos' => $devVideos];
     }
 
-    protected static function createDevUsers($userData)
+    protected static function createDevUsers($em, $userData)
     {
         $userList = [];
         foreach ($userData as $info) {
             extract($info);
             $user = new User();
-            $user->username = $username;
-            $user->email    = $email;
-            $user->password = $password;
-            $user->save();
+            $user->setEmail($email);
+            $user->setPassword($password);
+            $em->persist($user);
             $userList[] = $user;
         }
 
         return $userList;
     }
 
-    protected static function createDevVideos($videoData)
+    protected static function createDevVideos($em, $videoData)
     {
         $videoList = [];
         foreach ($videoData as $info) {
             extract($info);
             $video = new Video();
-            $video->path = $path;
-            $video->title = $title;
-            $video->description = $description;
-            $video->save();
+            $video->setPath($path);
+            $video->setTitle($title);
+            $video->setDescription($description);
+            $em->persist($video);
             $videoList[] = $video;
         }
         return $videoList;
