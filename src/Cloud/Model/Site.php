@@ -1,10 +1,63 @@
 <?php
 
 namespace Cloud\Model;
-use Cloud\Model\AbstractModel;
 
-class Site extends AbstractModel
+/**
+ * @Entity #Table(name='site')
+ **/
+class Site
 {
-    public $title;
-    public $uploadUrl;
+    /** 
+     * @Id @Column(type="integer") @GeneratedValue 
+     */
+    protected $id;
+
+    /** 
+     * @Column(type="string")
+     */
+    protected $title;
+
+    /** 
+     * @Column(type="string")
+     */
+    protected $slug;
+
+    /** 
+     * @Column(type="string")
+     */
+    protected $uploadUrl;
+
+    /**
+     * @OneToMany(targetEntity="VideoInbound", mappedBy="site")
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
+    }
+
+    public function getTitle()
+    {
+        return $this->title;
+    }
+
+    public function setSlug($slug)
+    {
+        $this->Slug = $slug;
+    }
+
+    public function getSlug()
+    {
+        return $this->slug;
+    }
+
+    public function setUploadUrl($uploadUrl)
+    {
+        $this->uploadUrl = $uploadUrl;
+    }
+
+    public function getUploadUrl()
+    { 
+        return $this->uploadUrl;
+    }
+
 }
