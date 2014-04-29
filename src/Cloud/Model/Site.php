@@ -30,6 +30,8 @@ class Site
     /**
      * @OneToMany(targetEntity="VideoInbound", mappedBy="site")
      */
+    protected $videoInbounds;
+
     public function setTitle($title)
     {
         $this->title = $title;
