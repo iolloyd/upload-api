@@ -52,7 +52,7 @@ class Bootstrap
         foreach ($videoData as $info) {
             extract($info);
             $video = new Video();
-            $video->setPath($path);
+            $video->setFilename($filename);
             $video->setTitle($title);
             $video->setDescription($description);
             $em->persist($video);
