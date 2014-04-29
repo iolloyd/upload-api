@@ -9,6 +9,7 @@
         "guzzle/guzzle-aws": "dev-master",
         "aws/aws-sdk-php": "~2",
         "doctrine/orm": "~2.4",
+        "beberlei/DoctrineExtensions": "dev-master",
         "symfony/yaml": "~2",
         "phpunit/phpunit": "~4.0",
         "phpunit/php-invoker": "~1.1"
