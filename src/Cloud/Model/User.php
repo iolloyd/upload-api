@@ -24,7 +24,7 @@ class User
     protected $password;
 
     /**
-     * @OneToMany(targetEntity="video", mappedBy="user")
+     * @OneToMany(targetEntity="video", mappedBy="creator")
      */
     protected $videos;
 
