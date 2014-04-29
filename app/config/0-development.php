@@ -1,4 +1,7 @@
 <?php
+use Doctrine\ORM\Tools\Setup;
+use Doctrine\ORM\EntityManager;
+
 
 $app->configureMode('development', function () use ($app) {
     // slim
@@ -13,6 +16,14 @@ $app->configureMode('development', function () use ($app) {
         'db.username' => 'root',
         'db.password' => 'root',
     ]);
+    
+    $app->config([
+        'doctrine.driver' => 'pdo_mysql',
+        'doctrine.dbname' => 'cloudxxx',
+        'doctrine.user' => 'root',
+        'doctrine.password' => 'root',
+        'doctrine.host' => 'localhost'
+    ]); 
     
     // app
     $app->config([
@@ -48,7 +59,7 @@ $app->configureMode('development', function () use ($app) {
 
         'dev.videos' => [
             [
-                'path' => 'path',
+                'filename' => 'filename',
                 'title' => 'Angie likes chickens', 
                 'description' => 'A video about feather love', 
                 'tags' => [
@@ -56,7 +67,7 @@ $app->configureMode('development', function () use ($app) {
                 ]
             ],
             [
-                'path' => 'path',
+                'filename' => 'filename',
                 'title' => 'Angie likes apples', 
                 'description' => 'A tale of fruity desires', 
                 'tags' => [
@@ -64,7 +75,7 @@ $app->configureMode('development', function () use ($app) {
                 ]
             ],
             [
-                'path' => 'path',
+                'filename' => 'filename',
                 'title' => 'Carol wants steak', 
                 'description' => 'Loving story of meaty madness',
                 'tags' => [
