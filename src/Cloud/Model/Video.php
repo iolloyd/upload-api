@@ -8,8 +8,8 @@ use Doctrine\Common\Collections\ArrayCollection;
  **/
 class Video
 {
-    const STATUS_PENDING = 'pending';
-    const STATUS_WORKING = 'working';
+    const STATUS_PENDING  = 'pending';
+    const STATUS_WORKING  = 'working';
     const STATUS_COMPLETE = 'complete';
     const STATUS_ERROR = 'error';
 
@@ -19,15 +19,17 @@ class Video
     protected $id;
 
     /** 
-     * @Column(type="string)
+     * @Column(type="string")
      */
     protected $filename;
 
-    /** @ManyToMany(targetEntity="Tag") **/
+    /** 
+     * @ManyToMany(targetEntity="Tag") 
+     */
     protected $tags;
 
     /**
-     * @Column(type="varchar")
+     * @Column(type="string")
      */
     protected $status;
 
@@ -53,12 +55,11 @@ class Video
         $this->tags = new ArrayCollection;
         $this->videoInbounds = new ArrayCollection;
         $this->videoOutbounds = new ArrayCollection;
-
     }
 
-    public function setFilename($path)
+    public function setFilename($filename)
     {
-        $this->filename = $path;
+        $this->filename = $filename;
     }
 
     public function setStatus($status)
@@ -95,6 +96,11 @@ class Video
     public function addTag(Tag $tag)
     {
         $this->tags[] = $tag;
+    }
+
+    public function getTags()
+    {
+        return $this->tags;
     }
 
     public function addInbound(VideoInbound $videoInbound)
