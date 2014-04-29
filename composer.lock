@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "21ae1f2f067857e1540c305f61e0ae08",
+    "hash": "478eedb339abefe61d86cfe01d45a9d9",
     "packages": [
         {
             "name": "aws/aws-sdk-php",
@@ -72,6 +72,32 @@
                 "sdk"
             ],
             "time": "2014-04-25 04:22:25"
+        },
+        {
+            "name": "beberlei/DoctrineExtensions",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/beberlei/DoctrineExtensions.git",
+                "reference": "5e4ec9c3ec3434151e1c73144b4ab87ae30aefbc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/beberlei/DoctrineExtensions/zipball/5e4ec9c3ec3434151e1c73144b4ab87ae30aefbc",
+                "reference": "5e4ec9c3ec3434151e1c73144b4ab87ae30aefbc",
+                "shasum": ""
+            },
+            "require": {
+                "doctrine/orm": "*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "DoctrineExtensions": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "time": "2013-12-20 22:02:19"
         },
         {
             "name": "chrisboulton/php-resque",
@@ -1266,20 +1292,21 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "4.0.17",
+            "version": "4.0.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "8185f4bd21860cc72466009070a50bed6cd2eaca"
+                "reference": "95d18c9b84f5f9b200f53363b717910446686768"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/8185f4bd21860cc72466009070a50bed6cd2eaca",
-                "reference": "8185f4bd21860cc72466009070a50bed6cd2eaca",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/95d18c9b84f5f9b200f53363b717910446686768",
+                "reference": "95d18c9b84f5f9b200f53363b717910446686768",
                 "shasum": ""
             },
             "require": {
                 "ext-dom": "*",
+                "ext-json": "*",
                 "ext-pcre": "*",
                 "ext-reflection": "*",
                 "ext-spl": "*",
@@ -1296,9 +1323,6 @@
                 "symfony/yaml": "~2.0"
             },
             "suggest": {
-                "ext-json": "*",
-                "ext-simplexml": "*",
-                "ext-tokenizer": "*",
                 "phpunit/php-invoker": "~1.1"
             },
             "bin": [
@@ -1337,7 +1361,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2014-04-21 06:33:32"
+            "time": "2014-04-29 07:33:55"
         },
         {
             "name": "phpunit/phpunit-mock-objects",
@@ -2001,7 +2025,8 @@
     "stability-flags": {
         "tpyo/amazon-s3-php-class": 20,
         "chrisboulton/php-resque": 20,
-        "guzzle/guzzle-aws": 20
+        "guzzle/guzzle-aws": 20,
+        "beberlei/doctrineextensions": 20
     },
     "platform": [
 
