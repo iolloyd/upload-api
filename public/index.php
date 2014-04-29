@@ -1,5 +1,6 @@
 <?php
-
+error_reporting(E_ALL);
+ini_set('display_errors', true);
 // Always start in the project directory
 chdir(dirname(__DIR__));
 
@@ -12,6 +13,8 @@ if (php_sapi_name() === 'cli-server'
 
 // Init autoloading
 require 'autoload.php';
+require 'bootstrap_doctrine.php';
+
 
 /*
  * Slim Application
