@@ -1,8 +1,9 @@
 <?php
 namespace Tests;
 
-use Cloud\Model\Video;
 use Cloud\Model\Tag;
+use Cloud\Model\Video;
+use Tests\Mock\MockTag;
 use Tests\Mock\MockVideo;
 use Tests\Mock\MockVideoInbound;
 use Tests\Mock\MockVideoOutbound;
@@ -13,19 +14,24 @@ class VideoTest extends Model
     {
         $video = new Video();
         $title = "the title";
-
         $video->setTitle($title);
-        $this->assertEquals($title, $video->getTitle());
+        $expected = $title;
+        $actual = $video->getTitle();
+
+        $this->assertEquals($expected, $actual);
     }
 
 
     public function testAddTag()
     {
-        $video = $this->getVideo();
-        $tag = new Tag();
+        $video = MockVideo::get();
+        $tag = MockTag::get();
         $video->addTag($tag);
         $tags = $video->getTags();
-        $this->assertEquals($tag, $tags[0]);
+        $expected = $tag;
+        $actual = $tags[0];
+
+        $this->assertEquals($expected, $actual);
     }
 
     public function testVideoInbound()
@@ -58,33 +64,18 @@ class VideoTest extends Model
 
     public function testSave()
     {
-        $video = $this->getVideo();
+        $video = MockVideo::get();
         $em = $this->entityManager;
+        $count1 = count($em->getRepository(
+            "Cloud\Model\Video")->findAll());
+
         $em->persist($video);
         $em->flush();
-        $videos = $em->getRepository(
-            "Cloud\Model\Video")->findAll();
 
-        $this->assertEquals(1, count($videos));
-    }
+        $count2 = count($em->getRepository(
+            "Cloud\Model\Video")->findAll());
 
-    protected function getVideo()
-    {
-        $video = new Video();
-        $video->setTitle('I am a video');
-        $video->setFilename('I am a filename');
-        $video->setStatus('pending');
-
-        return $video;
-    }
-
-
-    protected function getTag()
-    {
-        $tag = new Tag();
-        $tag->setTitle('I am a tag');
-
-        return $tag;
+        $this->assertGreaterThan($count1, $count2);
     }
 
 }
