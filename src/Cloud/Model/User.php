@@ -12,7 +12,7 @@ class User
     protected $id;
 
     /** 
-     * @ManyToOne(targetEntity="company", inversedBy="users")
+     * @ManyToOne(targetEntity="company", inversedBy="users", cascade={"persist"})
      * @JoinColumn(name="company_id", referencedColumnName="id")
      */
     protected $company;
@@ -24,7 +24,7 @@ class User
     protected $password;
 
     /**
-     * @OneToMany(targetEntity="video", mappedBy="creator")
+     * @OneToMany(targetEntity="Video", mappedBy="creator")
      */
     protected $videos;
 
@@ -39,6 +39,11 @@ class User
     public function setEmail($email)
     {
         $this->email = $email;
+    }
+
+    public function setCompany($company)
+    {
+        $this->company = $company;
     }
 
     public function setPassword($password)
