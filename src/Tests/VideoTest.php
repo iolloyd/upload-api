@@ -3,6 +3,9 @@ namespace Tests;
 
 use Cloud\Model\Video;
 use Cloud\Model\Tag;
+use Tests\Mock\MockVideo;
+use Tests\Mock\MockVideoInbound;
+use Tests\Mock\MockVideoOutbound;
 
 class VideoTest extends Model
 {
@@ -16,13 +19,41 @@ class VideoTest extends Model
     }
 
 
-    public function testAddUserToVideo()
+    public function testAddTag()
     {
         $video = $this->getVideo();
         $tag = new Tag();
         $video->addTag($tag);
         $tags = $video->getTags();
         $this->assertEquals($tag, $tags[0]);
+    }
+
+    public function testVideoInbound()
+    {
+        $video = MockVideo::get();
+        $inbound = MockVideoInbound::get();
+        $inbound->setVideo($video);
+        $inbounds = $video->getVideoInbounds();
+        $expected = $inbound;
+        
+        // Make sure we get the last inserted
+        $actual = $inbounds[count($inbounds)-1];
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testVideoOutbound()
+    {
+        $video = MockVideo::get();
+        $outbound = MockVideoOutbound::get();
+        $outbound->setVideo($video);
+        $outbounds = $video->getVideoOutbounds();
+        $expected = $outbound;
+        
+        // Make sure we get the last inserted
+        $actual = $outbounds[count($outbounds)-1];
+
+        $this->assertEquals($expected, $actual);
     }
 
     public function testSave()
