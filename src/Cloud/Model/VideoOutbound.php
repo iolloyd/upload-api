@@ -45,5 +45,11 @@ class VideoOutbound
         }
         $this->status = $status;
     }
+
+    public function setVideo($video)
+    {
+        $this->video = $video;
+    }
+
 }
 
