@@ -38,6 +38,11 @@ class Company
         $this->users[] = $user;
     }
 
+    public function getUsers()
+    {
+        return $this->users;
+    }
+
 }
 
 
