@@ -18,6 +18,12 @@ class Video
      */
     protected $id;
 
+    /**
+     * @ManyToOne(targetEntity="User", inversedBy="videos")
+     * @JoinColumn(name="user_id", referencedColumnName="id")
+     */
+    protected $creator;
+
     /** 
      * @Column(type="string")
      */
@@ -44,12 +50,6 @@ class Video
      */
     protected $videoOutbounds;
 
-    /**
-     * @ManyToOne(targetEntity="User", inversedBy="videos")
-     * @JoinColumn(name="user_id", referencedColumnName="id")
-     */
-    protected $creator;
-
     public function __construct()
     {
         $this->tags = new ArrayCollection;
@@ -57,9 +57,29 @@ class Video
         $this->videoOutbounds = new ArrayCollection;
     }
 
+    public function getCreator()
+    {
+        return $this->creator;
+    }
+
+    public function setCreator($creator)
+    {
+        $this->creator = $creator;
+    }
+
+    public function getFilename()
+    {
+        return $this->filename;
+    }
+
     public function setFilename($filename)
     {
         $this->filename = $filename;
+    }
+
+    public function getStatus()
+    {
+        return $this->status;
     }
 
     public function setStatus($status)
@@ -78,19 +98,24 @@ class Video
         $this->status = $status;
     }
 
+    public function getTitle()
+    {
+        return $this->title;
+    }
+
     public function setTitle($title)
     {
         $this->title = $title;
     }
 
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
     public function setDescription($description)
     {
         $this->description = $description;
-    }
-
-    public function getTitle()
-    {
-        return $this->title;
     }
 
     public function addTag(Tag $tag)
@@ -103,13 +128,26 @@ class Video
         return $this->tags;
     }
 
-    public function addInbound(VideoInbound $videoInbound)
+    public function getVideoInbounds()
     {
+        return $this->videoInbounds;
+    }
+
+    public function addVideoInbound(VideoInbound $videoInbound)
+    {
+        $videoInbound->setVideo($this);
         $this->videoInbounds[] = $videoInbound;
     }
 
-    public function addOutbound(VideoOutbound $videoOutbound)
+
+    public function getVideoOutbounds()
     {
+        return $this->videoOutbounds;
+    }
+
+    public function addVideoOutbound(VideoOutbound $videoOutbound)
+    {
+        $videoOutbound->setVideo($this);
         $this->videoOutbounds[] = $videoOutbound;
     }
 
