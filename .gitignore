@@ -13,3 +13,5 @@ Session.vim
 vendor
 composer.phar
 app/config/9-local.php
+cache
+tags
