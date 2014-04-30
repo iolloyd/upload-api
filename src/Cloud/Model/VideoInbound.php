@@ -22,8 +22,7 @@ class VideoInbound
      */
     protected $video;
 
-    /** @ManyToOne(targetEntity="Site", inversedBy="videoInbounds") 
-     * @JoinColumn(name="site_id", referencedColumnName="id") 
+    /** @ManyToMany(targetEntity="Site", inversedBy="videoInbounds") 
      */
     protected $site;
 
