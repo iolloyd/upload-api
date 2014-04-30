@@ -12,11 +12,14 @@ class VideoInbound
     const STATUS_COMPLETE = 'complete';
     const STATUS_ERROR = 'error';
 
-    /** @Id @Column(type="integer") @GeneratedValue **/
+    /** 
+     * @Id @Column(type="integer") @GeneratedValue 
+     */
     protected $id;
 
-    /** @ManyToOne(targetEntity="Video", inversedBy="videoInbounds") 
-     * @JoinColumn(name="video_id", referencedColumnName="id") 
+    /** 
+     * @ManyToOne(targetEntity="Video",inversedBy="videoInbounds") 
+     * @JoinColumn(name="video_id",referencedColumnName="id") 
      */
     protected $video;
 
@@ -24,6 +27,31 @@ class VideoInbound
      * @JoinColumn(name="site_id", referencedColumnName="id") 
      */
     protected $site;
+
+    public function getVideo()
+    {
+        return $this->video;
+    }
+
+    public function setVideo($video)
+    {
+        $this->video = $video;
+    }
+
+    public function getSite()
+    {
+        return $this->site;
+    }
+
+    public function setSite($site)
+    {
+        $this->site = $site;
+    }
+
+    public function getStatus()
+    {
+        return $this->status;
+    }
 
     public function setStatus($status)
     {
@@ -40,5 +68,6 @@ class VideoInbound
         }
         $this->status = $status;
     }
+
 }
 
