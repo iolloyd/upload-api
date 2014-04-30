@@ -18,20 +18,10 @@ abstract class Model extends \PHPUnit_Framework_TestCase
 
     protected function getConnection()
     {
-        $conn = [ 
-            'driver'   => 'pdo_mysql',
-            'dbname'   => 'cloudxxx',
-            'user'     => 'root',
-            'password' => 'root', 
-            'host'     => 'localhost',
-        ];
-
         $src = dirname(dirname(__DIR__)) . "/src";
         $config = Setup::createAnnotationMetadataConfiguration([$src], true);
-
+        $conn = $this->getConfiguration();
         $em = EntityManager::create($conn, $config);
-
-        //$pdo = $em->getConnection()->getWrappedConnection();
 
         $em->clear();
 
@@ -43,6 +33,19 @@ abstract class Model extends \PHPUnit_Framework_TestCase
         $tool->dropSchema($classes);
         $tool->createSchema($classes);
 
+    }
+
+    protected function getConfiguration()
+    {
+        $conn = [ 
+            'driver'   => 'pdo_mysql',
+            'dbname'   => 'test_cloudxxx',
+            'user'     => 'root',
+            'password' => 'root', 
+            'host'     => 'localhost',
+        ];
+
+        return $conn;
     }
 
 }
