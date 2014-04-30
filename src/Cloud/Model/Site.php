@@ -28,13 +28,18 @@ class Site
     protected $uploadUrl;
 
     /**
-     * @OneToMany(targetEntity="VideoInbound", mappedBy="site")
+     * @ManyToMany(targetEntity="VideoOutbound", mappedBy="site", cascade={"persist"})
      */
-    protected $videoInbounds;
+    protected $videoOutbounds;
 
-    public function setTitle($title)
+    public function addVideoOutbound(VideoOutbound $videoOutbound)
     {
-        $this->title = $title;
+        $this->videoOutbounds[] = $videoOutbound;
+    }
+
+    public function getSlug()
+    {
+        return $this->slug;
     }
 
     public function getTitle()
@@ -42,14 +47,19 @@ class Site
         return $this->title;
     }
 
+    public function getVideoOutbounds()
+    {
+        return $this->videoOutbounds;
+    }
+
     public function setSlug($slug)
     {
         $this->slug = $slug;
     }
 
-    public function getSlug()
+    public function setTitle($title)
     {
-        return $this->slug;
+        $this->title = $title;
     }
 
     public function setUploadUrl($uploadUrl)
