@@ -43,6 +43,5 @@ class Tag
         $video->addTag($this);
         $this->videos[] = $video;
     }
-
 }
 
