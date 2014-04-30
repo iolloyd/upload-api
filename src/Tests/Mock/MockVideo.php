@@ -14,14 +14,10 @@ class MockVideo
         $video->setTitle('I am title');
 
         $video->setCreator(MockUser::get());
-
         $video->addTag(MockTag::get());
 
-        $video->addVideoInbound(
-            MockVideoInbound::get());
-
-        $video->addVideoOutbound(
-            MockVideoOutbound::get());
+        $video->addVideoInbound(MockVideoInbound::get());
+        $video->addVideoOutbound(MockVideoOutbound::get());
 
         return $video;
     }

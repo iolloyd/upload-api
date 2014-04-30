@@ -18,8 +18,7 @@ class VideoInbound
     protected $id;
 
     /** 
-     * @ManyToOne(targetEntity="Video",inversedBy="videoInbounds") 
-     * @JoinColumn(name="video_id",referencedColumnName="id") 
+     * @ManyToOne(targetEntity="Video",inversedBy="videoInbound",cascade={"persist"}) 
      */
     protected $video;
 
