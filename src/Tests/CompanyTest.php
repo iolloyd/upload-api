@@ -10,35 +10,32 @@ class CompanyTest extends Model
     public function testSave()
     {
         $em = $this->entityManager;
-        $company = $this->getCompany();
+        $company = MockCompany::get();
         $em->persist($company);
         $em->flush();
         $companies = $em->getRepository(
             "Cloud\Model\Company")->findAll();
 
-        $this->assertEquals(1, count($company));
+        $expected = 1;
+        $actual = count($company);
+        $this->assertEquals($expected, $actual);
     }
 
     public function testAddUser()
     {
         $em = $this->entityManager;
-
         $user = MockUser::get();
-
         $company = MockCompany::get();
         $company->addUser($user);
+
         $em->persist($company);
-
         $em->flush();
+
+        $users = $company->getUsers();
+        $expected = $user;
+        $actual = $users[0];
+
+        $this->assertEquals($expected, $actual);
     }
-
-    protected function getCompany()
-    {
-        $company = new Company();
-        $company->setTitle('I am a Company');
-
-        return $company;
-    }
-
 }
 
