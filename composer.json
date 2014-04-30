@@ -12,7 +12,8 @@
         "beberlei/DoctrineExtensions": "dev-master",
         "symfony/yaml": "~2",
         "phpunit/phpunit": "~4.0",
-        "phpunit/php-invoker": "~1.1"
+        "phpunit/php-invoker": "~1.1",
+        "gedmo/doctrine-extensions": "~2.3"
     }
 }
 
