@@ -19,8 +19,7 @@ class Video
     protected $id;
 
     /**
-     * @ManyToOne(targetEntity="User", inversedBy="videos")
-     * @JoinColumn(name="user_id", referencedColumnName="id")
+     * @ManyToOne(targetEntity="User", inversedBy="video",cascade={"persist"})
      */
     protected $creator;
 
@@ -30,7 +29,7 @@ class Video
     protected $filename;
 
     /** 
-     * @ManyToMany(targetEntity="Tag") 
+     * @ManyToMany(targetEntity="Tag", inversedBy="tag", cascade={"persist"})
      */
     protected $tags;
 
@@ -40,12 +39,13 @@ class Video
     protected $status;
 
     /** 
-     * @OneToMany(targetEntity="VideoInbound", mappedBy="video") 
+     * @OneToMany(targetEntity="VideoInbound", mappedBy="video", cascade={"persist"}) 
+     * @JoinColumn(name="video_id", referencedColumnName="id") 
      */
     protected $videoInbounds;
 
     /** 
-     * @OneToMany(targetEntity="VideoOutbound", mappedBy="video") 
+     * @OneToMany(targetEntity="VideoOutbound", mappedBy="video", cascade={"persist"})
      * @JoinColumn(name="video_id", referencedColumnName="id") 
      */
     protected $videoOutbounds;
@@ -57,14 +57,32 @@ class Video
         $this->videoOutbounds = new ArrayCollection;
     }
 
+    public function addVideoInbound(VideoInbound $videoInbound)
+    {
+        $videoInbound->setVideo($this);
+        $this->videoInbounds[] = $videoInbound;
+    }
+
+
+    public function addVideoOutbound(VideoOutbound $videoOutbound)
+    {
+        $videoOutbound->setVideo($this);
+        $this->videoOutbounds[] = $videoOutbound;
+    }
+
+    public function addTag(Tag $tag)
+    {
+        $this->tags[] = $tag;
+    }
+
     public function getCreator()
     {
         return $this->creator;
     }
 
-    public function setCreator($creator)
+    public function getDescription()
     {
-        $this->creator = $creator;
+        return $this->description;
     }
 
     public function getFilename()
@@ -72,14 +90,44 @@ class Video
         return $this->filename;
     }
 
-    public function setFilename($filename)
-    {
-        $this->filename = $filename;
-    }
-
     public function getStatus()
     {
         return $this->status;
+    }
+
+    public function getTags()
+    {
+        return $this->tags;
+    }
+
+    public function getTitle()
+    {
+        return $this->title;
+    }
+
+    public function getVideoInbounds()
+    {
+        return $this->videoInbounds;
+    }
+
+    public function getVideoOutbounds()
+    {
+        return $this->videoOutbounds;
+    }
+
+    public function setCreator($creator)
+    {
+        $this->creator = $creator;
+    }
+
+    public function setDescription($description)
+    {
+        $this->description = $description;
+    }
+
+    public function setFilename($filename)
+    {
+        $this->filename = $filename;
     }
 
     public function setStatus($status)
@@ -98,57 +146,9 @@ class Video
         $this->status = $status;
     }
 
-    public function getTitle()
-    {
-        return $this->title;
-    }
-
     public function setTitle($title)
     {
         $this->title = $title;
-    }
-
-    public function getDescription()
-    {
-        return $this->description;
-    }
-
-    public function setDescription($description)
-    {
-        $this->description = $description;
-    }
-
-    public function addTag(Tag $tag)
-    {
-        $this->tags[] = $tag;
-    }
-
-    public function getTags()
-    {
-        return $this->tags;
-    }
-
-    public function getVideoInbounds()
-    {
-        return $this->videoInbounds;
-    }
-
-    public function addVideoInbound(VideoInbound $videoInbound)
-    {
-        $videoInbound->setVideo($this);
-        $this->videoInbounds[] = $videoInbound;
-    }
-
-
-    public function getVideoOutbounds()
-    {
-        return $this->videoOutbounds;
-    }
-
-    public function addVideoOutbound(VideoOutbound $videoOutbound)
-    {
-        $videoOutbound->setVideo($this);
-        $this->videoOutbounds[] = $videoOutbound;
     }
 
 }
