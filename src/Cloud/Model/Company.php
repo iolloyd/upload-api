@@ -14,16 +14,23 @@ class Company
      */
     protected $id;
 
-    /** @Column(type="string") **/
+    /** 
+     * @Column(type="string") 
+     */
     protected $title;
 
-    /** @OneToMany(targetEntity="User", mappedBy="company")
+    /** @OneToMany(targetEntity="User", mappedBy="company",cascade={"persist"})
      */
     protected $users;
 
     public function __construct()
     {
         $this->users = new ArrayCollection;
+    }
+
+    public function setTitle($title)
+    {
+        $this->title = $title;
     }
 
     public function addUser(User $user)
