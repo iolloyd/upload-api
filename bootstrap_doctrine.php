@@ -1,20 +1,28 @@
 <?php
+require_once "autoload.php";
+
 use Doctrine\ORM\Tools\Setup;
 use Doctrine\ORM\EntityManager;
 
-require_once "vendor/autoload.php";
-
 $isDevMode = true;
+
+$conn = [ 
+    'driver' => 'pdo_mysql',
+    'dbname' => 'cloudxxx',
+    'user' => 'root',
+    'password' => 'root', 
+    'host' => 'localhost',
+];
+
 $config = Setup::createAnnotationMetadataConfiguration(
     [__DIR__."/src"], 
     $isDevMode
 );
 //$config = Setup::createXMLMetadataConfiguration(array(__DIR__."/config/xml"), $isDevMode);
 
-// database configuration parameters
-$conn = [ 
-    'driver' => 'pdo_sqlite',
-    'path' => __DIR__ . '/db.sqlite',
-];
+$em = function () use ($conn, $config) {
+    return EntityManager::create($conn, $config);
+};
 
-$entityManager = EntityManager::create($conn, $config);
+$entityManager = $em;
+
