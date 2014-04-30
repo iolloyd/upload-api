@@ -44,7 +44,7 @@ class Site
 
     public function setSlug($slug)
     {
-        $this->Slug = $slug;
+        $this->slug = $slug;
     }
 
     public function getSlug()
