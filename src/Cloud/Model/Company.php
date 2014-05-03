@@ -4,7 +4,7 @@ namespace Cloud\Model;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * @Entity #Table(name='company')
+ * @Entity #Table(name="company")
  **/
 class Company
 {
