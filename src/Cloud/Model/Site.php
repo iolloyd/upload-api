@@ -3,7 +3,7 @@
 namespace Cloud\Model;
 
 /**
- * @Entity #Table(name='site')
+ * @Entity #Table(name="site")
  **/
 class Site
 {
