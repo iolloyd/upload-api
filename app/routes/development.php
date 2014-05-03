@@ -1,8 +1,6 @@
 <?php
 
 use Cloud\Dev\Bootstrap;
-use Cloud\Model\Video;
-use Cloud\Model\User;
 
 if (!$app->config('mode') == 'development') {
     return;
@@ -27,6 +25,17 @@ $app->get('/dev/setup', function() use ($app)
 });
 
 $app->get('/dev/test', function() use ($app) {
-    $video = Video::findAll();
-    $users = User::findAll();
+    $gen = new \Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator();
+    var_dump($gen->generateToken()); exit;
+
+    $video = $app->em->getRepository('cx:Video')->findAll()[0];
+
+    $inbound = new \Cloud\Model\VideoInbound($video);
+    $app->em->persist($inbound);
+    $app->em->flush();
+
+    $inbounds = $app->em->getRepository('cx:VideoInbound')->findAll();
+    var_dump($inbounds); exit;
+
+    $app->json($videos);
 });
