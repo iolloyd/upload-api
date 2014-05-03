@@ -1,154 +1,348 @@
 <?php
 
 namespace Cloud\Model;
+
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * @Entity @Table(name="video")
- **/
-class Video
+ * @Entity
+ * @HasLifecycleCallbacks
+ */
+class Video extends AbstractModel
 {
-    const STATUS_PENDING  = 'pending';
-    const STATUS_WORKING  = 'working';
-    const STATUS_COMPLETE = 'complete';
-    const STATUS_ERROR = 'error';
+    /** Temporarily saved as draft; metadata can still be edited */
+    const STATUS_DRAFT = 'draft';
 
-    /** 
-     * @Id @Column(type="integer") @GeneratedValue 
-     */
-    protected $id;
+    /** Ready and queued for publishing; metadata is locked */
+    const STATUS_PENDING = 'pending';
+
+    /** Workers are currently publishing the video */
+    const STATUS_WORKING = 'working';
+
+    /** All work is complete */
+    const STATUS_COMPLETE = 'complete';
+
+    //////////////////////////////////////////////////////////////////////////
+
+    use Traits\IdTrait;
+    use Traits\SlugTrait;
 
     /**
-     * @ManyToOne(targetEntity="User", inversedBy="video",cascade={"persist"})
+     * @Column(type="integer")
+     * @Version
      */
-    protected $creator;
+    protected $version = 1;
 
-    /** 
-     * @Column(type="string")
+    /**
+     * #Column(type="datetime")
      */
-    protected $filename;
+    protected $created_at;
 
-    /** 
-     * @ManyToMany(targetEntity="Tag", inversedBy="tag", cascade={"persist"})
+    /**
+     * #Column(type="datetime")
+     */
+    protected $updated_at;
+
+    /**
+     * #JoinColumn(nullable=false)
+     * @ManyToOne(targetEntity="User")
+     */
+    protected $created_by;
+
+    /**
+     * #JoinColumn(nullable=false)
+     * @ManyToOne(targetEntity="User")
+     */
+    protected $updated_by;
+
+    /**
+     * #JoinColumn(nullable=false)
+     * @ManyToOne(targetEntity="Company")
+     */
+    protected $company;
+
+    /**
+     * @Column(type="string", nullable=true)
+     */
+    protected $title;
+
+    /**
+     * @Column(type="text", nullable=true)
+     */
+    protected $description;
+
+    /**
+     * @ManyToMany(targetEntity="Tag")
      */
     protected $tags;
 
     /**
-     * @Column(type="string")
+     * The overall processing status for this video by the worker system. To
+     * query success or failure data, look at each individual inbound and
+     * outbound and query their status.
+     *
+     * @see STATUS_DRAFT
+     * @see STATUS_PENDING
+     * @see STATUS_WORKING
+     * @see STATUS_COMPLETE
+     *
+     * @Column(type="string", length=16)
      */
-    protected $status;
+    protected $status = self::STATUS_DRAFT;
 
-    /** 
-     * @OneToMany(targetEntity="VideoInbound", mappedBy="video", cascade={"persist"}) 
-     * @JoinColumn(name="video_id", referencedColumnName="id") 
+    /**
+     * @Column(type="boolean")
      */
-    protected $videoInbounds;
+    protected $is_draft = true;
 
-    /** 
-     * @OneToMany(targetEntity="VideoOutbound", mappedBy="video", cascade={"persist"})
-     * @JoinColumn(name="video_id", referencedColumnName="id") 
+    /**
+     * Inbound files: user upload from browser
+     *
+     * @OneToMany(
+     *   targetEntity="VideoInbound",
+     *   mappedBy="video",
+     *   cascade={"persist", "remove"}
+     * )
      */
-    protected $videoOutbounds;
+    protected $inbounds;
 
+    /**
+     * Outbound files: worker publish to tubesite
+     *
+     * @OneToMany(
+     *   targetEntity="VideoOutbound",
+     *   mappedBy="video",
+     *   cascade={"persist", "remove"}
+     * )
+     */
+    protected $outbounds;
+
+    /**
+     * @Column(type="string", nullable=true)
+     */
+    protected $filename;
+
+    /**
+     * @Column(type="integer", nullable=true)
+     */
+    protected $filesize;
+
+    /**
+     * @Column(type="string", nullable=true)
+     */
+    protected $filetype;
+
+    /**
+     * @Column(type="datetime", nullable=true)
+     */
+    protected $published_at;
+
+    /**
+     * @Column(type="datetime", nullable=true)
+     */
+    protected $completed_at;
+
+    //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Constructor
+     */
     public function __construct()
     {
-        $this->tags = new ArrayCollection;
-        $this->videoInbounds = new ArrayCollection;
-        $this->videoOutbounds = new ArrayCollection;
+        $this->tags = new ArrayCollection();
+        $this->inbounds = new ArrayCollection();
+        $this->outbounds = new ArrayCollection();
     }
 
-    public function addVideoInbound(VideoInbound $videoInbound)
+    /**
+     * Get the entity revision
+     *
+     * @return int
+     */
+    public function getVersion()
     {
-        $videoInbound->setVideo($this);
-        $this->videoInbounds[] = $videoInbound;
+        return $this->version;
     }
 
-
-    public function addVideoOutbound(VideoOutbound $videoOutbound)
+    /**
+     * Set the parent company
+     *
+     * @param  Company $company
+     * @return Video
+     */
+    public function setCompany(Company $company)
     {
-        $videoOutbound->setVideo($this);
-        $this->videoOutbounds[] = $videoOutbound;
+        $this->company = $company;
+        return $this;
     }
 
-    public function addTag(Tag $tag)
+    /**
+     * Set the parent company
+     *
+     * @return Company
+     */
+    public function getCompany()
     {
-        $this->tags[] = $tag;
+        return $this->company;
     }
 
-    public function getCreator()
+    /**
+     * Set the video title
+     *
+     * @param  string $title
+     * @return Video
+     */
+    public function setTitle($title)
     {
-        return $this->creator;
+        $this->title = $title;
+        return $this;
     }
 
-    public function getDescription()
-    {
-        return $this->description;
-    }
-
-    public function getFilename()
-    {
-        return $this->filename;
-    }
-
-    public function getStatus()
-    {
-        return $this->status;
-    }
-
-    public function getTags()
-    {
-        return $this->tags;
-    }
-
+    /**
+     * Get the video title
+     *
+     * @return string
+     */
     public function getTitle()
     {
         return $this->title;
     }
 
-    public function getVideoInbounds()
-    {
-        return $this->videoInbounds;
-    }
-
-    public function getVideoOutbounds()
-    {
-        return $this->videoOutbounds;
-    }
-
-    public function setCreator($creator)
-    {
-        $this->creator = $creator;
-    }
-
+    /**
+     * Set the video description
+     *
+     * @param  string $description
+     * @return Video
+     */
     public function setDescription($description)
     {
         $this->description = $description;
+        return $this;
     }
 
-    public function setFilename($filename)
+    /**
+     * Get the video description
+     *
+     * @return string
+     */
+    public function getDescription()
     {
-        $this->filename = $filename;
+        return $this->description;
     }
 
+    /**
+     * Add a tag
+     *
+     * @param  Tag $tag
+     * @return Video
+     */
+    public function addTag(Tag $tag)
+    {
+        $this->tags->add($tag);
+        return $this;
+    }
+
+    /**
+     * Remove a tag
+     *
+     * @param  Tag $tag
+     * @return Video
+     */
+    public function removeTag(Tag $tag)
+    {
+        $this->tags->removeElement($tag);
+        return $this;
+    }
+
+    /**
+     * Get the tags
+     *
+     * @return Collection
+     */
+    public function getTags()
+    {
+        return $this->tags;
+    }
+
+    /**
+     * Set the processing status
+     *
+     * @param  string $status
+     * @return Video
+     */
     public function setStatus($status)
     {
         if (!in_array($status, [
+            self::STATUS_DRAFT,
             self::STATUS_PENDING,
             self::STATUS_WORKING,
-            self::STATUS_COMPLETE,
-            self::STATUS_ERROR,
-        ])
-        ) {
-            throw new \InvalidArgumentException(
-                "Invalid Status"
-            );
+            self::STATUS_COMPLETE
+        ])) {
+            throw new \InvalidArgumentException("Invalid status");
         }
+
         $this->status = $status;
+        $this->is_draft = ($status == self::STATUS_DRAFT);
+
+        return $this;
     }
 
-    public function setTitle($title)
+    /**
+     * Get the processing status
+     *
+     * @return string
+     */
+    public function getStatus()
     {
-        $this->title = $title;
+        return $this->status;
     }
 
+    /**
+     * Check if the video is a draft and can be edited
+     *
+     * @return bool
+     */
+    public function isDraft()
+    {
+        return $this->is_draft;
+    }
+
+    /**
+     * Get the inbound file transfers for this video
+     *
+     * @return Collection
+     */
+    public function getInbounds()
+    {
+        return $this->inbounds;
+    }
+
+    /**
+     * Get the outbound file transfers for this video
+     *
+     * @return Collection
+     */
+    public function getOutbounds()
+    {
+        return $this->outbounds;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * @return array
+     */
+    protected function getSlugFields()
+    {
+        return ['id', 'title'];
+    }
+
+    /**
+     * @return bool
+     */
+    protected function shouldRegenerateSlugOnUpdate()
+    {
+        return $this->isDraft();
+    }
 }

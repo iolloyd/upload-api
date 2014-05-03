@@ -70,10 +70,7 @@ class Loader
     {
         foreach ($this->files as $group) {
             foreach ($group as $filepath) {
-                $app->log->debug(sprintf(
-                    '%s: loading `%s`', get_called_class(), $filepath
-                ));
-
+                // $app->log->debug(sprintf('%s: loading `%s`', get_called_class(), $filepath));
                 Cloud_Slim_Loader__require($filepath, $app);
             }
         }
