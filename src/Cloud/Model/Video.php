@@ -19,16 +19,12 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class Video extends AbstractModel implements JsonSerializable
 {
-    /** Temporarily saved as draft; metadata can still be edited */
     const STATUS_DRAFT = 'draft';
 
-    /** Ready and queued for publishing; metadata is locked */
     const STATUS_PENDING = 'pending';
 
-    /** Workers are currently publishing the video */
     const STATUS_WORKING = 'working';
 
-    /** All work is complete */
     const STATUS_COMPLETE = 'complete';
 
     use Traits\IdTrait;
@@ -40,18 +36,6 @@ class Video extends AbstractModel implements JsonSerializable
      * @Version
      */
     protected $version = 1;
-
-    /**
-     * #JoinColumn(nullable=false)
-     * @ManyToOne(targetEntity="User")
-     */
-    protected $created_by;
-
-    /**
-     * #JoinColumn(nullable=false)
-     * @ManyToOne(targetEntity="User")
-     */
-    protected $updated_by;
 
     /**
      * #JoinColumn(nullable=false)
@@ -91,7 +75,7 @@ class Video extends AbstractModel implements JsonSerializable
     /**
      * @Column(type="boolean")
      */
-    protected $is_draft = true;
+    protected $isDraft = true;
 
     /**
      * Inbound files: user upload from browser
@@ -133,12 +117,12 @@ class Video extends AbstractModel implements JsonSerializable
     /**
      * @Column(type="datetime", nullable=true)
      */
-    protected $published_at;
+    protected $publishedAt;
 
     /**
      * @Column(type="datetime", nullable=true)
      */
-    protected $completed_at;
+    protected $completedAt;
 
      
     //////////////////////////////////////////////////////////////////////////
@@ -161,28 +145,6 @@ class Video extends AbstractModel implements JsonSerializable
     public function getVersion()
     {
         return $this->version;
-    }
-
-    /**
-     * Set the updated date
-     *
-     * @param  DateTime $updated_at
-     * @return Video
-     */
-    public function setUpdatedAt(DateTime $updated_at)
-    {
-        $this->updated_at = $updated_at;
-        return $this;
-    }
-
-    /**
-     * Get the updated date
-     *
-     * @return DateTime
-     */
-    public function getUpdatedAt()
-    {
-        return $this->updated_at;
     }
 
     /**
@@ -369,7 +331,7 @@ class Video extends AbstractModel implements JsonSerializable
      */
     public function isDraft()
     {
-        return $this->is_draft;
+        return $this->isDraft;
     }
 
     /**
@@ -460,8 +422,8 @@ class Video extends AbstractModel implements JsonSerializable
         return [
             'id'          => $this->getId(),
             'version'     => $this->getVersion(),
-            'created_at'  => $this->getCreatedAt()->format(DateTime::ISO8601),
-            'updated_at'  => $this->getUpdatedAt()->format(DateTime::ISO8601),
+            'created_at'  => $this->getCreatedAt(),
+            'updated_at'  => $this->getUpdatedAt(),
             'status'      => $this->getStatus(),
             'is_draft'    => $this->isDraft(),
             'title'       => $this->getTitle(),

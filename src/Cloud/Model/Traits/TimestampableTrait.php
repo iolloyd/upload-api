@@ -28,6 +28,14 @@ trait TimestampableTrait
     protected $updatedAt;
 
     /**
+     * @ORM\prePersist
+     */
+    public function prePersistSetCreatedAt()
+    {
+        $this->createdAt = new \DateTime();
+    }
+
+    /**
      * Get created
      *
      * @return datetime $created
