@@ -12,7 +12,7 @@ class MockVideo
         $video->setFilename('I am video filename');
         $video->setDescription('I am a video description');
         $video->setStatus('pending');
-        $video->setTitle('I am a title');
+        $video->setTitle('I am a video title');
 
         return $video;
     }
