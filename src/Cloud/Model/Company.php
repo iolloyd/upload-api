@@ -11,6 +11,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 class Company extends AbstractModel implements JsonSerializable
 {
     use Traits\IdTrait;
+    use Traits\TimestampableTrait;
 
     /**
      * @Column(type="string")
