@@ -2,14 +2,15 @@
 
 namespace Cloud\Model;
 
-use Doctrine\Common\Collections\Collection;
+use DateTime;
+use JsonSerializable;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * @Entity
  * @HasLifecycleCallbacks
  */
-class Video extends AbstractModel
+class Video extends AbstractModel implements JsonSerializable
 {
     /** Temporarily saved as draft; metadata can still be edited */
     const STATUS_DRAFT = 'draft';
@@ -35,12 +36,12 @@ class Video extends AbstractModel
     protected $version = 1;
 
     /**
-     * #Column(type="datetime")
+     * @Column(type="datetime")
      */
     protected $created_at;
 
     /**
-     * #Column(type="datetime")
+     * @Column(type="datetime")
      */
     protected $updated_at;
 
@@ -163,6 +164,94 @@ class Video extends AbstractModel
     public function getVersion()
     {
         return $this->version;
+    }
+
+    /**
+     * Set the created date
+     *
+     * @param  DateTime $created_at
+     * @return Video
+     */
+    public function setCreatedAt(DateTime $created_at)
+    {
+        $this->created_at = $created_at;
+        return $this;
+    }
+
+    /**
+     * Get the created date
+     *
+     * @return DateTime
+     */
+    public function getCreatedAt()
+    {
+        return $this->created_at;
+    }
+
+    /**
+     * Set the updated date
+     *
+     * @param  DateTime $updated_at
+     * @return Video
+     */
+    public function setUpdatedAt(DateTime $updated_at)
+    {
+        $this->updated_at = $updated_at;
+        return $this;
+    }
+
+    /**
+     * Get the updated date
+     *
+     * @return DateTime
+     */
+    public function getUpdatedAt()
+    {
+        return $this->updated_at;
+    }
+
+    /**
+     * Set the creating user
+     *
+     * @param  User $created_by
+     * @return Video
+     */
+    public function setCreatedBy(User $created_by)
+    {
+        $this->created_by = $created_by;
+        return $this;
+    }
+
+    /**
+     * Get the creating user
+     *
+     * @return User
+     */
+    public function getCreatedBy()
+    {
+        return $this->created_by;
+    }
+
+    /**
+     * Set the updating user
+     *
+     * @param  User $updated_by
+     * @return Video
+     */
+    public function setUpdatedBy(User $updated_by)
+    {
+        $this->updated_by = $updated_by;
+        return $this;
+    }
+
+    /**
+     * Get the updating user
+     *
+     * @return User
+     */
+    public function getUpdatedBy()
+    {
+        return $this->updated_by;
     }
 
     /**
@@ -328,6 +417,28 @@ class Video extends AbstractModel
         return $this->outbounds;
     }
 
+    /**
+     * Set the raw video file name
+     *
+     * @param  string $filename
+     * @return Video
+     */
+    public function setFilename($filename)
+    {
+        $this->filename = $filename;
+        return $this;
+    }
+
+    /**
+     * Get the raw video file name
+     *
+     * @return string
+     */
+    public function getFilename()
+    {
+        return $this->filename;
+    }
+
     //////////////////////////////////////////////////////////////////////////
 
     /**
@@ -344,5 +455,23 @@ class Video extends AbstractModel
     protected function shouldRegenerateSlugOnUpdate()
     {
         return $this->isDraft();
+    }
+
+    /**
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'id'          => $this->getId(),
+            'version'     => $this->getVersion(),
+            'created_at'  => $this->getCreatedAt()->format(DateTime::ISO8601),
+            'updated_at'  => $this->getUpdatedAt()->format(DateTime::ISO8601),
+            'status'      => $this->getStatus(),
+            'is_draft'    => $this->isDraft(),
+            'title'       => $this->getTitle(),
+            'description' => $this->getDescription(),
+            'tags'        => $this->getTags()->toArray(),
+        ];
     }
 }

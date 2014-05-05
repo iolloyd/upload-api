@@ -38,12 +38,12 @@ class VideoInbound extends AbstractModel
     protected $video;
 
     /**
-     * @Column(type="datetime")
+     * #Column(type="datetime")
      */
     protected $created_at;
 
     /**
-     * @JoinColumn(nullable=false)
+     * #JoinColumn(nullable=false)
      * @ManyToOne(targetEntity="User")
      */
     protected $created_by;
@@ -53,6 +53,21 @@ class VideoInbound extends AbstractModel
      * @ManyToOne(targetEntity="Company")
      */
     protected $company;
+
+    /**
+     * @see STATUS_PENDING
+     * @see STATUS_WORKING
+     * @see STATUS_COMPLETE
+     * @see STATUS_ERROR
+     *
+     * @Column(type="string", length=16)
+     */
+    protected $status = self::STATUS_PENDING;
+
+    /**
+     * #Column(type="datetime", nullable=true)
+     */
+    protected $expires_at;
 
     /**
      * Constructor
@@ -132,6 +147,64 @@ class VideoInbound extends AbstractModel
     public function getCompany()
     {
         return $this->company;
+    }
+
+    /**
+     * Set the processing status
+     *
+     * @param  string $status
+     * @return VideoInbound
+     */
+    public function setStatus($status)
+    {
+        if (!in_array($status, [
+            self::STATUS_PENDING,
+            self::STATUS_WORKING,
+            self::STATUS_COMPLETE,
+            self::STATUS_ERROR,
+        ])) {
+            throw new \InvalidArgumentException("Invalid status");
+        }
+
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * Get the processing status
+     *
+     * @return string
+     */
+    public function getStatus()
+    {
+        return $this->status;
+    }
+
+    /**
+     * Get the AWS S3 storage prefix or directory name
+     *
+     * @return string
+     */
+    public function getStorageChunkPath()
+    {
+        return sprintf('inbounds/%d/%d/%s',
+            $this->getVideo()->getId(),
+            $this->getId(),
+            $this->getToken()
+        );
+    }
+
+    /**
+     * @return string
+     */
+    public function getStorageFilePath()
+    {
+        return sprintf('inbounds/%d/%d/%s',
+            $this->getVideo()->getId(),
+            $this->getId(),
+            $this->getFilename()
+        );
     }
 }
 

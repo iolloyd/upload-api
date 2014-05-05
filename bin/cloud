@@ -39,16 +39,17 @@ $app->container->singleton('environment', function ($c) {
 });
 $app->config('log.level', \Slim\Log::NOTICE);
 
+// console middleware
+$app->add(new \Cloud\Console\Middleware());
+
 // loader
 $loader = new \Cloud\Slim\Loader\Loader();
 $loader->load('config')
-       ->load('helper')
-       ->into($app);
+       ->load('helper');
 
-/*
- * Console Application
- */
-$input = new \Symfony\Component\Console\Input\ArgvInput();
-$cli = new \Cloud\Console\Application($app);
-$cli->run($input);
+// middleware
+$app->add($loader);
+$app->add(new \Cloud\Slim\Middleware\Doctrine());
 
+// run
+$app->run();

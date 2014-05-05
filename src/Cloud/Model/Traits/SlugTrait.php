@@ -82,6 +82,10 @@ trait SlugTrait
         }
 
         if (count($values) < 1) {
+            // TODO FIXME
+            $this->slug = uniqid();
+            return;
+
             throw new \UnexpectedValueException(
                 'Sluggable expects to have at least one usable (non-empty) field from the following: [ '
                     . implode($fields, ',') . ' ]'
