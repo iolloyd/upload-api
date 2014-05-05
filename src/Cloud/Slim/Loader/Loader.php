@@ -3,6 +3,7 @@
 namespace Cloud\Slim\Loader;
 
 use Slim\Slim;
+use Slim\Middleware;
 
 /**
  * Dynamic loading of modules and other subcomponents for Slim
@@ -12,11 +13,14 @@ use Slim\Slim;
  *
  * $loader = new \Cloud\Slim\Loader\Loader();
  * $loader->load('routes')
- *        ->load('controllers')
- *        ->into($app);
+ *        ->load('controllers');
+ *
+ * $app->add($loader);
+ *
+ * $app->run();
  * ```
  */
-class Loader
+class Loader extends Middleware
 {
     /**
      * @var array
@@ -70,12 +74,21 @@ class Loader
     {
         foreach ($this->files as $group) {
             foreach ($group as $filepath) {
-                // $app->log->debug(sprintf('%s: loading `%s`', get_called_class(), $filepath));
+                $app->log->debug(sprintf('%s: loading `%s`', get_called_class(), $filepath));
                 Cloud_Slim_Loader__require($filepath, $app);
             }
         }
 
         return $this;
+    }
+
+    /**
+     * Call as Middleware
+     */
+    public function call()
+    {
+        $this->into($this->app);
+        $this->next->call();
     }
 }
 
