@@ -1,4 +1,5 @@
 <?php
+
 namespace Cloud\Model\Traits;
 use DateTime;
 
@@ -13,13 +14,16 @@ trait TimestampableTrait
     protected $created_at;
 
     /**
-     * Set the created date
+     * Set the created date only the first time
      *
+     * @PrePersist
      */
-    public function setCreatedAt()
+    public function prePersistSetCreatedAt()
     {
-        $now = date('Y-m-d H:i:s');
-        $this->created_at = $now; 
+        if (empty($this->created_at)) {
+            $now = date('Y-m-d H:i:s');
+            $this->created_at = $now; 
+        }
     }
 
     /**
@@ -35,9 +39,11 @@ trait TimestampableTrait
 
     /**
      * Set the updated date
+     * @PreUpdate
      */
-    public function setUpdatedAt(DateTime $date)
+    public function preUpdateUpdatedAt()
     {
+        $now = date('Y-m-d H:i:s');
         $this->updated_at = $date;
     }
 
