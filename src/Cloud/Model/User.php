@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * @Entity
+ * @HasLifecycleCallbacks
  */
 class User extends AbstractModel implements JsonSerializable
 {
