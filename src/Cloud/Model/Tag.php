@@ -2,46 +2,40 @@
 
 namespace Cloud\Model;
 
-use Cloud\Model\Video;
-use Doctrine\Common\Collections\ArrayCollection;
-
 /**
- * @Entity #Table(name='tag')
- **/
-class Tag 
+ * @Entity
+ * @HasLifecycleCallbacks
+ */
+class Tag extends AbstractModel
 {
-    /** @Id @Column(type="integer") @GeneratedValue **/
-    protected $id;
+    use Traits\IdTrait;
+    use Traits\SlugTrait;
 
-    /** 
+    /**
      * @Column(type="string")
      */
     protected $title;
 
     /**
-     * @ManyToMany(targetEntity="Video", mappedBy="tag")
+     * Set the tag name
+     *
+     * @param  string $title
+     * @return Tag
      */
-    protected $videos;
-
-    public function __construct()
-    {
-        $this->videos = new ArrayCollection;
-    }
-
     public function setTitle($title)
     {
         $this->title = $title;
+        return $this;
     }
 
+    /**
+     * Get the tag name
+     *
+     * @return string
+     */
     public function getTitle()
     {
         return $this->title;
-    }
-
-    public function addVideo(Video $video)
-    {
-        $video->addTag($this);
-        $this->videos[] = $video;
     }
 }
 
