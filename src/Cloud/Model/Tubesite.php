@@ -32,12 +32,12 @@ class Tubesite extends AbstractModel
     /**
      * @Column(type="string", nullable=true)
      */
-    protected $login_url;
+    protected $loginUrl;
 
     /**
      * @Column(type="string", nullable=true)
      */
-    protected $signup_url;
+    protected $signupUrl;
 
     /**
      * Set the site name
