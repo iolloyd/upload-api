@@ -25,6 +25,7 @@ class VideoInbound extends AbstractModel
     //////////////////////////////////////////////////////////////////////////
 
     use Traits\IdTrait;
+    use Traits\TimestampableTrait;
 
     /**
      * @Column(type="string", length=48)
@@ -36,11 +37,6 @@ class VideoInbound extends AbstractModel
      * @ManyToOne(targetEntity="Video", inversedBy="inbounds")
      */
     protected $video;
-
-    /**
-     * #Column(type="datetime")
-     */
-    protected $created_at;
 
     /**
      * #JoinColumn(nullable=false)
