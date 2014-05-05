@@ -1,0 +1,31 @@
+<phpunit bootstrap="./Bootstrap.php" colors="true">
+    <testsuites>
+        <testsuite name="Cloud Test Suite">
+            <directory>./CloudTest</directory>
+            <exclude>./CloudTest/_files/</exclude>
+            <exclude>./CloudTest/AllTests/</exclude>
+        </testsuite>
+    </testsuites>
+
+    <groups>
+        <exclude>
+            <group>disable</group>
+            <group>integration</group>
+            <group>integration-mysql</group>
+        </exclude>
+    </groups>
+
+    <listeners>
+    </listeners>
+
+    <php>
+        <ini name="date.timezone" value="UTC"/>
+
+        <!--<var name="DB_ADAPTER_DRIVER_MYSQL_HOSTNAME" value="" />-->
+        <!--<var name="DB_ADAPTER_DRIVER_MYSQL_USERNAME" value="" />-->
+        <!--<var name="DB_ADAPTER_DRIVER_MYSQL_PASSWORD" value="" />-->
+        <!--<var name="DB_ADAPTER_DRIVER_MYSQL_DATABASE" value="" />-->
+
+        <!--<var name="DB_ADAPTER_DRIVER_SQLITE_MEMORY" value="true" />-->
+    </php>
+</phpunit>
