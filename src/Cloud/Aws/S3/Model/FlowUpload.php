@@ -319,7 +319,7 @@ class FlowUpload extends Collection
      *
      * @return \Guzzle\Service\Resource\Model
      */
-    public function delete()
+    public function deleteChunks()
     {
         $objects = array_map(
             function ($d) {

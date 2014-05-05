@@ -1,14 +1,5 @@
 <?php
 
-function testDatabase() {
-    $user = R::findAll('user');
-    if (count($user)) {
-        return true;
-    }
-
-    throw new Exception("Problem with database");
-}
-
 $app->get('/', function() use ($app) {
     $app->json([
         'docs' => 'http://docs.cloudxxx.apiary.io/'
