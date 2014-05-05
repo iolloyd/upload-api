@@ -10,6 +10,7 @@ class Tag extends AbstractModel
 {
     use Traits\IdTrait;
     use Traits\SlugTrait;
+    use TimestampableTrait;
 
     /**
      * @Column(type="string")

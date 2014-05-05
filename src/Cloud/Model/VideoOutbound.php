@@ -15,6 +15,7 @@ class VideoOutbound extends AbstractModel
     //////////////////////////////////////////////////////////////////////////
 
     use Traits\IdTrait;
+    use Traits\TimestampableTrait;
 
     /**
      * @JoinColumn(nullable=false)
