@@ -31,8 +31,7 @@ class TubesiteFixture extends AbstractFixture
         $xhamster->setLoginUrl('http://upload.xhamster.com/producer.php');
         $xhamster->setSignupUrl('http://xhamster.com/content_program.php');
 
-        $em->persist($youporn);
-        $em->persist($xhamster);
-        $em->flush();
+        return $xhamster;
     }
+
 }
