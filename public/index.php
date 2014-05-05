@@ -33,11 +33,12 @@ $loader = new \Cloud\Slim\Loader\Loader();
 $loader->load('config')
        ->load('helper')
        ->load('routes')
-       ->load('controllers')
-       ->into($app);
+       ->load('controllers');
 
 // middleware
+$app->add($loader);
 $app->add(new \Cloud\Slim\Middleware\Session());
+$app->add(new \Cloud\Slim\Middleware\Doctrine());
 $app->add(new \Slim\Middleware\ContentTypes());
 
 // run

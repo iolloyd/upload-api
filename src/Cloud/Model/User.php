@@ -2,13 +2,14 @@
 
 namespace Cloud\Model;
 
-use Doctrine\Common\Collections\Collection;
+use DateTime;
+use JsonSerializable;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * @Entity
  */
-class User extends AbstractModel
+class User extends AbstractModel implements JsonSerializable
 {
     use Traits\IdTrait;
 
@@ -41,6 +42,11 @@ class User extends AbstractModel
      * #OneToMany(targetEntity="Video", mappedBy="created_by")
      */
     protected $videos;
+
+    /**
+     * @Column(type="datetime", nullable=true)
+     */
+    protected $last_login_at;
 
     /**
      * Constructor
@@ -165,6 +171,45 @@ class User extends AbstractModel
     public function getVideos()
     {
         return $this->users;
+    }
+
+    /**
+     * Set the most recent login date
+     *
+     * @param  DateTime $last_login_at
+     * @return User
+     */
+    public function setLastLoginAt($last_login_at = null)
+    {
+        if (!$last_login_at) {
+            $last_login_at = new DateTime();
+        }
+
+        $this->last_login_at = $last_login_at;
+
+        return $this;
+    }
+
+    /**
+     * Get the most recent login date
+     *
+     * @return DateTime
+     */
+    public function getLastLoginAt()
+    {
+        return $this->last_login_at;
+    }
+
+    /**
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'id' => $this->getId(),
+            'name' => $this->getName(),
+            'email' => $this->getEmail(),
+        ];
     }
 
     /**
