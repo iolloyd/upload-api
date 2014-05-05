@@ -28,7 +28,14 @@ $json = function ($statusOrData, $data = null) use ($app)
     }
 
     $app->response->headers->set('Content-Type', 'application/json');
-    $app->response->body(json_encode($statusOrData));
+
+    /*
+     * Prefix JSON output with following string: ")]}',\n"
+     * See https://docs.angularjs.org/api/ng/service/$http#json-vulnerability-protection
+     */
+    $app->response->body(
+        ")]}',\n" . json_encode($statusOrData)
+    );
 };
 
 /**
