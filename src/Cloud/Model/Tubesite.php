@@ -12,6 +12,7 @@ class Tubesite extends AbstractModel
 {
     use Traits\IdTrait;
     use Traits\SlugTrait;
+    use Traits\TimestampableTrait;
 
     /**
      * @Column(type="string")
