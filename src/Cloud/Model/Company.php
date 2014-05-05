@@ -2,12 +2,13 @@
 
 namespace Cloud\Model;
 
+use JsonSerializable;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * @Entity
  */
-class Company extends AbstractModel
+class Company extends AbstractModel implements JsonSerializable
 {
     use Traits\IdTrait;
 
@@ -90,5 +91,24 @@ class Company extends AbstractModel
     public function getUsers()
     {
         return $this->users;
+    }
+
+    /**
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'id' => $this->getId(),
+            'title' => $this->getTitle(),
+        ];
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->getTitle();
     }
 }
