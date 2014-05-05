@@ -4,6 +4,7 @@ namespace Cloud\Model;
 
 /**
  * @Entity
+ * @HasLifecycleCallbacks
  */
 class VideoOutbound extends AbstractModel
 {
