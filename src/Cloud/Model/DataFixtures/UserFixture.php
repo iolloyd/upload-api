@@ -20,19 +20,19 @@ class UserFixture extends AbstractFixture implements DependentFixtureInterface
     {
         $user1 = new User();
         $user1->setName('Test User');
-        $user1->setEmail('test@cloud.xxx');
-        $user1->setPassword('123');
+        $user1->setEmail('alan@cloud.xxx');
+        $user1->setPassword('nail');
         $user1->setCompany($this->getReference('cumulus'));
 
         $user2 = new User();
         $user2->setName('Another User');
-        $user2->setEmail('test2@cloud.xxx');
-        $user2->setPassword('123');
+        $user2->setEmail('bill@cloud.xxx');
+        $user2->setPassword('lib');
         $user2->setCompany($this->getReference('cumulus'));
 
         $user3 = new User();
-        $user3->setEmail('foobar@cloud.xxx');
-        $user3->setPassword('123');
+        $user3->setEmail('chris@cloud.xxx');
+        $user3->setPassword('sirk');
         $user3->setCompany($this->getReference('foobar'));
 
         $em->persist($user1);
