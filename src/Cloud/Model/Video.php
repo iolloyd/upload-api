@@ -28,17 +28,13 @@ class Video extends AbstractModel implements JsonSerializable
 
     use Traits\IdTrait;
     use Traits\SlugTrait;
+    use Traits\TimestampableTrait;
 
     /**
      * @Column(type="integer")
      * @Version
      */
     protected $version = 1;
-
-    /**
-     * @Column(type="datetime")
-     */
-    protected $created_at;
 
     /**
      * @Column(type="datetime")
@@ -164,28 +160,6 @@ class Video extends AbstractModel implements JsonSerializable
     public function getVersion()
     {
         return $this->version;
-    }
-
-    /**
-     * Set the created date
-     *
-     * @param  DateTime $created_at
-     * @return Video
-     */
-    public function setCreatedAt(DateTime $created_at)
-    {
-        $this->created_at = $created_at;
-        return $this;
-    }
-
-    /**
-     * Get the created date
-     *
-     * @return DateTime
-     */
-    public function getCreatedAt()
-    {
-        return $this->created_at;
     }
 
     /**
