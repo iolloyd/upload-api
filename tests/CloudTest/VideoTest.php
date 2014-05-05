@@ -10,10 +10,21 @@ use Tests\Mock\MockVideoOutbound;
 
 class VideoTest extends Model
 {
+    public function testTimeStampable()
+    {
+        $video = MockVideo::get();
+        $this->em->persist($video);
+        $now = new \DateTime("now");
+        $this->em->flush();
+        $expected = $now;
+        $actual = $video->getCreatedAt();
+
+        $this->assertEquals($expected, $actual);
+    }
+
     public function testSetVideoTitle()
     {
-        $video = new Video();
-        $title = "the title";
+        $video = MockVideo::get();
         $video->setTitle($title);
         $expected = $title;
         $actual = $video->getTitle();

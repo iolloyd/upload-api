@@ -2,9 +2,14 @@
 
 namespace Cloud\Slim\Middleware;
 
-use Doctrine\ORM\Tools\Setup;
+use Doctrine\Common\EventManager;
+use Doctrine\Common\Persistence\Mapping\Driver\MappingDriverChain;
+use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\Driver\DriverChain;
 use Doctrine\ORM\Mapping\UnderscoreNamingStrategy;
+use Doctrine\ORM\Tools\Setup;
+use Gedmo\Timestampable\TimestampableListener;
 use Slim\Middleware;
 
 /**
@@ -43,18 +48,6 @@ class Doctrine extends Middleware
             'src/Cloud/Model/',
         ];
 
-        $params = [
-            'driver'   => $app->config('db.driver'),
-            'host'     => $app->config('db.host'),
-            'dbname'   => $app->config('db.dbname'),
-            'user'     => $app->config('db.user'),
-            'password' => $app->config('db.password'),
-
-            'path'     => $app->config('db.path'), // optional for sqlite
-
-            'charset'  => 'utf8',
-        ];
-
         /*
          * Inside the Setup methods several assumptions are made:
          *
@@ -77,12 +70,47 @@ class Doctrine extends Middleware
         $config->setNamingStrategy(new UnderscoreNamingStrategy());
         $config->addEntityNamespace('cx', 'Cloud\Model');
 
-        $em = EntityManager::create(
-            $params,
-            $config
-        );
+        $defaultDriver = $config->getMetadataDriverImpl();
+        $defaultReader = $defaultDriver->getReader();
+
+        $driverChain = new MappingDriverChain();
+        $driverChain->setDefaultDriver($defaultDriver);
+        $config->setMetadataDriverImpl($driverChain);
+
+        \Gedmo\DoctrineExtensions::registerAbstractMappingIntoDriverChainORM($driverChain, $defaultReader);
+
+        $params = $this->getConnectionParams();
+        $em = EntityManager::create($params, $config);
+
+        $timestampableListener = new TimestampableListener();
+        $timestampableListener->setAnnotationReader($defaultReader);
+
+        $evm = $em->getEventManager();
+        $evm->addEventSubscriber($timestampableListener);
 
         return $em;
+    }
+
+    /**
+     * Parameters for database connection and configuration
+     */
+    protected function getConnectionParams()
+    {
+        $app = $this->app;
+
+        $connection = [
+            'driver'   => $app->config('db.driver'),
+            'host'     => $app->config('db.host'),
+            'dbname'   => $app->config('db.dbname'),
+            'user'     => $app->config('db.user'),
+            'password' => $app->config('db.password'),
+
+            'path'     => $app->config('db.path'), // optional for sqlite
+
+            'charset'  => 'utf8',
+        ];
+
+        return $connection;
     }
 
     /**
@@ -94,8 +122,7 @@ class Doctrine extends Middleware
     {
         $app = $this->app;
 
-        return function ($route) use ($app, $models)
-        {
+        return function ($route) use ($app, $models) {
             $params = array_keys($route->getParams());
 
             if (!$models) {
@@ -144,5 +171,6 @@ class Doctrine extends Middleware
             }
         };
     }
+
 }
 
