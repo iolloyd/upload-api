@@ -37,11 +37,6 @@ class Video extends AbstractModel implements JsonSerializable
     protected $version = 1;
 
     /**
-     * @Column(type="datetime")
-     */
-    protected $updated_at;
-
-    /**
      * #JoinColumn(nullable=false)
      * @ManyToOne(targetEntity="User")
      */

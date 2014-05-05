@@ -48,7 +48,7 @@ class User extends AbstractModel implements JsonSerializable
     /**
      * @Column(type="datetime", nullable=true)
      */
-    protected $last_login_at;
+    protected $lastLoginAt;
 
     /**
      * Constructor
