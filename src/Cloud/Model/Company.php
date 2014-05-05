@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * @Entity
+ * @HasLifecycleCallbacks
  */
 class Company extends AbstractModel implements JsonSerializable
 {
