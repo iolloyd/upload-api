@@ -13,7 +13,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 class User extends AbstractModel implements JsonSerializable
 {
     use Traits\IdTrait;
-    use Traits\CreatedAtTrait;
     use Traits\TimestampableTrait;
 
     /**
