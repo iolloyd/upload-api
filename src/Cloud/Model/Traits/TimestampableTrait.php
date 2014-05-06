@@ -36,6 +36,14 @@ trait TimestampableTrait
     }
 
     /**
+     * @PreUpdate
+     */
+    public function preUpdateSetUpdatedAt()
+    {
+        $this->updatedAt = new \DateTime();
+    }
+
+    /**
      * Get created
      *
      * @return datetime $created
