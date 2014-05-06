@@ -422,8 +422,8 @@ class Video extends AbstractModel implements JsonSerializable
         return [
             'id'          => $this->getId(),
             'version'     => $this->getVersion(),
-            'created_at'  => $this->getCreatedAt(),
-            'updated_at'  => $this->getUpdatedAt(),
+            'created_at'  => $this->getCreatedAt()->format(DateTime::ISO8601),
+            'updated_at'  => $this->getUpdatedAt()->format(DateTime::ISO8601),
             'status'      => $this->getStatus(),
             'is_draft'    => $this->isDraft(),
             'title'       => $this->getTitle(),
