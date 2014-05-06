@@ -28,7 +28,7 @@ trait TimestampableTrait
     protected $updatedAt;
 
     /**
-     * @ORM\prePersist
+     * @PrePersist
      */
     public function prePersistSetCreatedAt()
     {
