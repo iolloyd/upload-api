@@ -34,15 +34,9 @@ abstract class Model extends \PHPUnit_Framework_TestCase
 
     protected function getEntityManager($config)
     {
-        /*
-        $defaultReader= $this->getDefaultReader($config);
-        $driverChain = $this->getDriverChain($config);
-        $config->setMetadataDriverImpl($driverChain);
-        \Gedmo\DoctrineExtensions::registerAbstractMappingIntoDriverChainORM($driverChain, $defaultReader);
         $connectionParams = $this->getConfiguration();
         $em = EntityManager::create($connectionParams, $config);
         $em->clear();
-         */
         return $em;
     }
 
