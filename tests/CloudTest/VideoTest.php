@@ -16,8 +16,8 @@ class VideoTest extends Model
         $video = MockVideo::get();
         $this->entityManager->persist($video);
         $this->entityManager->flush();
-        $expected = $now->format(\DateTime::ISO8601);
-        $actual = $video->getCreatedAt();
+        $expected = $now->getTimestamp();
+        $actual = $video->getCreatedAt()->getTimestamp();
 
         $this->assertEquals($expected, $actual);
     }
