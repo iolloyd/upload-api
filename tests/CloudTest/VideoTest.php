@@ -20,6 +20,16 @@ class VideoTest extends Model
         $actual = $video->getCreatedAt()->getTimestamp();
 
         $this->assertEquals($expected, $actual);
+        $sleep = 1;
+        sleep($sleep);
+
+        $video->setTitle('I am new title');
+        $this->entityManager->persist($video);
+        $this->entityManager->flush();
+
+        $expected = $now->getTimestamp() + $sleep;
+        $actual = $video->getUpdatedAt()->getTimestamp();
+        $this->assertEquals($expected, $actual);
     }
 
     public function testSetVideoTitle()
