@@ -15,3 +15,4 @@ if (!class_exists('Slim\Slim')) {
 }
 
 $autoloader->add('Cloud\\', 'src/');
+$autoloader->add('CloudOutbound\\', 'src/');
