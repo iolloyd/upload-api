@@ -13,13 +13,16 @@
         "symfony/process": "~2.4",
         "symfony/finder": "~2.4",
         "symfony/security": "~2.4",
+        "symfony/dom-crawler": "~2.4",
+        "symfony/css-selector": "~2.4",
 
         "doctrine/orm": "~2.4",
         "doctrine/data-fixtures": "~1.0",
         "gedmo/doctrine-extensions": "~2.3",
 
-        "chrisboulton/php-resque": "dev-master",
         "guzzlehttp/guzzle": "~4.0",
+        "guzzlehttp/streams": "~1.1",
+        "chrisboulton/php-resque": "dev-master",
         "aws/aws-sdk-php": "~2.6"
     },
 
