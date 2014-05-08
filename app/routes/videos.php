@@ -34,8 +34,8 @@ $app->get('/videos/:video', $app->authorize(), $app->find(), function(Video $vid
  */
 $app->post('/videos/:video', $app->authorize(), $app->find(), function(Video $video) use ($app)
 {
-    if ($video->getStatus() != 'draft') {
-        return $app->jsonError(400, 'invalid_status', 'Video must have status `draft` to update');
+    if (!$video->isDraft()) {
+        return $app->jsonError(400, 'invalid_status', 'Video must be in draft status');
     }
 
     $app->em->transactional(function () use ($app, $video) {
@@ -53,14 +53,16 @@ $app->post('/videos/:video', $app->authorize(), $app->find(), function(Video $vi
  */
 $app->post('/videos/:video/publish', $app->authorize(), $app->find(), function(Video $video) use ($app)
 {
-    if ($video->getStatus() != 'draft') {
-        return $app->jsonError(400, 'invalid_status', 'Video must have status `draft` to publish');
+    if (!$video->isDraft()) {
+        return $app->jsonError(400, 'invalid_status', 'Video must be in draft status');
     }
 
     $app->em->transactional(function () use ($app, $video) {
         $video->setUpdatedAt(new DateTime());
         $video->setUpdatedBy($app->session->user());
         $video->setStatus(Video::STATUS_PENDING);
+
+        // TODO: schedule outbounds
     });
 
     $app->json($video);
