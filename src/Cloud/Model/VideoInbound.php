@@ -124,7 +124,6 @@ class VideoInbound extends AbstractModel
     public function setVideo($video)
     {
         $this->video = $video;
-        $this->setCompany($video->getCompany());
         return $this;
     }
 

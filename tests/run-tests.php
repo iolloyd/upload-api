@@ -97,7 +97,7 @@ function getAll($phpunit_conf)
     for ($i = 0; $i < count($excludes); $i++) {
         $excludes[$i] = basename($excludes[$i]);
     }
-    if ($handle = opendir(__DIR__ . '/ZendTest/')) {
+    if ($handle = opendir(__DIR__ )) {
         while (false !== ($entry = readdir($handle))) {
             if ($entry != '.' && $entry != '..' && !in_array($entry, $excludes)) {
                 $components[] = $entry;

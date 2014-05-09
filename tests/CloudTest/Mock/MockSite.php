@@ -1,14 +1,12 @@
 <?php
-namespace Tests\Mock;
+namespace CloudTest\Mock;
 
 class MockSite
 {
     public static function get()
     {
-        $site = new \Cloud\Model\Site();
+        $site = new \Cloud\Model\TubeSite();
         $site->setTitle('I am a tube site');
-        $site->setSlug('I am a slug');
-        $site->setUploadUrl('I/am/url');
 
         return $site;
     }
