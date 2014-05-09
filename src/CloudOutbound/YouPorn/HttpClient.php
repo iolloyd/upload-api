@@ -126,10 +126,8 @@ class HttpClient extends GuzzleHttp\Client
             'expect'          => false,
             'cookies'         => $this->getCookieJar(),
 
-            //'exceptions'      => false,
-
             // TODO: based on log level?
-            'debug' => true,
+            //'debug' => true,
 
             'headers' => [
                 'Accept'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',

@@ -19,9 +19,13 @@ class TubesiteFixture extends AbstractFixture
     {
         $youporn = $this->getYouPorn();
         $xhamster = $this->getXhamster();
+
         $em->persist($youporn);
         $em->persist($xhamster);
         $em->flush();
+
+        $this->addReference('youporn', $youporn);
+        $this->addReference('xhamster', $xhamster);
     }
 
     protected function getYouPorn()
