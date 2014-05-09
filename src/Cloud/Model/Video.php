@@ -27,6 +27,17 @@ class Video extends AbstractModel implements JsonSerializable
 
     const STATUS_COMPLETE = 'complete';
 
+    /*
+     * php-resque status codes:
+     *
+    const STATUS_WAITING = 1;
+    const STATUS_RUNNING = 2;
+    const STATUS_FAILED = 3;
+    const STATUS_COMPLETE = 4;
+     */
+
+    //////////////////////////////////////////////////////////////////////////
+
     use Traits\IdTrait;
     use Traits\SlugTrait;
     use Traits\TimestampableTrait;
@@ -54,7 +65,7 @@ class Video extends AbstractModel implements JsonSerializable
     protected $description;
 
     /**
-     * @ManyToMany(targetEntity="Tag",cascade={"persist"})
+     * @ManyToMany(targetEntity="Tag")
      */
     protected $tags;
 
@@ -124,7 +135,6 @@ class Video extends AbstractModel implements JsonSerializable
      */
     protected $completedAt;
 
-     
     //////////////////////////////////////////////////////////////////////////
 
     /**
@@ -355,33 +365,25 @@ class Video extends AbstractModel implements JsonSerializable
     }
 
     /**
+     * Set the raw video file name
+     *
+     * @param  string $filename
+     * @return Video
+     */
+    public function setFilename($filename)
+    {
+        $this->filename = $filename;
+        return $this;
+    }
+
+    /**
      * Get the raw video file name
      *
      * @return string
      */
-    public function getFileName()
+    public function getFilename()
     {
         return $this->filename;
-    }
-
-    /**
-     * Get the file type 
-     *
-     * @return string
-     */
-    public function getFileType()
-    {
-        return $this->filetype;
-    }
-
-    /**
-     * Get the file size
-     *
-     * @return string
-     */
-    public function getFileSize()
-    {
-        return $this->filesize;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -392,18 +394,6 @@ class Video extends AbstractModel implements JsonSerializable
     protected function getSlugFields()
     {
         return ['id', 'title'];
-    }
-
-    /**
-     * Set the raw video file name
-     *
-     * @param  string $filename
-     * @return Video
-     */
-    public function setFilename($filename)
-    {
-        $this->filename = $filename;
-        return $this;
     }
 
     /**
@@ -429,6 +419,7 @@ class Video extends AbstractModel implements JsonSerializable
             'title'       => $this->getTitle(),
             'description' => $this->getDescription(),
             'tags'        => $this->getTags()->toArray(),
+            'filename'    => $this->getFilename(),
         ];
     }
 
