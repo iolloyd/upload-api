@@ -95,9 +95,12 @@ $app->post('/videos/:video/inbounds/:videoinbound/complete', $app->authorize(), 
     // combine
 
     $app->em->transactional(function ($em) use ($video, $inbound, $upload) {
-        $meta = $upload->getMetadata();
+        $meta     = $upload->getMetadata();
+        $mimetype = Mimetypes::getInstance();
 
         $video->setFilename($meta['flowfilename']);
+        $video->setFilesize($meta['flowtotalsize']);
+        $video->setFiletype($mimetype);
 
         /*
          * video.formats

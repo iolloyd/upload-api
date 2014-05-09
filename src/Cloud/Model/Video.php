@@ -1,4 +1,11 @@
 <?php
+/**
+ * @package  cloudxxx-api (http://www.cloud.xxx)
+ *
+ * @author    ReallyUseful <info@ruseful.com>
+ * @copyright 2014 Really Useful Limited
+ * @license   Proprietary code. Usage restrictions apply.
+ */
 
 namespace Cloud\Model;
 
@@ -23,8 +30,6 @@ class Video extends AbstractModel implements JsonSerializable
 
     /** All work is complete */
     const STATUS_COMPLETE = 'complete';
-
-    //////////////////////////////////////////////////////////////////////////
 
     use Traits\IdTrait;
     use Traits\SlugTrait;
@@ -65,7 +70,7 @@ class Video extends AbstractModel implements JsonSerializable
     protected $description;
 
     /**
-     * @ManyToMany(targetEntity="Tag")
+     * @ManyToMany(targetEntity="Tag",cascade={"persist"})
      */
     protected $tags;
 
@@ -135,6 +140,7 @@ class Video extends AbstractModel implements JsonSerializable
      */
     protected $completed_at;
 
+     
     //////////////////////////////////////////////////////////////////////////
 
     /**
@@ -387,25 +393,33 @@ class Video extends AbstractModel implements JsonSerializable
     }
 
     /**
-     * Set the raw video file name
-     *
-     * @param  string $filename
-     * @return Video
-     */
-    public function setFilename($filename)
-    {
-        $this->filename = $filename;
-        return $this;
-    }
-
-    /**
      * Get the raw video file name
      *
      * @return string
      */
-    public function getFilename()
+    public function getFileName()
     {
         return $this->filename;
+    }
+
+    /**
+     * Get the file type 
+     *
+     * @return string
+     */
+    public function getFileType()
+    {
+        return $this->filetype;
+    }
+
+    /**
+     * Get the file size
+     *
+     * @return string
+     */
+    public function getFileSize()
+    {
+        return $this->filesize;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -416,6 +430,18 @@ class Video extends AbstractModel implements JsonSerializable
     protected function getSlugFields()
     {
         return ['id', 'title'];
+    }
+
+    /**
+     * Set the raw video file name
+     *
+     * @param  string $filename
+     * @return Video
+     */
+    public function setFilename($filename)
+    {
+        $this->filename = $filename;
+        return $this;
     }
 
     /**
@@ -443,4 +469,15 @@ class Video extends AbstractModel implements JsonSerializable
             'tags'        => $this->getTags()->toArray(),
         ];
     }
+
+    public function getVideoInbounds()
+    {
+        return $this->inbounds;
+    }
+
+    public function getVideoOutbounds()
+    {
+        return $this->outbounds;
+    }
+
 }
