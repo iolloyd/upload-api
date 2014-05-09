@@ -9,9 +9,7 @@ $app->post('/videos', $app->authorize(), function() use ($app)
 {
     $video = new Video();
 
-    $video->setCreatedAt(new DateTime());
     $video->setCreatedBy($app->session->user());
-    $video->setUpdatedAt(new DateTime());
     $video->setUpdatedBy($app->session->user());
     $video->setCompany($app->session->company());
 
@@ -39,7 +37,6 @@ $app->post('/videos/:video', $app->authorize(), $app->find(), function(Video $vi
     }
 
     $app->em->transactional(function () use ($app, $video) {
-        $video->setUpdatedAt(new DateTime());
         $video->setUpdatedBy($app->session->user());
         $video->setTitle($app->param('title'));
         $video->setDescription($app->param('description'));
@@ -58,7 +55,6 @@ $app->post('/videos/:video/publish', $app->authorize(), $app->find(), function(V
     }
 
     $app->em->transactional(function () use ($app, $video) {
-        $video->setUpdatedAt(new DateTime());
         $video->setUpdatedBy($app->session->user());
         $video->setStatus(Video::STATUS_PENDING);
 

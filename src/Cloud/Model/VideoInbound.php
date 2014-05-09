@@ -61,9 +61,24 @@ class VideoInbound extends AbstractModel
     protected $status = self::STATUS_PENDING;
 
     /**
+     * @Column(type="string", nullable=true)
+     */
+    protected $filename;
+
+    /**
+     * @Column(type="integer", nullable=true)
+     */
+    protected $filesize;
+
+    /**
+     * @Column(type="string", nullable=true)
+     */
+    protected $filetype;
+
+    /**
      * #Column(type="datetime", nullable=true)
      */
-    protected $expires_at;
+    protected $expiresAt;
 
     /**
      * Constructor
@@ -175,6 +190,72 @@ class VideoInbound extends AbstractModel
     public function getStatus()
     {
         return $this->status;
+    }
+
+    /**
+     * Set the filename
+     *
+     * @param  string $filename
+     * @return VideoInbound
+     */
+    public function setFilename($filename)
+    {
+        $this->filename = $filename;
+        return $this;
+    }
+
+    /**
+     * Get the filename
+     *
+     * @return string
+     */
+    public function getFilename()
+    {
+        return $this->filename;
+    }
+
+    /**
+     * Set the filesize in bytes
+     *
+     * @param  int $filesize
+     * @return VideoInbound
+     */
+    public function setFilesize($filesize)
+    {
+        $this->filesize = $filesize;
+        return $this;
+    }
+
+    /**
+     * Get the filesize in bytes
+     *
+     * @return int
+     */
+    public function getFilesize()
+    {
+        return $this->filesize;
+    }
+
+    /**
+     * Set the file mimetype
+     *
+     * @param  string $filetype
+     * @return VideoOutbound
+     */
+    public function setFiletype($filetype)
+    {
+        $this->filetype = $filetype;
+        return $this;
+    }
+
+    /**
+     * Get the file mimetype
+     *
+     * @return string
+     */
+    public function getFiletype()
+    {
+        return $this->filetype;
     }
 
     /**
