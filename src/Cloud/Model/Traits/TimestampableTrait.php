@@ -2,11 +2,13 @@
 
 namespace Cloud\Model\Traits;
 
-use Gedmo\Mapping\Annotation\Timestampable;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Doctrine\ORM\Mapping as ORM;
+
 use DateTime;
 
 /**
- * Trait for `$created_at` field
+ * Trait for `$createdAt` field
  *
  * Entity must declare `@HasLifecycleCallbacks` 
  * for this trait to work as expected.
@@ -14,13 +16,30 @@ use DateTime;
 trait TimestampableTrait
 {
     /**
-     * Get the created date
+     * @Gedmo\Timestampable(on="create")
+     * @ORM\Column(type="date")
+     */
+    protected $createdAt;
+
+    /**
+     * @ORM\Column(type="datetime")
+     * @Gedmo\Timestampable(on="update")
+     */
+    protected $updatedAt;
+
+    /**
+     * Get created
      *
-     * @return DateTime
+     * @return datetime $created
      */
     public function getCreatedAt()
     {
         return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTime $createdAt)
+    {
+        $this->createdAt = $createdAt;
     }
 
     /**
@@ -30,18 +49,6 @@ trait TimestampableTrait
     {
         return $this->updatedAt;
     }
-
-    /**
-     * @Column(type="datetime")
-     * @\Gedmo\Mapping\Annotation\Timestampable(on="create")
-     */
-    protected $createdAt;
-
-    /**
-     * @Column(type="datetime")
-     * @\Gedmo\Mapping\Annotation\Timestampable(on="create")
-     */
-    protected $updatedAt;
 
 }
 

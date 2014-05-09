@@ -1,12 +1,15 @@
 <?php
-namespace Tests;
+namespace CloudTest;
+
 use Doctrine\ORM\Tools\Setup;
 use Doctrine\ORM\EntityManager;
 
-require_once "bootstrap_doctrine.php";
+require_once dirname(dirname(__DIR__)) . "/vendor/autoload.php";
 
 abstract class Model extends \PHPUnit_Framework_TestCase
 {
+    protected $entityManager;
+
     public function setup()
     {
         $connection = $this->getConnection();
@@ -46,6 +49,12 @@ abstract class Model extends \PHPUnit_Framework_TestCase
         ];
 
         return $conn;
+    }
+
+
+    protected function getEntityManager()
+    {
+        return $this->entityManager;
     }
 
 }

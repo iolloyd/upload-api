@@ -1,5 +1,5 @@
 <?php
-namespace Tests;
+namespace CloudTest;
 
 use Cloud\Model\Tag;
 
