@@ -1,5 +1,6 @@
 <?php
 
+use Cloud\Factory\VideoOutboundFactory;
 use Cloud\Model\Video;
 
 /**
@@ -28,6 +29,15 @@ $app->get('/videos/:video', $app->authorize(), $app->find(), function(Video $vid
 });
 
 /**
+ * Get list of videos
+ */
+$app->get('/videos', function() use ($app)
+{
+    $videos = $app->em->getRepository("\Cloud\Model\Video")->findAll();
+    $app->json($videos);
+});
+
+/**
  * Update a video
  */
 $app->post('/videos/:video', $app->authorize(), $app->find(), function(Video $video) use ($app)
@@ -51,14 +61,25 @@ $app->post('/videos/:video', $app->authorize(), $app->find(), function(Video $vi
 $app->post('/videos/:video/publish', $app->authorize(), $app->find(), function(Video $video) use ($app)
 {
     if (!$video->isDraft()) {
-        return $app->jsonError(400, 'invalid_status', 'Video must be in draft status');
+        return $app->jsonError(
+            400, 'invalid_status', 'Video must be in draft status'
+        );
     }
 
     $app->em->transactional(function () use ($app, $video) {
+        $inbound = $video->getVideoInbounds()->last();
+        $video->setUpdatedAt(new DateTime());
         $video->setUpdatedBy($app->session->user());
         $video->setStatus(Video::STATUS_PENDING);
 
         // TODO: schedule outbounds
+        $outbound = VideoOutboundFactory::create();
+        Resque::enqueue(
+            'default', 
+            'CloudOutbound\YouPorn\Job\DemoCombined', 
+            ['videooutbound' => $outbound->getId()]
+        );
+
     });
 
     $app->json($video);

@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Mock;
+namespace CloudTest\Mock;
 
 class MockTag
 {

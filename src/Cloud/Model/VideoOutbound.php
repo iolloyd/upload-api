@@ -89,6 +89,12 @@ class VideoOutbound extends AbstractModel
     // submitStatus
     // approvalStatus
 
+    public function __construct()
+    {
+        $this->status = STATUS_PENDING;
+        parent::__construct();
+    }
+
     /**
      * Set the parent video
      *
