@@ -49,14 +49,21 @@ class DemoCombined extends AbstractJob
             ])
             ->setName('job:youporn:demo')
         ;
+    }
 
-        // HTTP defaults
-
+    /**
+     * Initializes the job
+     */
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
         $this->httpSession = new HttpClient([
             'base_url' => 'http://www.youporn.com/',
             'cookies' => [
                 'is_pc'    => '1',
                 'language' => 'en',
+            ],
+            'defaults' => [
+                'debug' => $output->isVerbose(),
             ],
         ]);
     }

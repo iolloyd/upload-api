@@ -38,7 +38,7 @@ class TubesiteUser extends AbstractModel implements JsonSerializable
 
     /**
      * TODO: encrypt, isolate, etc
-     * @Column(type="json_array")
+     * #Column(type="json_array")
      */
     protected $credentials;
 
@@ -51,6 +51,20 @@ class TubesiteUser extends AbstractModel implements JsonSerializable
      * @Column(type="json_array")
      */
     protected $params = [];
+
+    /**
+     * Constructor
+     */
+    public function __construct(Tubesite $tubesite = null, Company $company = null)
+    {
+        if ($tubesite) {
+            $this->setTubesite($tubesite);
+        }
+
+        if ($company) {
+            $this->setCompany($company);
+        }
+    }
 
     /**
      * Set the parent tube site
@@ -138,6 +152,28 @@ class TubesiteUser extends AbstractModel implements JsonSerializable
     public function getPassword()
     {
         return $this->password;
+    }
+
+    /**
+     * Set the external ID
+     *
+     * @param  string $externalId
+     * @return TubesiteUser
+     */
+    public function setExternalId($externalId)
+    {
+        $this->externalId = $externalId;
+        return $this;
+    }
+
+    /**
+     * Get the external ID
+     *
+     * @return string
+     */
+    public function getExternalId()
+    {
+        return $this->externalId;
     }
 
     /**
