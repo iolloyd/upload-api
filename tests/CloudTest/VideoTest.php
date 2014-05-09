@@ -1,22 +1,22 @@
 <?php
-namespace Tests;
+namespace CloudTest;
 
 use Cloud\Model\Tag;
 use Cloud\Model\Video;
-use Tests\Mock\MockTag;
-use Tests\Mock\MockVideo;
-use Tests\Mock\MockVideoInbound;
-use Tests\Mock\MockVideoOutbound;
+use CloudTest\Mock\MockTag;
+use CloudTest\Mock\MockVideo;
+use CloudTest\Mock\MockVideoInbound;
+use CloudTest\Mock\MockVideoOutbound;
 
 class VideoTest extends Model
 {
     public function testTimeStampable()
     {
-        $video = MockVideo::get();
-        $this->em->persist($video);
         $now = new \DateTime("now");
-        $this->em->flush();
-        $expected = $now;
+        $video = MockVideo::get();
+        $this->entityManager->persist($video);
+        $this->entityManager->flush();
+        $expected = $now->getTimeStamp();
         $actual = $video->getCreatedAt();
 
         $this->assertEquals($expected, $actual);
@@ -25,6 +25,7 @@ class VideoTest extends Model
     public function testSetVideoTitle()
     {
         $video = MockVideo::get();
+        $title = "I am a title";
         $video->setTitle($title);
         $expected = $title;
         $actual = $video->getTitle();
@@ -41,34 +42,6 @@ class VideoTest extends Model
         $tags = $video->getTags();
         $expected = $tag;
         $actual = $tags[0];
-
-        $this->assertEquals($expected, $actual);
-    }
-
-    public function testVideoInbound()
-    {
-        $video = MockVideo::get();
-        $inbound = MockVideoInbound::get();
-        $inbound->setVideo($video);
-        $inbounds = $video->getVideoInbounds();
-        $expected = $inbound;
-        
-        // Make sure we get the last inserted
-        $actual = $inbounds[count($inbounds)-1];
-
-        $this->assertEquals($expected, $actual);
-    }
-
-    public function testVideoOutbound()
-    {
-        $video = MockVideo::get();
-        $outbound = MockVideoOutbound::get();
-        $outbound->setVideo($video);
-        $outbounds = $video->getVideoOutbounds();
-        $expected = $outbound;
-        
-        // Make sure we get the last inserted
-        $actual = $outbounds[count($outbounds)-1];
 
         $this->assertEquals($expected, $actual);
     }

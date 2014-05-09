@@ -1,9 +1,9 @@
 <?php
-namespace Tests;
+namespace CloudTest;
 
 use Cloud\Model\Company;
-use Tests\Mock\MockUser;
-use Tests\Mock\MockCompany;
+use CloudTest\Mock\MockUser;
+use CloudTest\Mock\MockCompany;
 
 class CompanyTest extends Model
 {

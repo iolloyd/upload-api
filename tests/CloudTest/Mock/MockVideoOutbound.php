@@ -1,12 +1,11 @@
 <?php
-namespace Tests\Mock;
+namespace CloudTest\Mock;
 
 class MockVideoOutbound
 {
     public static function get()
     {
         $videoOutbound = new \Cloud\Model\VideoOutbound();
-        $videoOutbound->setStatus('pending');
 
         return $videoOutbound;
     }
