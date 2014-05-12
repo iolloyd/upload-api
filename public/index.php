@@ -17,29 +17,71 @@ if (php_sapi_name() === 'cli-server'
 require 'autoload.php';
 
 /*
- * Slim Application
+ * Silex Application
  */
 
-ini_set('session.name', 'CLOUD');
-ini_set('session.cookie_httponly', true);
+$app = new Cloud\Silex\Application();
+$app['route_class'] = 'Cloud\Silex\Route';
 
-session_cache_limiter(false);
-session_start();
+// env
+$app['env'] = 'development';
+$app['debug'] = ($app['env'] == 'development');
 
-$app = new \Cloud\Slim\Slim();
+// config
+$app->register(new Herrera\Wise\WiseServiceProvider(), [
+    'wise.path' => 'app/config/',
+]);
+$app['config'] = $app['wise']->load($app['env'] . '.ini');
+
+// db
+$app->register(new Silex\Provider\DoctrineServiceProvider());
+$app->register(new Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider(), [
+    'orm.em.options' => [
+        'mappings' => [
+            [
+                'type'      => 'annotation',
+                'namespace' => 'Cloud\Model',
+                'path'      => 'src/Cloud/Model/',
+            ],
+        ],
+    ],
+]);
+$app['em'] = $app['orm.em'];
+
+// providers
+$app->register(new Silex\Provider\SecurityServiceProvider(), [
+    'security.firewalls' => [
+        'default' => [
+            'pattern' => '^/',
+            'anonymous' => true,
+            'users' => array(
+                // raw password is foo
+                'user' => array('ROLE_USER', '5FZ2Z8QIkA7UTZ4BYkoC+GsReLf569mSKDsfods6LYQ8t+a8EW9oaircfMpmaLbPBh4FOBiiFyLfuZmTSUwzZg=='),
+                'admin' => array('ROLE_ADMIN', '5FZ2Z8QIkA7UTZ4BYkoC+GsReLf569mSKDsfods6LYQ8t+a8EW9oaircfMpmaLbPBh4FOBiiFyLfuZmTSUwzZg=='),
+            ),
+        ],
+    ],
+]);
+
+$app->register(new Silex\Provider\SessionServiceProvider(), [
+    'session.storage.options' => [
+        'name'            => 'CLOUD',
+        'cookie_lifetime' => $app['debug'] ? null : '2h',
+        'cookie_httponly' => true,
+    ],
+]);
 
 // loader
-$loader = new \Cloud\Slim\Loader\Loader();
-$loader->load('config')
-       ->load('helper')
-       ->load('routes')
-       ->load('controllers');
-
-// middleware
-$app->add($loader);
-$app->add(new \Cloud\Slim\Middleware\Session());
-$app->add(new \Cloud\Slim\Middleware\Doctrine());
-$app->add(new \Slim\Middleware\ContentTypes());
+$app->register(new Cloud\Silex\Loader(), [
+    'loader.path' => 'app/',
+    'loader.extensions' => [
+        'php',
+    ],
+]);
+$app['load']('helper');
 
 // run
+$app->boot();
+$app['load']('routes');
+
 $app->run();
