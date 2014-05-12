@@ -41,6 +41,7 @@ class StartCommand extends Command
                 new InputOption('prefix', null, InputOption::VALUE_OPTIONAL, 'Use a custom prefix to separate multiple apps using Resque', 'resque'),
 
                 new InputOption('no-blocking', '', InputOption::VALUE_NONE, 'Do not use BLPOP when polling the queue.'),
+                new InputOption('scheduler', '', InputOption::VALUE_NONE, 'Run a resque-scheduler instance.'),
             ])
             ->setName('resque:start')
             ->setDescription('Start up a Resque worker')
@@ -69,36 +70,20 @@ EOT
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $logger = new \Resque_Log($output->isVerbose());
-
-        if ($input->hasOption('prefix')) {
-            \Resque_Redis::prefix($input->getOption('prefix'));
-        }
-
-        $count    = $input->getOption('workers');
-        $queues   = $input->getOption('queue');
-        $interval = max(1, round($input->getOption('interval')));
-        $blocking = !$input->getOption('no-blocking');
+        $count = $input->getOption('workers');
 
         /*
          * a) child, run resque worker
          */
 
         if (getenv('__RESQUE_RUN__')) {
-            $worker = new \Resque_Worker($queues);
-            $worker->setLogger($logger);
-
-            \Resque_Event::listen('beforePerform', function ($job) {
-                $instance = $job->getInstance();
-
-                if ($instance instanceof Command) {
-                    $instance->setApplication($this->getApplication());
-                    $instance->mergeApplicationDefinition(false);
-                }
-            });
-
-            $logger->log(\Psr\Log\LogLevel::NOTICE, 'Starting worker {worker}', array('worker' => $worker));
-            $worker->work($interval, $blocking);
+            if (class_exists('\Resque_Log')) {
+                // php-resque
+                return $this->runPhpResque($input, $output);
+            } else {
+                // php-resque-ex
+                return $this->runPhpResqueEx($input, $output);
+            }
 
             return;
         }
@@ -146,6 +131,11 @@ EOT
             $processes[] = $builder->getProcess();
         }
 
+        if (class_exists('\ResqueScheduler\ResqueScheduler')) {
+            $builder->add('--scheduler');
+            $processes[] = $builder->getProcess();
+        }
+
         // process loop
 
         while (count($processes) > 0) {
@@ -170,5 +160,93 @@ EOT
         if ($input->hasOption('pid')) {
             unlink($input->getOption('pid'));
         }
+    }
+
+    /**
+     * Run standard `php-resque`
+     * https://github.com/chrisboulton/php-resque/
+     */
+    protected function runPhpResque(InputInterface $input, OutputInterface $output)
+    {
+        $logger = new \Resque_Log($output->isVerbose());
+
+        if ($input->hasOption('prefix')) {
+            \Resque_Redis::prefix($input->getOption('prefix'));
+        }
+
+        $queues   = $input->getOption('queue');
+        $interval = max(1, round($input->getOption('interval')));
+        $blocking = !$input->getOption('no-blocking');
+
+        $worker = new \Resque_Worker($queues);
+        $worker->setLogger($logger);
+
+        \Resque_Event::listen('beforePerform', function ($job) {
+            $instance = $job->getInstance();
+
+            if ($instance instanceof Command) {
+                $instance->setApplication($this->getApplication());
+                $instance->mergeApplicationDefinition(false);
+            }
+        });
+
+        $logger->log(\Psr\Log\LogLevel::NOTICE, 'Starting worker {worker}', array('worker' => $worker));
+        $worker->work($interval, $blocking);
+    }
+
+    /**
+     * Run forked `php-resque-ex` used with ResqueBoard
+     *
+     * php-resque-ex is a port of php-resque with more logging options,
+     * essential to send log to Cube via an UDP socket.
+     *
+     * https://github.com/kamisama/php-resque-ex
+     */
+    protected function runPhpResqueEx(InputInterface $input, OutputInterface $output)
+    {
+        if ($input->hasOption('prefix')) {
+            \Resque::setBackend(null, 0, $input->getOption('prefix'));
+        }
+
+        $queues   = $input->getOption('queue');
+        $interval = max(5, round($input->getOption('interval')));
+
+        // logger
+
+        $logger = new \MonologInit\MonologInit('Cube', 'udp://127.0.0.1:1180');
+
+        if ($output->isVeryVerbose()) {
+            $logLevel = \Resque_Worker::LOG_VERBOSE;
+        } else {
+            $logLevel = \Resque_Worker::LOG_NORMAL;
+        }
+
+        if ($output->isVerbose()) {
+            $stdoutHandler = new \Monolog\Handler\StreamHandler('php://stdout');
+            $logger->getInstance()->pushHandler($stdoutHandler);
+        }
+
+        // start
+
+        if (!$input->getOption('scheduler')) {
+            $worker = new \Resque_Worker($queues);
+        } else {
+            $logger->getInstance()->addInfo('Starting resque-scheduler worker...');
+            $worker = new \ResqueScheduler\Worker([ \ResqueScheduler\ResqueScheduler::QUEUE_NAME ]);
+        }
+
+        $worker->registerLogger($logger);
+        $worker->logLevel = $logLevel;
+
+        \Resque_Event::listen('beforePerform', function ($job) {
+            $instance = $job->getInstance();
+
+            if ($instance instanceof Command) {
+                $instance->setApplication($this->getApplication());
+                $instance->mergeApplicationDefinition(false);
+            }
+        });
+
+        $worker->work($interval);
     }
 }

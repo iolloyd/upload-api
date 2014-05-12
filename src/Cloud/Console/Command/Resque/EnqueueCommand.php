@@ -20,7 +20,7 @@ use Symfony\Component\Process\Process;
 use Symfony\Component\Process\ProcessBuilder;
 
 /**
- * Enqueue a Resque job
+ * Enqueue a resque job
  */
 class EnqueueCommand extends Command
 {
@@ -35,7 +35,6 @@ class EnqueueCommand extends Command
                 new InputArgument('args', InputArgument::OPTIONAL, 'A JSON object of arguments to pass to the job.'),
                 new InputOption('track', null, InputOption::VALUE_NONE, 'Monitor the status of the job until finished.'),
                 new InputOption('queue', null, InputOption::VALUE_OPTIONAL, 'Name of the queue to place the job in.', 'default'),
-                new InputOption('prefix', null, InputOption::VALUE_OPTIONAL, 'Use a custom prefix to separate multiple apps using Resque', 'resque'),
             ])
             ->setName('resque:enqueue')
             ->setDescription('Enqueue a new Resque job')
