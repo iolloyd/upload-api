@@ -365,7 +365,7 @@ class Video extends AbstractModel implements JsonSerializable
     }
 
     /**
-     * Set the raw video file name
+     * Set the filename
      *
      * @param  string $filename
      * @return Video
@@ -377,13 +377,57 @@ class Video extends AbstractModel implements JsonSerializable
     }
 
     /**
-     * Get the raw video file name
+     * Get the filename
      *
      * @return string
      */
     public function getFilename()
     {
         return $this->filename;
+    }
+
+    /**
+     * Set the filesize in bytes
+     *
+     * @param  int $filesize
+     * @return Video
+     */
+    public function setFilesize($filesize)
+    {
+        $this->filesize = $filesize;
+        return $this;
+    }
+
+    /**
+     * Get the filesize in bytes
+     *
+     * @return int
+     */
+    public function getFilesize()
+    {
+        return $this->filesize;
+    }
+
+    /**
+     * Set the file mimetype
+     *
+     * @param  string $filetype
+     * @return VideoOutbound
+     */
+    public function setFiletype($filetype)
+    {
+        $this->filetype = $filetype;
+        return $this;
+    }
+
+    /**
+     * Get the file mimetype
+     *
+     * @return string
+     */
+    public function getFiletype()
+    {
+        return $this->filetype;
     }
 
     //////////////////////////////////////////////////////////////////////////
