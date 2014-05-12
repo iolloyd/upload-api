@@ -60,22 +60,22 @@ class VideoOutbound extends AbstractModel
     protected $tubesiteUser;
 
     /**
-     * @Column(type="string")
+     * @Column(type="string", nullable=true)
      */
     protected $externalId;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @Column(type="string")
      */
     protected $filename;
 
     /**
-     * @Column(type="integer", nullable=true)
+     * @Column(type="integer")
      */
     protected $filesize;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @Column(type="string")
      */
     protected $filetype;
 
@@ -89,10 +89,51 @@ class VideoOutbound extends AbstractModel
     // submitStatus
     // approvalStatus
 
-    public function __construct()
+    /**
+     * Constructor
+     */
+    public function __construct(Video $video = null, TubesiteUser $tubeuser = null)
     {
-        $this->status = STATUS_PENDING;
-        parent::__construct();
+        if ($video) {
+            $this->setVideo($video);
+        }
+
+        if ($tubeuser) {
+            $this->setTubesite($tubeuser->getTubesite());
+            $this->setTubesiteUser($tubeuser);
+        }
+    }
+
+    /**
+     * Set the processing status
+     *
+     * @param  string $status
+     * @return VideoInbound
+     */
+    public function setStatus($status)
+    {
+        if (!in_array($status, [
+            self::STATUS_PENDING,
+            self::STATUS_WORKING,
+            self::STATUS_COMPLETE,
+            self::STATUS_ERROR,
+        ])) {
+            throw new \InvalidArgumentException("Invalid status");
+        }
+
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * Get the processing status
+     *
+     * @return string
+     */
+    public function getStatus()
+    {
+        return $this->status;
     }
 
     /**
@@ -103,6 +144,7 @@ class VideoOutbound extends AbstractModel
      */
     public function setVideo(Video $video)
     {
+        $this->setCompany($video->getCompany());
         $this->video = $video;
         return $this;
     }
@@ -159,6 +201,28 @@ class VideoOutbound extends AbstractModel
     public function getTubesiteUser()
     {
         return $this->tubesiteUser;
+    }
+
+    /**
+     * Set the parent company
+     *
+     * @param  Company $company
+     * @return VideoInbound
+     */
+    public function setCompany(Company $company)
+    {
+        $this->company = $company;
+        return $this;
+    }
+
+    /**
+     * Set the parent company
+     *
+     * @return Company
+     */
+    public function getCompany()
+    {
+        return $this->company;
     }
 
     /**

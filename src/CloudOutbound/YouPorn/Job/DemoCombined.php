@@ -11,6 +11,7 @@
 
 namespace CloudOutbound\YouPorn\Job;
 
+use Cloud\Job\AbstractJob;
 use Cloud\Model\TubesiteUser;
 use Cloud\Model\VideoOutbound;
 use CloudOutbound\YouPorn\HttpClient;
@@ -22,6 +23,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class DemoCombined extends AbstractJob
 {
+    /**
+     * @var EntityManager
+     */
+    protected $em;
+
     /**
      * GuzzleHttp client for this request session. Holds a preconfigured client
      * instance which tracks header and cookie settings.
@@ -66,6 +72,8 @@ class DemoCombined extends AbstractJob
                 'debug' => $output->isVerbose(),
             ],
         ]);
+
+        $this->em = $this->getHelper('em')->getEntityManager();
     }
 
     /**
@@ -73,16 +81,13 @@ class DemoCombined extends AbstractJob
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $em       = $this->getHelper('em')->getEntityManager();
-        $outbound = $em->find('cx:videooutbound', $input->getArgument('videooutbound'));
+        $outbound = $this->em->find('cx:videooutbound', $input->getArgument('videooutbound'));
 
         if (!$outbound) {
             throw new \InvalidArgumentException('No VideoOutbound with this ID');
         }
 
         $tubeuser = $outbound->getTubesiteUser();
-
-        // process
 
         if (!$this->isLoggedIn($tubeuser)) {
             $this->login($tubeuser);
@@ -109,9 +114,15 @@ class DemoCombined extends AbstractJob
 
         $this->logout($tubeuser);
 
-        // done
-
         $output->writeln('<info>done.</info>');
+
+        /*
+         * TODO: refactor
+         */
+        $output->writeln('');
+        $output->writeln('<info>Queueing refresh</info> ... in 10 seconds');
+        sleep(10);
+        \Resque::enqueue('default', get_called_class(), ['videooutbound' => $outbound->getId()]);
     }
 
     /**
@@ -257,14 +268,28 @@ class DemoCombined extends AbstractJob
 
         // persist
 
-        $em = $this->getHelper('em')->getEntityManager();
-
-        $em->transactional(function ($em) use ($outbound, $data) {
+        $this->em->transactional(function ($em) use ($outbound, $data) {
             $params = array_intersect_key($data, array_flip([
                 'status', 'comment', 'review_note',
             ]));
 
             $outbound->addParams($params);
+
+            switch($data['status']) {
+                case 'uploaded':
+                case 'encoding_in_progress':
+                    $outbound->setStatus(VideoOutbound::STATUS_WORKING);
+                    break;
+
+                case 'waiting_for_approval':
+                case 'released':
+                    $outbound->setStatus(VideoOutbound::STATUS_COMPLETE);
+                    break;
+
+                case 'refused':
+                    $outbound->setStatus(VideoOutbound::STATUS_ERROR);
+                    break;
+            }
         });
 
         return $data['status'];
@@ -275,6 +300,10 @@ class DemoCombined extends AbstractJob
      */
     protected function createVideo(VideoOutbound $outbound)
     {
+        $this->em->transactional(function ($em) use ($outbound) {
+            $outbound->setStatus(VideoOutbound::STATUS_WORKING);
+        });
+
         $response = $this->httpSession->jsonPost('/upload/create-videos/', [
             'body' => [
                 'file' => $outbound->getFilename(), // just the filename here
@@ -283,11 +312,7 @@ class DemoCombined extends AbstractJob
 
         $data = $response->json();
 
-        // persist
-
-        $em = $this->getHelper('em')->getEntityManager();
-
-        $em->transactional(function ($em) use ($outbound, $data) {
+        $this->em->transactional(function ($em) use ($outbound, $data) {
             $outbound->setExternalId($data['video_id']);
             $outbound->setParam('video_id', $data['video_id']);
             $outbound->setParam('user_uploader_id', $data['user_uploader_id']);
@@ -329,8 +354,6 @@ class DemoCombined extends AbstractJob
             ));
 
         $response = $this->httpSession->send($request);
-
-        var_dump($response->json());
 
         $data = $response->json()[0];
 
@@ -376,10 +399,11 @@ class DemoCombined extends AbstractJob
                     'videoedit[tags]' => '',
                     'videoedit[pornstars]' => '',
 
-                    'videoedit[content_partner_site_id]' =>
-                        $tubeuser->getParam('content_partner_site_id'),
+                    //'videoedit[content_partner_site_id]' =>
+                        //(string) $tubeuser->getParam('content_partner_site_id'),
 
-                    'videoedit[video_options_disable_commenting]' => $disableComments,
+                    'videoedit[content_partner_site_id]' => '2242',
+                    'videoedit[video_options_disable_commenting]' => '0', // $disableComments,
                 ],
             ]
         );

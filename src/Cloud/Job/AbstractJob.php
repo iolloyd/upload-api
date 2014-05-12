@@ -9,7 +9,7 @@
  * @license    Proprietary
  */
 
-namespace CloudOutbound\YouPorn\Job;
+namespace Cloud\Job;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -51,7 +51,16 @@ abstract class AbstractJob extends Command
     public function perform()
     {
         $args = $this->args ?: [];
-        array_unshift($args, '...');
+
+        if (!is_array($args)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Job `args` must be of type array, got %s',
+                gettype($args)
+            ));
+        }
+
+        array_unshift($args, $this->getName());
+        unset($args['s_time']);
 
         $input = new ArrayInput($args);
         $input->setInteractive(false);

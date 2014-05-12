@@ -1,7 +1,7 @@
 <?php
 
-use Cloud\Factory\VideoOutboundFactory;
 use Cloud\Model\Video;
+use Cloud\Model\VideoOutbound;
 
 /**
  * Create new draft video
@@ -66,21 +66,31 @@ $app->post('/videos/:video/publish', $app->authorize(), $app->find(), function(V
         );
     }
 
-    $app->em->transactional(function () use ($app, $video) {
-        $inbound = $video->getVideoInbounds()->last();
-        $video->setUpdatedAt(new DateTime());
-        $video->setUpdatedBy($app->session->user());
+    $outbound = new VideoOutbound($video);
+
+    $app->em->transactional(function ($em) use ($app, $video, $outbound) {
         $video->setStatus(Video::STATUS_PENDING);
+        $video->setUpdatedBy($app->session->user());
 
-        // TODO: schedule outbounds
-        $outbound = VideoOutboundFactory::create();
-        Resque::enqueue(
-            'default', 
-            'CloudOutbound\YouPorn\Job\DemoCombined', 
-            ['videooutbound' => $outbound->getId()]
-        );
+        // TODO: refactor
 
+        $inbound  = $video->getVideoInbounds()->last();
+        $tubeuser = $app->em->getRepository('cx:tubesiteuser')->findAll()[0];
+
+        $outbound->setTubesite($tubeuser->getTubesite());
+        $outbound->setTubesiteUser($tubeuser);
+        $outbound->setFilename($video->getFilename());
+        $outbound->setFilesize($video->getFilesize());
+        $outbound->setFiletype($video->getFiletype());
+
+        $em->persist($outbound);
     });
+
+    Resque::enqueue(
+        'default',
+        'CloudOutbound\YouPorn\Job\DemoCombined',
+        ['videooutbound' => $outbound->getId()]
+    );
 
     $app->json($video);
 });
