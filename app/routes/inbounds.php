@@ -5,6 +5,7 @@ use Aws\S3\Model\PostObject;
 use Cloud\Model\Video;
 use Cloud\Model\VideoInbound;
 use Cloud\Aws\S3\Model\FlowUpload;
+use GuzzleHttp\Mimetypes;
 
 /**
  * Create a new inbound upload and get parameters for the form to
@@ -95,12 +96,12 @@ $app->post('/videos/:video/inbounds/:videoinbound/complete', $app->authorize(), 
     // combine
 
     $app->em->transactional(function ($em) use ($video, $inbound, $upload) {
-        $meta     = $upload->getMetadata();
-        $mimetype = Mimetypes::getInstance();
+        $mimetypes = Mimetypes::getInstance();
+        $meta      = $upload->getMetadata();
 
         $video->setFilename($meta['flowfilename']);
         $video->setFilesize($meta['flowtotalsize']);
-        $video->setFiletype($mimetype);
+        $video->setFiletype($mimetypes->fromFilename($meta['flowfilename']));
 
         /*
          * video.formats
