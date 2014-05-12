@@ -15,6 +15,7 @@ use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Finder\Finder;
 
 /**
  * Console Application
@@ -87,8 +88,21 @@ class Application extends BaseApplication
         $commands[] = new Command\Doctrine\LoadFixturesCommand();
         $commands[] = new Command\Resque\StartCommand();
         $commands[] = new Command\Resque\EnqueueCommand();
+        $commands[] = new Command\Resque\ScheduleCommand();
 
-        // Tests
+        // Jobs
+        $finder = new Finder();
+        $finder
+            ->files()
+            ->in('src/Cloud/Job/')
+            ->name('*.php')
+        ;
+        foreach ($finder as $file) {
+            $className = 'Cloud\\Job\\' . str_replace('/', '\\', substr($file->getRelativePathname(), 0, -4));
+            if (class_exists($className) && is_subclass_of($className, 'Cloud\Job\AbstractJob')) {
+                $commands[] = new $className;
+            }
+        }
         $commands[] = new \CloudOutbound\YouPorn\Job\DemoCombined();
 
         // Doctrine ORM Commands
