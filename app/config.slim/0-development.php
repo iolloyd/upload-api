@@ -4,8 +4,8 @@ $app->configureMode('development', function () use ($app) {
     // slim
     $app->config([
         'debug'       => true,
-        'log.enabled' => false,
-        'log.level'   => \Slim\Log::INFO,
+        //'log.enabled' => false,
+        //'log.level'   => \Slim\Log::INFO,
     ]);
 
     // db
