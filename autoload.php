@@ -7,7 +7,7 @@ if (!file_exists('vendor/autoload.php')) {
 }
 
 $autoloader = require __DIR__ . '/vendor/autoload.php';
-if (!class_exists('Slim\Slim')) {
+if (!class_exists('Silex\Application')) {
     throw new RuntimeException(
         'Unable to load vendor libraries. Run `php composer.phar install`'
     );
