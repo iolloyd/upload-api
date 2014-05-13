@@ -34,7 +34,11 @@ $app->register(new Herrera\Wise\WiseServiceProvider(), [
 $app['config'] = $app['wise']->load($app['env'] . '.ini');
 
 // db
-$app->register(new Silex\Provider\DoctrineServiceProvider());
+$app->register(new Silex\Provider\DoctrineServiceProvider(), [
+    'db.options' => $app['config']['db.options']
+
+]);
+
 $app->register(new Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider(), [
     'orm.em.options' => [
         'mappings' => [
@@ -46,11 +50,15 @@ $app->register(new Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider
         ],
     ],
 ]);
+
 $app['em'] = $app['orm.em'];
 
 // providers
 $app->register(new Silex\Provider\SecurityServiceProvider(), [
     'security.firewalls' => [
+        'login' => [
+            'pattern' => '^/login$',
+        ],
         'default' => [
             'pattern' => '^/',
             'anonymous' => true,
