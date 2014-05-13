@@ -11,13 +11,13 @@ trait TimestampableTrait
 {
     /**
      * @Column(type="datetime")
-     * @\Gedmo\Mapping\Annotation\Timestampable(on="create")
+     * @Gedmo\Mapping\Annotation\Timestampable(on="create")
      */
     protected $createdAt;
 
     /**
      * @Column(type="datetime")
-     * @\Gedmo\Mapping\Annotation\Timestampable(on="update")
+     * @Gedmo\Mapping\Annotation\Timestampable(on="update")
      */
     protected $updatedAt;
 

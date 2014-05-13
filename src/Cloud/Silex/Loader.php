@@ -12,6 +12,7 @@
 namespace Cloud\Silex;
 
 use Silex\ServiceProviderInterface;
+use Symfony\Component\Finder\Finder;
 
 /**
  * Dynamic loading of modules and other subcomponents for Slim
@@ -45,9 +46,8 @@ class Loader implements ServiceProviderInterface
 
             if (is_dir($dir)) {
                 // TODO: refactor with Symfony Finder
-                $iterator = new \Cloud\Slim\Loader\FileIterator($dir, $ext);
-                $files = array_keys(iterator_to_array($iterator));
-                foreach ($files as $filepath) {
+                $finder = new Finder();
+                foreach ($finder->files()->in($dir) as $filepath) {
                     Cloud_Silex_Loader__require($filepath, $app);
                 }
             }

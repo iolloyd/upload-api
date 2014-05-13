@@ -54,4 +54,20 @@ class DoctrineOrmConverter
 
         return $entity;
     }
+
+    /**
+     * Convert parameter to ORM entity list
+     *
+     * @return array object
+     */
+    public function convertAll()
+    {
+        $entity = $this->em->getRepository($this->entityName)->findAll();
+        if (!$entities) {
+            throw new NotFoundHttpException(sprintf('Entities #%d does not exist', $id));
+        }
+
+        return $entities;
+
+    }
 }
