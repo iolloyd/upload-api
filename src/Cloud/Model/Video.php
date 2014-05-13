@@ -140,11 +140,18 @@ class Video extends AbstractModel implements JsonSerializable
     /**
      * Constructor
      */
-    public function __construct()
+    public function __construct($user)
     {
+        if (!isset($user)) {
+            throw new \Exception("A video needs to have a user");
+        }
+
         $this->tags = new ArrayCollection();
         $this->inbounds = new ArrayCollection();
         $this->outbounds = new ArrayCollection();
+        $this->created_by = $user;
+        $this->updated_by = $user;
+        $this->setCompany = $user->company();
     }
 
     /**
