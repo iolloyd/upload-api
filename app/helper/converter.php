@@ -11,4 +11,5 @@ $app['converter'] = $app->protect(function($entityName) use ($app) {
 
 $app['converter.video'] = $app['converter']('Cloud\Model\Video');
 $app['converter.videooutbound'] = $app['converter']('Cloud\Model\VideoOutbound');
+$app['converter.videoinbound'] = $app['converter']('Cloud\Model\VideoInbound');
 
