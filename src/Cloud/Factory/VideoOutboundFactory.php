@@ -7,7 +7,7 @@ use Cloud\Model\VideoOutbound;
 
 class VideoOutboundFactory
 {
-    public static function create(VideoInbound $inbound)
+    public static function createFromInbound(VideoInbound $inbound)
     {
         $outbound = new VideoOutbound();
         /*
