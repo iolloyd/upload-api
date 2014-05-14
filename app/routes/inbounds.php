@@ -8,16 +8,17 @@ use Cloud\Aws\S3\Model\FlowUpload;
 use GuzzleHttp\Mimetypes;
 
 /**
- * Create a new inbound upload and get parameters for the form to
- * AWS S3
+ * Create a new inbound upload and get 
+ * parameters for the form to AWS S3
  */
-$app->post('/videos/:video/inbounds', $app->authorize(), $app->find(), function(Video $video) use ($app)
+$app->post('/videos/:video/inbounds', function(Video $video) use ($app)
 {
     $inbound = new VideoInbound($video);
 
     $app->em->persist($inbound);
     $app->em->flush();
 
+    $form = new AwsPostObject($app->s3, $app->config('s3.bucket'), $video, $ibound);
     $form = new PostObject($app->s3, $app->config('s3.bucket'), [
         'ttd'                             => '+24 hours',
         'acl'                             => CannedAcl::PRIVATE_ACCESS,
