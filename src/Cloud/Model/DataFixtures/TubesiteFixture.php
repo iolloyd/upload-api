@@ -37,6 +37,7 @@ class TubesiteFixture extends AbstractFixture
         $site->setDescription('I am description of '. $title);
         $site->setUrl($title . '/url');
         $site->setLoginUrl($title . '/login/url');
+        $site->setSignupUrl($title . '/signup/url');
 
         return $site;
     }
