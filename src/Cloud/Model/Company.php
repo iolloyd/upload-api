@@ -5,22 +5,26 @@ namespace Cloud\Model;
 use JsonSerializable;
 use Doctrine\Common\Collections\ArrayCollection;
 
+use Doctrine\ORM\Mapping as ORM;
+use Cloud\Doctrine\Annotation as CX;
+
 /**
- * @Entity
- * @HasLifecycleCallbacks
+ * @ORM\Entity
+ * @ORM\HasLifecycleCallbacks
  */
 class Company extends AbstractModel implements JsonSerializable
 {
     use Traits\IdTrait;
-    use Traits\TimestampableTrait;
+    use Traits\CreatedAtTrait;
+    use Traits\UpdatedAtTrait;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $title;
 
     /**
-     * @OneToMany(
+     * @ORM\OneToMany(
      *   targetEntity="User",
      *   mappedBy="company",
      *   cascade={"persist", "remove"}

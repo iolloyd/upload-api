@@ -2,40 +2,42 @@
 
 namespace Cloud\Model;
 
+use Doctrine\ORM\Mapping as ORM;
+use Cloud\Doctrine\Annotation as CX;
+
 /**
  * Represents a tube-site and its configuration
  *
- * @Entity
- * @HasLifecycleCallbacks
+ * @ORM\Entity
+ * @ORM\HasLifecycleCallbacks
  */
 class Tubesite extends AbstractModel
 {
     use Traits\IdTrait;
     use Traits\SlugTrait;
-    use Traits\TimestampableTrait;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $title;
 
     /**
-     * @Column(type="text", nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     protected $description;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $url;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $loginUrl;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $signupUrl;
 
@@ -108,12 +110,12 @@ class Tubesite extends AbstractModel
     /**
      * Set the upload portal URL
      *
-     * @param  string $login_url
+     * @param  string $loginUrl
      * @return Tubesite
      */
-    public function setLoginUrl($login_url)
+    public function setLoginUrl($loginUrl)
     {
-        $this->login_url = $login_url;
+        $this->loginUrl = $loginUrl;
         return $this;
     }
 
@@ -124,18 +126,18 @@ class Tubesite extends AbstractModel
      */
     public function getLoginUrl()
     {
-        return $this->login_url;
+        return $this->loginUrl;
     }
 
     /**
      * Set the CPP signup URL
      *
-     * @param  string $signup_url
+     * @param  string $signupUrl
      * @return Tubesite
      */
-    public function setSignupUrl($signup_url)
+    public function setSignupUrl($signupUrl)
     {
-        $this->signup_url = $signup_url;
+        $this->signupUrl = $signupUrl;
         return $this;
     }
 
@@ -146,6 +148,6 @@ class Tubesite extends AbstractModel
      */
     public function getSignupUrl()
     {
-        return $this->signup_url;
+        return $this->signupUrl;
     }
 }
