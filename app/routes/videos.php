@@ -9,14 +9,19 @@
 
 use Cloud\Model\Video;
 use Cloud\Model\VideoOutbound;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Component\HttpFoundation\Request;
+use Pagerfanta\Adapter\ArrayAdapter;
+use Pagerfanta\Adapter\DoctrineCollectionAdapter;
+use Pagerfanta\Pagerfanta;
 
 /**
  * Get a video
  */
 $app->get('/videos/{video}', function(Video $video) use ($app)
 {
+    $video = $app['em']->find('cx:video', $id);
     return $app->json($video);
 })
 ->assert('video', '\d+')
@@ -28,23 +33,29 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
  */
 $app->get('/videos', function(Request $request) use ($app)
 {
+    $videos = $app['em']
+        ->getRepository('cx:video')
+        ->matching(new Criteria());
+
+    $adapter = new DoctrineCollectionAdapter($videos);
+    $pager = new Pagerfanta($adapter); 
+
+    $videos = $pager->getCurrentPageResults();
+
+    echo 'total:' . $pager->count() . '<br/>';
+    echo 'returned:' . count($videos) . '<br/>'; 
+    echo $videos[0]->getTitle();
+die;
     $first = $request->get('first') ?: 0;
     $limit = $request->get('limit') ?: 10;
 
-    //$dql = "SELECT v, i from Cloud\Model\Video v JOIN v.inbounds i";
-    $dql = "SELECT v FROM Cloud\Model\Video v";
-    $qry = $app['em']->createQuery($dql)
-        ->setFirstResult($first)
-        ->setMaxResults($limit);
-
-    $videos = new Paginator($qry, $fetchjoinCollection = true);
-    $count = count($videos);
 
     return $app->json([
         'videos' => $videos, 
         'count'  => $count,
     ]);
-});
+})
+->secure('ROLE_USER');
 
 /**
  * Create new draft video

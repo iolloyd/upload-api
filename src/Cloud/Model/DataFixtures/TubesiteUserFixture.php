@@ -30,6 +30,8 @@ class TubesiteUserFixture extends AbstractFixture implements DependentFixtureInt
 
         $em->persist($youpornUser);
         $em->flush();
+
+        $this->addReference('youporn-user', $youpornUser);
     }
 
     /**

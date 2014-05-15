@@ -24,7 +24,8 @@
         "aws/aws-sdk-php": "~2.6",
 
         "kamisama/php-resque-ex": "~1.2",
-        "kamisama/php-resque-ex-scheduler": "dev-master"
+        "kamisama/php-resque-ex-scheduler": "dev-master",
+        "pagerfanta/pagerfanta": "~1.0"
     },
 
     "require-dev": {
