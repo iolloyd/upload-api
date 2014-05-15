@@ -111,9 +111,9 @@ class Tubesite extends AbstractModel
      * @param  string $login_url
      * @return Tubesite
      */
-    public function setLoginUrl($login_url)
+    public function setLoginUrl($loginUrl)
     {
-        $this->login_url = $login_url;
+        $this->loginUrl = $loginUrl;
         return $this;
     }
 
@@ -124,7 +124,7 @@ class Tubesite extends AbstractModel
      */
     public function getLoginUrl()
     {
-        return $this->login_url;
+        return $this->loginUrl;
     }
 
     /**
@@ -133,9 +133,9 @@ class Tubesite extends AbstractModel
      * @param  string $signup_url
      * @return Tubesite
      */
-    public function setSignupUrl($signup_url)
+    public function setSignupUrl($signupUrl)
     {
-        $this->signup_url = $signup_url;
+        $this->signupUrl = $signupUrl;
         return $this;
     }
 
@@ -146,6 +146,6 @@ class Tubesite extends AbstractModel
      */
     public function getSignupUrl()
     {
-        return $this->signup_url;
+        return $this->signupUrl;
     }
 }
