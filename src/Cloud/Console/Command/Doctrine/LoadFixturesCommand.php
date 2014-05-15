@@ -24,8 +24,17 @@ class LoadFixturesCommand extends Command
     {
         $this
             ->setDefinition([
-                new InputArgument('path', InputArgument::OPTIONAL|InputArgument::IS_ARRAY, 'Directory to load data fixtures from.', ['src/Cloud/Model/DataFixtures/']),
-                new InputOption('append', 'a', InputOption::VALUE_NONE, 'Append the data fixtures instead of deleting all data from the database first.'),
+                new InputArgument(
+                    'path', 
+                    InputArgument::OPTIONAL|InputArgument::IS_ARRAY, 
+                    'Directory to load data fixtures from.', ['src/Cloud/Model/DataFixtures/']
+                ),
+                new InputOption(
+                    'append', 
+                    'a', 
+                    InputOption::VALUE_NONE, 
+                    'Append the data fixtures instead of deleting all data from the database first.'
+                ),
             ])
             ->setName('doctrine:fixtures:load')
             ->setDescription('Load data fixtures to your database')

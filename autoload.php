@@ -1,6 +1,6 @@
 <?php
 
-define('REQUEST_MICROTIME', microtime(true));
+//define('REQUEST_MICROTIME', microtime(true));
 
 if (!file_exists('vendor/autoload.php')) {
     throw new RuntimeException('Unable to load vendor libraries. Run `php composer.phar install`');
