@@ -25,14 +25,14 @@ class LoadFixturesCommand extends Command
         $this
             ->setDefinition([
                 new InputArgument(
-                    'path', 
-                    InputArgument::OPTIONAL|InputArgument::IS_ARRAY, 
+                    'path',
+                    InputArgument::OPTIONAL|InputArgument::IS_ARRAY,
                     'Directory to load data fixtures from.', ['src/Cloud/Model/DataFixtures/']
                 ),
                 new InputOption(
-                    'append', 
-                    'a', 
-                    InputOption::VALUE_NONE, 
+                    'append',
+                    'a',
+                    InputOption::VALUE_NONE,
                     'Append the data fixtures instead of deleting all data from the database first.'
                 ),
             ])
@@ -76,6 +76,7 @@ EOT
 
         $loader = new DataFixturesLoader();
         $paths  = $input->getArgument('path');
+        $append = $input->getOption('append');
 
         foreach ($paths as $path) {
             $loader->loadFromDirectory($path);
@@ -101,13 +102,25 @@ EOT
 
         $output->writeln('');
 
-        $purger   = new ORMPurger($em);
+        $purger = new ORMPurger($em);
+
+        if (!$append) {
+            // to truncuate, first delete all database content, then run the
+            // actualy purge, to avoid problems with foreign key constraints
+
+            $output->writeln($formatter->formatSection('+', 'truncating database'));
+            $conn->exec('SET FOREIGN_KEY_CHECKS = 0');
+            $purger->setPurgeMode(ORMPurger::PURGE_MODE_TRUNCATE);
+            $purger->purge();
+            $conn->exec('SET FOREIGN_KEY_CHECKS = 1');
+            $purger->setPurgeMode(ORMPurger::PURGE_MODE_DELETE);
+        }
+
         $executor = new ORMExecutor($em, $purger);
         $executor->setLogger(function($message) use ($output, $formatter) {
             $output->writeln($formatter->formatSection('+', $message));
         });
-
-        $executor->execute($fixtures, $input->getOption('append'));
+        $executor->execute($fixtures, $append);
 
         $output->writeln('');
     }

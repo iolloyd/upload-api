@@ -2,40 +2,30 @@
 
 namespace Cloud\Model;
 
+use Doctrine\ORM\Mapping as ORM;
+use Cloud\Doctrine\Annotation as CX;
+
 /**
- * @Entity
- * @HasLifecycleCallbacks
+ * @ORM\Entity
+ * @ORM\HasLifecycleCallbacks
  */
 class VideoOutbound extends AbstractModel
 {
-    /** Queued for worker */
-    const STATUS_PENDING = 'pending';
-
-    /** Currently preparing and publishing to tubesite */
-    const STATUS_WORKING = 'working';
-
-    /** Publishing complete */
+    const STATUS_PENDING  = 'pending';
+    const STATUS_WORKING  = 'working';
     const STATUS_COMPLETE = 'complete';
-
-    /** Error during preparation or publishing */
-    const STATUS_ERROR = 'error';
-
-    //////////////////////////////////////////////////////////////////////////
+    const STATUS_ERROR    = 'error';
 
     use Traits\IdTrait;
-    use Traits\TimestampableTrait;
+    use Traits\CreatedAtTrait;
+    use Traits\UpdatedAtTrait;
+    use Traits\CompanyTrait;
 
     /**
-     * @JoinColumn(nullable=false)
-     * @ManyToOne(targetEntity="Video", inversedBy="outbounds")
+     * @ORM\JoinColumn(nullable=false)
+     * @ORM\ManyToOne(targetEntity="Video", inversedBy="outbounds")
      */
     protected $video;
-
-    /**
-     * @JoinColumn(nullable=false)
-     * @ManyToOne(targetEntity="Company")
-     */
-    protected $company;
 
     /**
      * @see STATUS_PENDING
@@ -43,44 +33,44 @@ class VideoOutbound extends AbstractModel
      * @see STATUS_COMPLETE
      * @see STATUS_ERROR
      *
-     * @Column(type="string", length=16)
+     * @ORM\Column(type="string", length=16)
      */
     protected $status = self::STATUS_PENDING;
 
     /**
-     * @JoinColumn(nullable=false)
-     * @ManyToOne(targetEntity="Tubesite")
+     * @ORM\JoinColumn(nullable=false)
+     * @ORM\ManyToOne(targetEntity="Tubesite")
      */
     protected $tubesite;
 
     /**
-     * @JoinColumn(nullable=false)
-     * @ManyToOne(targetEntity="TubesiteUser")
+     * @ORM\JoinColumn(nullable=false)
+     * @ORM\ManyToOne(targetEntity="TubesiteUser")
      */
     protected $tubesiteUser;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $externalId;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $filename;
 
     /**
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $filesize;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $filetype;
 
     /**
-     * @Column(type="json_array")
+     * @ORM\Column(type="json_array")
      */
     protected $params = [];
 
