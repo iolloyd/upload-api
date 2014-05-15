@@ -9,19 +9,13 @@
 
 use Cloud\Model\Video;
 use Cloud\Model\VideoOutbound;
-use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Component\HttpFoundation\Request;
-use Pagerfanta\Adapter\ArrayAdapter;
-use Pagerfanta\Adapter\DoctrineCollectionAdapter;
-use Pagerfanta\Pagerfanta;
 
 /**
  * Get a video
  */
 $app->get('/videos/{video}', function(Video $video) use ($app)
 {
-    $video = $app['em']->find('cx:video', $id);
     return $app->json($video);
 })
 ->assert('video', '\d+')
@@ -34,29 +28,14 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
  */
 $app->get('/videos', function(Request $request) use ($app)
 {
-    $videos = $app['em']
-        ->getRepository('cx:video')
-        ->matching(new Criteria());
+    $videoPager = $app['paginator']('cx:video');
 
-    $adapter = new DoctrineCollectionAdapter($videos);
-    $pager = new Pagerfanta($adapter); 
+    $videos = $videoPager->getCurrentPageResults();
 
-    $videos = $pager->getCurrentPageResults();
-
-    echo 'total:' . $pager->count() . '<br/>';
-    echo 'returned:' . count($videos) . '<br/>'; 
-    echo $videos[0]->getTitle();
-die;
-    $first = $request->get('first') ?: 0;
-    $limit = $request->get('limit') ?: 10;
-
-
-    return $app->json([
-        'videos' => $videos, 
-        'count'  => $count,
-    ]);
+    return $app->json($videos);
 })
-->secure('ROLE_USER');
+//->secure('ROLE_USER');
+;
 
 /**
  * Create new draft video

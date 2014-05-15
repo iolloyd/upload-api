@@ -51,6 +51,8 @@ $app->register(new Cloud\Silex\Provider\CorsHeadersServiceProvider(), [
     ],
 ]);
 
+$app->register(new Cloud\Silex\Provider\ModelListServiceProvider());
+
 // run
 $app->boot();
 $app['load']('routes');
