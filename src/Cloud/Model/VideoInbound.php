@@ -24,8 +24,10 @@ class VideoInbound extends AbstractModel
 
     //////////////////////////////////////////////////////////////////////////
 
+    use \Gedmo\Timestampable\Traits\TimestampableEntity;
     use Traits\IdTrait;
-    use Traits\TimestampableTrait;
+    use Traits\SlugTrait;
+
 
     /**
      * @Column(type="string", length=48)
