@@ -11,7 +11,6 @@ use Cloud\Doctrine\Annotation as CX;
  */
 class Tag extends AbstractModel
 {
-    use \Gedmo\Timestampable\Traits\TimestampableEntity;
     use Traits\IdTrait;
     use Traits\SlugTrait;
 
