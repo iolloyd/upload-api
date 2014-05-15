@@ -1,0 +1,33 @@
+<?php
+
+namespace Cloud\Silex\Provider;
+
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\Tools\Pagination\Paginator;
+use Pagerfanta\Adapter\ArrayAdapter;
+use Pagerfanta\Adapter\DoctrineCollectionAdapter;
+use Pagerfanta\Pagerfanta;
+use Silex\Application;
+use Silex\ServiceProviderInterface;
+
+class ModelListServiceProvider implements ServiceProviderInterface
+{
+    public function register(Application $app)
+    {
+        $app['paginator'] = $app->protect(function ($model) use ($app) {
+            $list = $app['em']
+                ->getRepository($model)
+                ->matching(new Criteria());
+
+            $adapter = new DoctrineCollectionAdapter($list);
+            $pager = new Pagerfanta($adapter);
+
+            return $pager;
+        });
+    }
+
+    public function boot(\Silex\Application $app)
+    {
+    }
+}
+
