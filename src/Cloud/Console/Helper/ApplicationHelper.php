@@ -20,7 +20,6 @@ class ApplicationHelper extends Helper implements SilexAwareInterface
      */
     public function __construct(\Cloud\Silex\Application $app)
     {
-        $this->App($app);
     }
 
     /**
