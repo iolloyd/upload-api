@@ -22,8 +22,9 @@ class VideoOutbound extends AbstractModel
 
     //////////////////////////////////////////////////////////////////////////
 
+    use \Gedmo\Timestampable\Traits\TimestampableEntity;
     use Traits\IdTrait;
-    use Traits\TimestampableTrait;
+    use Traits\SlugTrait;
 
     /**
      * @JoinColumn(nullable=false)

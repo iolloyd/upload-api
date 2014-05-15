@@ -10,9 +10,9 @@ namespace Cloud\Model;
  */
 class Tubesite extends AbstractModel
 {
+    use \Gedmo\Timestampable\Traits\TimestampableEntity;
     use Traits\IdTrait;
     use Traits\SlugTrait;
-    use Traits\TimestampableTrait;
 
     /**
      * @Column(type="string")
