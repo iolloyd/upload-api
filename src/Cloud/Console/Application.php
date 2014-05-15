@@ -107,7 +107,7 @@ class Application extends BaseApplication
      */
     protected function getDefaultInputDefinition()
     {
-        return new InputDefinition(array(
+        return new InputDefinition([
             new InputArgument('command', InputArgument::REQUIRED, 'The command to execute'),
 
             new InputOption('--help',           '', InputOption::VALUE_NONE, 'Display this help message.'),
@@ -115,7 +115,7 @@ class Application extends BaseApplication
             new InputOption('--version',        '', InputOption::VALUE_NONE, 'Display the application version.'),
             new InputOption('--ansi',           '',   InputOption::VALUE_NONE, 'Force ANSI output.'),
             new InputOption('--no-interaction', ['--force', '-f'], InputOption::VALUE_NONE, 'Do not ask any interactive question.'),
-        ));
+        ]);
     }
 
     /**
@@ -127,9 +127,9 @@ class Application extends BaseApplication
     {
         $helpers = parent::getDefaultHelperSet();
 
-        $helpers->set(new Helper\ApplicationHelper($this->app, 'app'));
-        $helpers->set(new EntityManagerHelper($this->app['em'], 'em'));
-        $helpers->set(new ConnectionHelper($this->app['db'], 'db'));
+        $helpers->set(new Helper\ApplicationHelper($this->app), 'app');
+        $helpers->set(new EntityManagerHelper($this->app['em']), 'em');
+        $helpers->set(new ConnectionHelper($this->app['db']), 'db');
 
         return $helpers;
     }
