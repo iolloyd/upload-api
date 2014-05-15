@@ -4,6 +4,7 @@
 ini_set('display_errors', true);
 error_reporting(E_ALL);
 set_time_limit(0);
+date_default_timezone_set('UTC');
 
 // Always start in the project directory
 chdir(dirname(__DIR__));
@@ -11,45 +12,34 @@ chdir(dirname(__DIR__));
 // Init autoloading
 require 'autoload.php';
 
+use Symfony\Component\Console\Application;
+
+require 'bootstrap.php';
+
+$cli = new \Cloud\Console\Application($app, 'cloudxxx', '0.1.0');
+
+$cli->addCommands([
+    new Cloud\Console\Command\Development\ServerCommand(),
+    new Cloud\Console\Command\Doctrine\LoadFixturesCommand(),
+    new Cloud\Console\Command\Resque\StartCommand(),
+    new Cloud\Console\Command\Resque\EnqueueCommand(),
+    new Cloud\Console\Command\Resque\ScheduleCommand(),
+]);
+
 /*
- * Slim Application
+  $finder = new Finder();
+  $finder
+      ->files()
+      ->in('src/Cloud/Job/')
+      ->name('*.php')
+  ;
+  foreach ($finder as $file) {
+      $className = 'Cloud\\Job\\' . str_replace('/', '\\', substr($file->getRelativePathname(), 0, -4));
+      if (class_exists($className) && is_subclass_of($className, 'Cloud\Job\AbstractJob')) {
+          $commands[] = new $className;
+      }
+  }
+  $commands[] = new \CloudOutbound\YouPorn\Job\DemoCombined();
  */
-$app = new \Cloud\Slim\Slim();
 
-// cli environment
-$app->container->singleton('environment', function ($c) {
-    $environment = \Slim\Environment::mock([
-        'REQUEST_METHOD' => 'GET',
-        'SCRIPT_NAME' => $_SERVER['SCRIPT_NAME'],
-        'PATH_INFO' => '',
-        'QUERY_STRING' => '',
-        'SERVER_NAME' => gethostname(),
-        'SERVER_PORT' => 80,
-        'ACCEPT' => 'text/plain',
-        'ACCEPT_LANGUAGE' => 'en-US',
-        'ACCEPT_CHARSET' => 'utf-8',
-        'USER_AGENT' => 'cli',
-        'REMOTE_ADDR' => '127.0.0.1',
-        'slim.url_scheme' => 'cli',
-        'slim.input' => STDIN,
-        'slim.errors' => STDERR,
-    ]);
-
-    return $environment;
-});
-$app->config('log.level', \Slim\Log::NOTICE);
-
-// console middleware
-$app->add(new \Cloud\Console\Middleware());
-
-// loader
-$loader = new \Cloud\Slim\Loader\Loader();
-$loader->load('config')
-       ->load('helper');
-
-// middleware
-$app->add($loader);
-$app->add(new \Cloud\Slim\Middleware\Doctrine());
-
-// run
-$app->run();
+$cli->run();
