@@ -12,16 +12,15 @@ use Cloud\Model\VideoOutbound;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Component\HttpFoundation\Request;
 
+
 /**
  * Get a video
  */
-$app->get('/videos/{video}', function(Video $video) use ($app)
+$app->get('/videos/{id}', function($id) use ($app)
 {
+    $video = $app['em']->find('\Cloud\Model\Video', $id);
     return $app->json($video);
-})
-->assert('video', '\d+')
-->convert('video', 'converter.video:convert')
-->secure('ROLE_USER');
+});
 
 /**
  * Get list of videos
@@ -53,6 +52,7 @@ $app->post('/videos', function(Request $request) use ($app)
 {
     $user = $app->session->user;
     $video = new Video($user);
+
     $video->setTitle($request->get('title'));
     $video->setDescription($request->get('description'));
     $video->setTags($request->get('tags'));
@@ -129,7 +129,8 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
     );
 
     $app->json($video);
-});
+})
+    ->convert('video', 'converter.video:convert');
 
 /**
  * Create a new inbound upload and get parameters for the form to
@@ -182,7 +183,7 @@ $app->post('/videos/:video/inbounds', function(Video $video) use ($app)
 /**
  * Complete chunk upload and combine chunks into single file
  */
-$app->post('/videos/:video/inbounds/:videoinbound/complete',
+$app->post('/videos/:video/inbounds/:inbound/complete',
     function(Video $video, VideoInbound $inbound) use ($app)
 {
     if ($inbound->getVideo() != $video) {
@@ -253,7 +254,7 @@ $app->post('/videos/:video/inbounds/:videoinbound/complete',
 /**
  * Abort chunk upload and delete chunks
  */
-$app->delete('/videos/:video/inbounds/:videoinbound', function(Video $video, VideoInbound $inbound) use ($app)
+$app->delete('/videos/:video/inbounds/:inbound', function(Video $video, VideoInbound $inbound) use ($app)
 {
     if ($inbound->getVideo() != $video) {
         return $app->notFound();
