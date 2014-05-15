@@ -86,6 +86,14 @@ class VideoInbound extends AbstractModel
     }
 
     /**
+     * Set the creator
+     */
+    public function setCreatedBy(User $user)
+    {
+        $this->created_by = $user;
+    }
+
+    /**
      * Set the upload identification token
      *
      * @param  string $token
@@ -225,7 +233,7 @@ class VideoInbound extends AbstractModel
      */
     public function getFilesize()
     {
-        return $this->filesize;
+        return $this->getVideo()->getFilesize;
     }
 
     /**

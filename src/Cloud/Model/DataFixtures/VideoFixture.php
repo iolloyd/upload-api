@@ -18,16 +18,18 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
      */
     public function load(ObjectManager $em)
     {
-        $video = new Video(
-            $this->getReference('user')
-        );
 
-        $video->setTitle('Eye iz vidayo');
-        $video->setDescription('Me iz dizcreyeber');
+        foreach (range(1, 30) as $x) {
+            $video = new Video(
+                $this->getReference('user')
+            );
 
-        $em->persist($video);
+            $video->setTitle('Eye iz vidayo' . $x);
+            $video->setDescription('Me iz dizcreyeber' . $x);
+            $em->persist($video);
+        }
+
         $em->flush();
-
         $this->addReference('video', $video);
     }
 
