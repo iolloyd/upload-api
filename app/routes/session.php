@@ -1,23 +1,31 @@
 <?php
 
 /**
- * @package  cloudxxx-api (http://www.cloud.xxx)
- *
- * @author    ReallyUseful <info@ruseful.com>
- * @copyright 2014 Really Useful Limited
- * @license   Proprietary code. Usage restrictions apply.
- */
-
-/**
  * Get state of session and global config
  */
 $app->get('/session', function () use ($app)
 {
-    if (!$app->session->isLoggedIn()) {
-        return $app->status(401);
+    if (!$app['security']->getToken()) {
+        $app->status(401);
     }
 
-    return $app->pass();
+    $json = [
+        'endpoints' => [
+            //'default' => $app['config']['baseurl'],
+        ],
+        'config' => [
+            'env' => $app['env'],
+        ],
+    ];
+
+    $token = $app['security']->getToken();
+
+    if ($app['security']->isGranted('ROLE_USER')) {
+        $json['user'] = $token;
+        //$json['company'] = $user->getCompany();
+    }
+
+    return $app->json($json);
 });
 
 /**
@@ -26,15 +34,15 @@ $app->get('/session', function () use ($app)
 $app->post('/session', function () use ($app)
 {
     $result = $app->session->login(
-        ['email' => $app->get('email')],
-        $app->get('password')
+        ['email' => $app->param('email')],
+        $app->param('password')
     );
 
     if (!$result) {
         $app->jsonError(400, 'invalid_grant', 'Invalid username or password');
     }
 
-    return $app->pass();
+    $app->pass();
 });
 
 /**
@@ -43,28 +51,30 @@ $app->post('/session', function () use ($app)
 $app->delete('/session', function () use ($app)
 {
     $app->session->logout();
-    return $app->pass();
+    $app->pass();
 });
 
 /**
  * Render standard response payload for session requests.
  * Invoked via `$app->pass()` from the method specific function.
  */
-$app->match('/session', function () use ($app)
-{
-    $json = [
-        'endpoints' => [
-            'default' => $app->config('baseurl'),
-        ],
-        'config' => [
-            'mode' => $app->config('mode'),
-        ],
-    ];
+//$app->any('/session', function () use ($app)
+//{
+    //$json = [
+        //'endpoints' => [
+            //'default' => $app->config('baseurl'),
+        //],
+        //'config' => [
+            //'mode' => $app->config('mode'),
+        //],
+    //];
 
-    if ($app->session->isLoggedIn()) {
-        $json['user'] = $app->session->user();
-        $json['company'] = $app->session->company();
-    }
+    //$user = $app['security']->getToken();
 
-    return $app->json($json);
-});
+    //if ($user) {
+        //$json['user'] = $user;
+        //$json['company'] = $user->getCompany();
+    //}
+
+    //$app->json($json);
+//});

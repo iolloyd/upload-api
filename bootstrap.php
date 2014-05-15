@@ -64,17 +64,14 @@ $userToken = '5FZ2Z8QIkA7UTZ4BYkoC+GsReLf569mSKDsfods6LYQ8t+a8EW9oaircfMpmaLbPBh
 // providers
 $app->register(new Silex\Provider\SecurityServiceProvider(), [
     'security.firewalls' => [
-        'login' => [
-            'pattern' => '^/login$',
-        ],
         'default' => [
+            'http' => true,
             'pattern' => '^/',
-            'security' => $app['debug'] ? false : true,
+            //'security' => $app['debug'] ? false : true,
             'anonymous' => true,
-            'users' => [
-                'user' => ['ROLE_USER', $userToken],
-                'admin' => ['ROLE_ADMIN', $userToken],
-            ],
+            'users' => $app->share(function () use ($app) {
+                return $app['em']->getRepository('cx:user');
+            }),
         ],
     ],
 ]);
@@ -84,6 +81,14 @@ $app->register(new Silex\Provider\SessionServiceProvider(), [
         'name'            => 'CLOUD',
         'cookie_lifetime' => $app['debug'] ? null : '2h',
         'cookie_httponly' => true,
+    ],
+]);
+
+$app->register(new Cloud\Silex\Provider\CorsHeadersServiceProvider(), [
+    'cors.options' => [
+        'allow_credentials' => true,
+        'allow_origin'      => 'http://cloud-ng.local',
+        'max_age'           => 604800,
     ],
 ]);
 
