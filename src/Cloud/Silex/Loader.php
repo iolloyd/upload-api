@@ -45,9 +45,16 @@ class Loader implements ServiceProviderInterface
             $dir  = $path . $dir;
 
             if (is_dir($dir)) {
-                // TODO: refactor with Symfony Finder
                 $finder = new Finder();
-                foreach ($finder->files()->in($dir) as $filepath) {
+                $finder
+                    ->files()
+                    ->in($dir);
+
+                foreach ($ext as $x) {
+                    $finder->name('*.' . $x);
+                }
+
+                foreach ($finder as $filepath) {
                     Cloud_Silex_Loader__require($filepath, $app);
                 }
             }
