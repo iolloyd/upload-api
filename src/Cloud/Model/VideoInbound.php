@@ -4,51 +4,43 @@ namespace Cloud\Model;
 
 use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
 
+use Doctrine\ORM\Mapping as ORM;
+use Cloud\Doctrine\Annotation as CX;
+
 /**
- * @Entity
- * @HasLifecycleCallbacks
+ * @ORM\Entity
+ * @ORM\HasLifecycleCallbacks
  */
 class VideoInbound extends AbstractModel
 {
-    /** Waiting for chunk files to be uploaded */
-    const STATUS_PENDING = 'pending';
-
-    /** Finalizing upload and combining chunks into one file */
-    const STATUS_WORKING = 'working';
-
-    /** Upload complete */
+    const STATUS_PENDING  = 'pending';
+    const STATUS_WORKING  = 'working';
     const STATUS_COMPLETE = 'complete';
-
-    /** Error during upload or finalization */
-    const STATUS_ERROR = 'error';
+    const STATUS_ERROR    = 'error';
 
     //////////////////////////////////////////////////////////////////////////
 
     use Traits\IdTrait;
-    use Traits\TimestampableTrait;
+    use Traits\CreatedAtTrait;
+    use Traits\UpdatedAtTrait;
+    use Traits\CompanyTrait;
 
     /**
-     * @Column(type="string", length=48)
+     * @ORM\Column(type="string", length=48)
      */
     protected $token;
 
     /**
-     * @JoinColumn(nullable=false)
-     * @ManyToOne(targetEntity="Video", inversedBy="inbounds")
+     * @ORM\JoinColumn(nullable=false)
+     * @ORM\ManyToOne(targetEntity="Video", inversedBy="inbounds")
      */
     protected $video;
 
     /**
      * #JoinColumn(nullable=false)
-     * @ManyToOne(targetEntity="User")
+     * @ORM\ManyToOne(targetEntity="User")
      */
     protected $created_by;
-
-    /**
-     * @JoinColumn(nullable=false)
-     * @ManyToOne(targetEntity="Company")
-     */
-    protected $company;
 
     /**
      * @see STATUS_PENDING
@@ -56,22 +48,22 @@ class VideoInbound extends AbstractModel
      * @see STATUS_COMPLETE
      * @see STATUS_ERROR
      *
-     * @Column(type="string", length=16)
+     * @ORM\Column(type="string", length=16)
      */
     protected $status = self::STATUS_PENDING;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $filename;
 
     /**
-     * @Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      */
     protected $filesize;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $filetype;
 
