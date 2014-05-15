@@ -13,6 +13,6 @@ Session.vim
 vendor
 composer.phar
 composer.lock
-app/config/9-local.php
+app/config/local.ini
 cache
 tags
