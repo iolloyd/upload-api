@@ -38,9 +38,9 @@ class Video extends AbstractModel implements JsonSerializable
 
     //////////////////////////////////////////////////////////////////////////
 
+    use \Gedmo\Timestampable\Traits\TimestampableEntity;
     use Traits\IdTrait;
     use Traits\SlugTrait;
-    use Traits\TimestampableTrait;
 
     /**
      * @Column(type="integer")
@@ -151,7 +151,7 @@ class Video extends AbstractModel implements JsonSerializable
         $this->outbounds = new ArrayCollection();
         $this->created_by = $user;
         $this->updated_by = $user;
-        $this->setCompany = $user->company();
+        $this->setCompany($user->getCompany());
     }
 
     /**

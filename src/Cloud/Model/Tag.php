@@ -8,9 +8,9 @@ namespace Cloud\Model;
  */
 class Tag extends AbstractModel
 {
+    use \Gedmo\Timestampable\Traits\TimestampableEntity;
     use Traits\IdTrait;
     use Traits\SlugTrait;
-    use Traits\TimestampableTrait;
 
     /**
      * @Column(type="string")
