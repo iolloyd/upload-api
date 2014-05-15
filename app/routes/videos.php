@@ -26,7 +26,8 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
 })
 ->assert('video', '\d+')
 ->convert('video', 'converter.video:convert')
-->secure('ROLE_USER');
+// ->secure('ROLE_USER');
+;
 
 /**
  * Get list of videos
