@@ -5,7 +5,7 @@ namespace Cloud\Silex;
 /**
  * Trait implementing ApplicationAwareInterface
  */
-trait ApplicationAwareTrait
+trait SilexAwareTrait
 {
     /**
      * @var Slim
