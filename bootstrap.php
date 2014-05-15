@@ -75,6 +75,7 @@ $app->register(new Cloud\Silex\Loader(), [
         'php',
     ],
 ]);
+
 $app['load']('helper');
 
 

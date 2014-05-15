@@ -42,4 +42,5 @@ $cli->addCommands([
   $commands[] = new \CloudOutbound\YouPorn\Job\DemoCombined();
  */
 
+$app->boot();
 $cli->run();
