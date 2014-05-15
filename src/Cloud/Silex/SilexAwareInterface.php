@@ -5,7 +5,7 @@ namespace Cloud\Silex;
 /**
  * Interface for classes that depend on the Silex application
  */
-interface ApplicationAwareInterface
+interface SilexAwareInterface
 {
     /**
      * Set the Silex application
