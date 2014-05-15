@@ -2,6 +2,10 @@
 
 namespace Cloud\Model;
 
+use Gedmo\Mapping\Annotation as Gedmo;
+use Doctrine\ORM\Mapping as ORM;
+
+
 /**
  * Basis for all model classes
  */

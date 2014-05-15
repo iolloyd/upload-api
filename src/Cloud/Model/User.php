@@ -12,8 +12,8 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class User extends AbstractModel implements JsonSerializable
 {
+    use \Gedmo\Timestampable\Traits\TimestampableEntity;
     use Traits\IdTrait;
-    use Traits\TimestampableTrait;
 
     /**
      * @ManyToOne(
