@@ -26,8 +26,8 @@ $app->get('/session', function () use ($app)
 $app->post('/session', function () use ($app)
 {
     $result = $app->session->login(
-        ['email' => $app->param('email')],
-        $app->param('password')
+        ['email' => $app->get('email')],
+        $app->get('password')
     );
 
     if (!$result) {
