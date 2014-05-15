@@ -11,8 +11,8 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class Company extends AbstractModel implements JsonSerializable
 {
+    use \Gedmo\Timestampable\Traits\TimestampableEntity;
     use Traits\IdTrait;
-    use Traits\TimestampableTrait;
 
     /**
      * @Column(type="string")
