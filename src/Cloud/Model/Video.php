@@ -13,18 +13,18 @@ use DateTime;
 use JsonSerializable;
 use Doctrine\Common\Collections\ArrayCollection;
 
+use Doctrine\ORM\Mapping as ORM;
+use Cloud\Doctrine\Annotation as CX;
+
 /**
- * @Entity
- * @HasLifecycleCallbacks
+ * @ORM\Entity
+ * @ORM\HasLifecycleCallbacks
  */
 class Video extends AbstractModel implements JsonSerializable
 {
-    const STATUS_DRAFT = 'draft';
-
-    const STATUS_PENDING = 'pending';
-
-    const STATUS_WORKING = 'working';
-
+    const STATUS_DRAFT    = 'draft';
+    const STATUS_PENDING  = 'pending';
+    const STATUS_WORKING  = 'working';
     const STATUS_COMPLETE = 'complete';
 
     /*
@@ -36,36 +36,30 @@ class Video extends AbstractModel implements JsonSerializable
     const STATUS_COMPLETE = 4;
      */
 
-    //////////////////////////////////////////////////////////////////////////
-
     use Traits\IdTrait;
     use Traits\SlugTrait;
-    use Traits\TimestampableTrait;
+    use Traits\CreatedAtTrait;
+    use Traits\UpdatedAtTrait;
+    use Traits\CompanyTrait;
 
     /**
-     * @Column(type="integer")
-     * @Version
+     * @ORM\Column(type="integer")
+     * @ORM\Version
      */
     protected $version = 1;
 
     /**
-     * #JoinColumn(nullable=false)
-     * @ManyToOne(targetEntity="Company")
-     */
-    protected $company;
-
-    /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $title;
 
     /**
-     * @Column(type="text", nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     protected $description;
 
     /**
-     * @ManyToMany(targetEntity="Tag")
+     * @ORM\ManyToMany(targetEntity="Tag")
      */
     protected $tags;
 
@@ -79,19 +73,19 @@ class Video extends AbstractModel implements JsonSerializable
      * @see STATUS_WORKING
      * @see STATUS_COMPLETE
      *
-     * @Column(type="string", length=16)
+     * @ORM\Column(type="string", length=16)
      */
     protected $status = self::STATUS_DRAFT;
 
     /**
-     * @Column(type="boolean")
+     * @ORM\Column(type="boolean")
      */
     protected $isDraft = true;
 
     /**
      * Inbound files: user upload from browser
      *
-     * @OneToMany(
+     * @ORM\OneToMany(
      *   targetEntity="VideoInbound",
      *   mappedBy="video",
      *   cascade={"persist", "remove"}
@@ -102,7 +96,7 @@ class Video extends AbstractModel implements JsonSerializable
     /**
      * Outbound files: worker publish to tubesite
      *
-     * @OneToMany(
+     * @ORM\OneToMany(
      *   targetEntity="VideoOutbound",
      *   mappedBy="video",
      *   cascade={"persist", "remove"}
@@ -111,27 +105,27 @@ class Video extends AbstractModel implements JsonSerializable
     protected $outbounds;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $filename;
 
     /**
-     * @Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      */
     protected $filesize;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $filetype;
 
     /**
-     * @Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true)
      */
     protected $publishedAt;
 
     /**
-     * @Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true)
      */
     protected $completedAt;
 
@@ -140,18 +134,11 @@ class Video extends AbstractModel implements JsonSerializable
     /**
      * Constructor
      */
-    public function __construct($user)
+    public function __construct()
     {
-        if (!isset($user)) {
-            throw new \Exception("A video needs to have a user");
-        }
-
         $this->tags = new ArrayCollection();
         $this->inbounds = new ArrayCollection();
         $this->outbounds = new ArrayCollection();
-        $this->created_by = $user;
-        $this->updated_by = $user;
-        $this->setCompany = $user->company();
     }
 
     /**

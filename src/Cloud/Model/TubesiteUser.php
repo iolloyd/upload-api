@@ -6,33 +6,33 @@ use DateTime;
 use JsonSerializable;
 use Doctrine\Common\Collections\ArrayCollection;
 
+use Doctrine\ORM\Mapping as ORM;
+use Cloud\Doctrine\Annotation as CX;
+
 /**
- * @Entity
+ * @ORM\Entity
  */
 class TubesiteUser extends AbstractModel implements JsonSerializable
 {
     use Traits\IdTrait;
+    use Traits\CreatedAtTrait;
+    use Traits\UpdatedAtTrait;
+    use Traits\CompanyTrait;
 
     /**
-     * @JoinColumn(nullable=false)
-     * @ManyToOne(targetEntity="Tubesite")
+     * @ORM\JoinColumn(nullable=false)
+     * @ORM\ManyToOne(targetEntity="Tubesite")
      */
     protected $tubesite;
 
     /**
-     * @JoinColumn(nullable=false)
-     * @ManyToOne(targetEntity="Company", inversedBy="tubesiteUsers")
-     */
-    protected $company;
-
-    /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $username;
 
     /**
      * TODO: encrypt, isolate, etc
-     * @Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255)
      */
     protected $password;
 
@@ -43,12 +43,12 @@ class TubesiteUser extends AbstractModel implements JsonSerializable
     protected $credentials;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $externalId;
 
     /**
-     * @Column(type="json_array")
+     * @ORM\Column(type="json_array")
      */
     protected $params = [];
 
