@@ -39,6 +39,8 @@ class UserFixture extends AbstractFixture implements DependentFixtureInterface
         $em->persist($user2);
         $em->persist($user3);
         $em->flush();
+
+        $this->addReference('user', $user1);
     }
 
     /**
