@@ -354,7 +354,7 @@ class VideoOutbound extends AbstractModel
      */
     public function getFilename()
     {
-        return $this->filename;
+        return $this->getVideo()->getfilename();
     }
 
     /**
