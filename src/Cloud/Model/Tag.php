@@ -2,18 +2,20 @@
 
 namespace Cloud\Model;
 
+use Doctrine\ORM\Mapping as ORM;
+use Cloud\Doctrine\Annotation as CX;
+
 /**
- * @Entity
- * @HasLifecycleCallbacks
+ * @ORM\Entity
+ * @ORM\HasLifecycleCallbacks
  */
 class Tag extends AbstractModel
 {
     use Traits\IdTrait;
     use Traits\SlugTrait;
-    use Traits\TimestampableTrait;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $title;
 

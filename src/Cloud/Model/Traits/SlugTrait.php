@@ -11,7 +11,7 @@ namespace Cloud\Model\Traits;
 trait SlugTrait
 {
     /**
-     * @Column(type="string", unique=true)
+     * @ORM\Column(type="string", unique=true)
      */
     protected $slug;
 
@@ -59,8 +59,8 @@ trait SlugTrait
     /**
      * Prepare the entity's slug value on persist and update
      *
-     * @PrePersist
-     * @PreUpdate
+     * @ORM\PrePersist
+     * @ORM\PreUpdate
      */
     public function prePersistPrepareSlug()
     {

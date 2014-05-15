@@ -6,37 +6,42 @@ use DateTime;
 use JsonSerializable;
 use Doctrine\Common\Collections\ArrayCollection;
 
+use Doctrine\ORM\Mapping as ORM;
+use Cloud\Doctrine\Annotation as CX;
+
 /**
- * @Entity
- * @HasLifecycleCallbacks
+ * @ORM\Entity
+ * @ORM\HasLifecycleCallbacks
  */
 class User extends AbstractModel implements JsonSerializable
 {
     use Traits\IdTrait;
-    use Traits\TimestampableTrait;
+    use Traits\CreatedAtTrait;
+    use Traits\UpdatedAtTrait;
 
     /**
-     * @ManyToOne(
+     * @ORM\JoinColumn(nullable=false)
+     * @ORM\ManyToOne(
      *   targetEntity="Company",
      *   fetch="EAGER",
      *   inversedBy="users"
      * )
-     * @JoinColumn(nullable=false)
+     * @CX\Company
      */
     protected $company;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $name;
 
     /**
-     * @Column(type="string", unique=true)
+     * @ORM\Column(type="string", unique=true)
      */
     protected $email;
 
     /**
-     * @Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     protected $password;
 
@@ -46,7 +51,7 @@ class User extends AbstractModel implements JsonSerializable
     protected $videos;
 
     /**
-     * @Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true)
      */
     protected $lastLoginAt;
 
