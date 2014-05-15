@@ -1,11 +1,14 @@
 <?php
 /**
- * @package  cloudxxx-api (http://www.cloud.xxx)
+ * cloudxxx-api (http://www.cloud.xxx)
  *
- * @author    ReallyUseful <info@ruseful.com>
- * @copyright 2014 Really Useful Limited
- * @license   Proprietary code. Usage restrictions apply.
+ * Copyright (C) 2014 Really Useful Limited.
+ * Proprietary code. Usage restrictions apply.
+ *
+ * @copyright  Copyright (C) 2014 Really Useful Limited
+ * @license    Proprietary
  */
+
 
 namespace Cloud\Model;
 
