@@ -13,7 +13,6 @@ use Cloud\Doctrine\Annotation as CX;
  */
 class Tubesite extends AbstractModel
 {
-    use \Gedmo\Timestampable\Traits\TimestampableEntity;
     use Traits\IdTrait;
     use Traits\SlugTrait;
 
