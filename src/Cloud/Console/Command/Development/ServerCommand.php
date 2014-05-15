@@ -51,7 +51,7 @@ EOF
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $app = $this->getHelper('slim')->getSlim();
+        $app = $this->getHelper('Silex')->getApp();
         $mode = $app->config('mode');
 
         if ($mode != 'development') {

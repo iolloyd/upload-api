@@ -2,12 +2,12 @@
 
 namespace Cloud\Console;
 
-use Cloud\Slim\SlimAwareInterface;
+use Cloud\Silex\ApplicationAwareInterface;
+
 use Doctrine\DBAL\Tools\Console\Helper\ConnectionHelper;
 use Doctrine\ORM\Tools\Console\ConsoleRunner as DoctrineConsoleRunner;
 use Doctrine\ORM\Tools\Console\Helper\EntityManagerHelper;
-use Slim\Slim;
-use Slim\Log as SlimLog;
+
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Input\InputArgument;
@@ -23,29 +23,32 @@ use Symfony\Component\Finder\Finder;
 class Application extends BaseApplication
 {
     /**
-     * @var Slim
+     * @var Application
      */
     protected $app;
 
     /**
      * Constructor
      *
-     * @param Slim $app
+     * @param Application $app
      */
-    public function __construct(Slim $app)
+    public function __construct(\Cloud\Silex\Application $app, $name, $version)
     {
         $this->app = $app;
-
-        $name = 'cloud.xxx (cli)';
-        $version = sprintf('0.0.0 (%s)', $app->config('mode'));
-
+        $version = sprintf('0.0.0 (%s)', $app['env']);
+ 
         parent::__construct($name, $version);
 
-        $this->getDefinition()->addOption(new InputOption('--mode', null, InputOption::VALUE_REQUIRED, 'Slim application mode: development, staging, production', $app->config('mode')));
+        $this->getDefinition()->addOption(
+            new InputOption('--env', 
+            null, 
+            InputOption::VALUE_REQUIRED, 
+            'Silex application mode: development, staging, production', $app['env'])
+        );
     }
 
     /**
-     * Adjust Slim configuration before running
+     * Adjust Silex configuration before running
      *
      * @param InputInterface  $input
      * @param OutputInterface $output
@@ -53,6 +56,7 @@ class Application extends BaseApplication
      */
     public function doRun(InputInterface $input, OutputInterface $output)
     {
+        /*
         $log = $this->app->log;
 
         if ($output->isQuiet()) {
@@ -64,12 +68,7 @@ class Application extends BaseApplication
         } else {
             $log->setLevel(SlimLog::NOTICE);
         }
-
-        foreach ($this->all() as $command) {
-            if ($command instanceof SlimAwareInterface) {
-                $command->setSlim($this->app);
-            }
-        }
+        */
 
         return parent::doRun($input, $output);
     }
@@ -82,28 +81,6 @@ class Application extends BaseApplication
     protected function getDefaultCommands()
     {
         $commands = parent::getDefaultCommands();
-
-        // Cloud Commands
-        $commands[] = new Command\Development\ServerCommand();
-        $commands[] = new Command\Doctrine\LoadFixturesCommand();
-        $commands[] = new Command\Resque\StartCommand();
-        $commands[] = new Command\Resque\EnqueueCommand();
-        $commands[] = new Command\Resque\ScheduleCommand();
-
-        // Jobs
-        $finder = new Finder();
-        $finder
-            ->files()
-            ->in('src/Cloud/Job/')
-            ->name('*.php')
-        ;
-        foreach ($finder as $file) {
-            $className = 'Cloud\\Job\\' . str_replace('/', '\\', substr($file->getRelativePathname(), 0, -4));
-            if (class_exists($className) && is_subclass_of($className, 'Cloud\Job\AbstractJob')) {
-                $commands[] = new $className;
-            }
-        }
-        $commands[] = new \CloudOutbound\YouPorn\Job\DemoCombined();
 
         // Doctrine ORM Commands
         $doctrine = [];
@@ -150,9 +127,9 @@ class Application extends BaseApplication
     {
         $helpers = parent::getDefaultHelperSet();
 
-        $helpers->set(new Helper\SlimHelper($this->app), 'slim');
-        $helpers->set(new EntityManagerHelper($this->app->em), 'em');
-        $helpers->set(new ConnectionHelper($this->app->em->getConnection()), 'db');
+        $helpers->set(new Helper\ApplicationHelper($this->app, 'app'));
+        $helpers->set(new EntityManagerHelper($this->app['em'], 'em'));
+        $helpers->set(new ConnectionHelper($this->app['db'], 'db'));
 
         return $helpers;
     }
