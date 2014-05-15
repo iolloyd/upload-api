@@ -6,14 +6,9 @@ error_reporting(E_ALL);
 set_time_limit(0);
 date_default_timezone_set('UTC');
 
-// Always start in the project directory
 chdir(dirname(__DIR__));
 
-// Init autoloading
 require 'autoload.php';
-
-use Symfony\Component\Console\Application;
-
 require 'bootstrap.php';
 
 $cli = new \Cloud\Console\Application($app, 'cloudxxx', '0.1.0');

@@ -2,8 +2,9 @@
 
 ini_set('display_errors', true);
 error_reporting(E_ALL);
+set_time_limit(0);
+date_default_timezone_set('UTC');
 
-// Always start in the project directory
 chdir(dirname(__DIR__));
 
 // Decline static file requests back to the PHP built-in webserver
@@ -13,8 +14,9 @@ if (php_sapi_name() === 'cli-server'
     return false;
 }
 
-// Init Silex Application
+require 'autoload.php';
 require 'bootstrap.php';
+
 // run
 $app->boot();
 $app['load']('routes');
