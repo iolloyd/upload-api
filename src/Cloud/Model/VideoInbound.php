@@ -1,4 +1,14 @@
 <?php
+/**
+ * cloudxxx-api (http://www.cloud.xxx)
+ *
+ * Copyright (C) 2014 Really Useful Limited.
+ * Proprietary code. Usage restrictions apply.
+ *
+ * @copyright  Copyright (C) 2014 Really Useful Limited
+ * @license    Proprietary
+ */
+
 
 namespace Cloud\Model;
 
@@ -83,6 +93,14 @@ class VideoInbound extends AbstractModel
         if ($video) {
             $this->setVideo($video);
         }
+    }
+
+    /**
+     * Set the creator
+     */
+    public function setCreatedBy(User $user)
+    {
+        $this->created_by = $user;
     }
 
     /**
@@ -225,7 +243,7 @@ class VideoInbound extends AbstractModel
      */
     public function getFilesize()
     {
-        return $this->filesize;
+        return $this->getVideo()->getFilesize;
     }
 
     /**

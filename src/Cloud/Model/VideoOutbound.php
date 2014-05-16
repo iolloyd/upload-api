@@ -1,4 +1,14 @@
 <?php
+/**
+ * cloudxxx-api (http://www.cloud.xxx)
+ *
+ * Copyright (C) 2014 Really Useful Limited.
+ * Proprietary code. Usage restrictions apply.
+ *
+ * @copyright  Copyright (C) 2014 Really Useful Limited
+ * @license    Proprietary
+ */
+
 
 namespace Cloud\Model;
 
@@ -354,7 +364,7 @@ class VideoOutbound extends AbstractModel
      */
     public function getFilename()
     {
-        return $this->filename;
+        return $this->getVideo()->getfilename();
     }
 
     /**

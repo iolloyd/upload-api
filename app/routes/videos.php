@@ -1,15 +1,16 @@
 <?php
 /**
- * @package  cloudxxx-api (http://www.cloud.xxx)
+ * cloudxxx-api (http://www.cloud.xxx)
  *
- * @author    ReallyUseful <info@ruseful.com>
- * @copyright 2014 Really Useful Limited
- * @license   Proprietary code. Usage restrictions apply.
+ * Copyright (C) 2014 Really Useful Limited.
+ * Proprietary code. Usage restrictions apply.
+ *
+ * @copyright  Copyright (C) 2014 Really Useful Limited
+ * @license    Proprietary
  */
 
 use Cloud\Model\Video;
 use Cloud\Model\VideoOutbound;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -21,30 +22,22 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
 })
 ->assert('video', '\d+')
 ->convert('video', 'converter.video:convert')
-->secure('ROLE_USER');
+// ->secure('ROLE_USER');
+;
 
 /**
  * Get list of videos
  */
 $app->get('/videos', function(Request $request) use ($app)
 {
-    $first = $request->get('first') ?: 0;
-    $limit = $request->get('limit') ?: 10;
+    $videoPager = $app['paginator']('cx:video');
 
-    //$dql = "SELECT v, i from Cloud\Model\Video v JOIN v.inbounds i";
-    $dql = "SELECT v FROM Cloud\Model\Video v";
-    $qry = $app['em']->createQuery($dql)
-        ->setFirstResult($first)
-        ->setMaxResults($limit);
+    $videos = $videoPager->getCurrentPageResults();
 
-    $videos = new Paginator($qry, $fetchjoinCollection = true);
-    $count = count($videos);
-
-    return $app->json([
-        'videos' => $videos, 
-        'count'  => $count,
-    ]);
-});
+    return $app->json($videos);
+})
+//->secure('ROLE_USER');
+;
 
 /**
  * Create new draft video
