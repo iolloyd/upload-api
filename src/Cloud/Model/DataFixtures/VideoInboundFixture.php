@@ -17,36 +17,38 @@ use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 
 use Cloud\Model\Video;
+use Cloud\Model\VideoInbound;
 
 /**
  * Loads all standard tubesites
  */
-class VideoFixture extends AbstractFixture implements DependentFixtureInterface   
+class VideoInboundFixture extends AbstractFixture implements DependentFixtureInterface   
 {
     /**
      * {@inheritDoc}
      */
     public function load(ObjectManager $em)
     {
+        $inbound = new VideoInbound(
+            $this->getReference('video')
+        );
 
-        foreach (range(1, 30) as $x) {
-            $video = new Video(
-                $this->getReference('user')
-            );
+        $inbound->setToken('token12345');
+        $inbound->setFilename('video inbound filename');
+        $inbound->setCreatedBy(
+            $this->getReference('user')
+        );
 
-            $video->setTitle('Eye iz vidayo' . $x);
-            $video->setDescription('Me iz dizcreyeber' . $x);
-            $em->persist($video);
-        }
-
+        $em->persist($inbound);
         $em->flush();
-        $this->addReference('video', $video);
+
+        $this->addReference('video-inbound', $inbound);
     }
 
     public function getDependencies()
     {
         return [
-            __NAMESPACE__ . '\UserFixture', 
+            __NAMESPACE__ . '\VideoFixture', 
         ];
     }
 
