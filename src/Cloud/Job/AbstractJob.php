@@ -11,6 +11,9 @@
 
 namespace Cloud\Job;
 
+use Resque;
+use Resque_Job_Status;
+use ResqueScheduler\Job\Status;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputArgument;
@@ -21,12 +24,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 abstract class AbstractJob extends Command
 {
-    //////////////////////////// Resque_Job //////////////////////////////
-
-    /**
-     * @var Resque_Job
-     */
-    public $job;
+    const QUEUE_DEFAULT = 'default';
 
     /**
      * @var array
@@ -34,9 +32,61 @@ abstract class AbstractJob extends Command
     public $args = [];
 
     /**
+     * @var Resque_Job
+     */
+    public $job;
+
+    /**
      * @var string
      */
     public $queue;
+
+    /**
+     * Enqueue a job for immediate execution
+     *
+     * @param  array   $args   Arguments that should be passed when the job is executed.
+     * @param  string  $queue  Name of the queue to place the job in.
+     * @return \Resque_Job_Status
+     */
+    public static function enqueue($args = [], $queue = self::QUEUE_DEFAULT)
+    {
+        $id = \Resque::enqueue($queue, get_called_class(), $args, true);
+        return new \Resque_Job_Status($id);
+    }
+
+    /**
+     * Enqueue a job in a given number of seconds from now
+     *
+     * Identical to enqueue(), however the first argument is the number
+     * of seconds before the job should be executed.
+     *
+     * @param  int    $in     Number of seconds from now when the job should be executed.
+     * @param  array  $args   Arguments that should be passed when the job is executed.
+     * @param  string $queue  Name of the queue to place the job in.
+     * @return \ResqueScheduler\Job\Status
+     */
+    public static function enqueueIn($in, $args = [], $queue = self::QUEUE_DEFAULT)
+    {
+        $id = \ResqueScheduler\ResqueScheduler::enqueueIn($in, $queue, get_called_class(), $args, true);
+        return new \ResqueScheduler\Job\Status($id);
+    }
+
+    /**
+     * Enqueue a job in a given number of seconds from now
+     *
+     * Identical to enqueue(), however the first argument is the number
+     * of seconds before the job should be executed.
+     *
+     * @param  DateTime|int $in     DateTime object or int of UNIX timestamp when should be executed.
+     * @param  array        $args   Arguments that should be passed when the job is executed.
+     * @param  string       $queue  Name of the queue to place the job in.
+     * @return \ResqueScheduler\Job\Status
+     */
+    public static function enqueueAt($time, $args = [], $queue = self::QUEUE_DEFAULT)
+    {
+        $id = \ResqueScheduler\ResqueScheduler::enqueueAt($time, $queue, get_called_class(), $args, true);
+        return new \ResqueScheduler\Job\Status($id);
+    }
 
     /**
      * resque: Set up environment for this job
