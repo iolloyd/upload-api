@@ -91,7 +91,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
         return $prev;
     }
 
-    protected function getNextLink($hostUrl, $params, $pager, $newPage)
+    protected function getNextLink($hostUrl, $params, $pager)
     {
         if ($pager->hasNextPage() ) {
             $params['page'] = $pager->getNextPage();
