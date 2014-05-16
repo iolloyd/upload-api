@@ -70,13 +70,31 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
     protected function getLinks($hostUrl, $params, $pager)
     {
+        $first = $this->getFirstLink($hostUrl, $params, $pager);
+        $last = $this->getLastLink($hostUrl, $params, $pager);
         $prev = $this->getPreviousLink($hostUrl, $params, $pager);
         $next = $this->getNextLink($hostUrl, $params, $pager);
-        $comma = ($pager->hasPreviousPage() && $pager->hasNextPage())
-            ? ', '
-            : '';
 
-        return $prev . $comma . $next;
+        return implode(', ', [$first, $last, $prev, $next]);
+    }
+
+    protected function getFirstLink($hostUrl, $params, $pager)
+    {
+        $params['page'] = 1;
+        $params = http_build_query($params);
+        $prev = sprintf('<%s?%s>; rel="first"', $hostUrl, $params);
+
+        return $prev;
+    }
+
+    protected function getLastLink($hostUrl, $params, $pager)
+    {
+        $params['page'] = ($pager->count() / $pager->getMaxPerPage()) - 1;
+
+        $params = http_build_query($params);
+        $prev = sprintf('<%s?%s>; rel="last"', $hostUrl, $params);
+
+        return $prev;
     }
 
     protected function getPreviousLink($hostUrl, $params, $pager)
