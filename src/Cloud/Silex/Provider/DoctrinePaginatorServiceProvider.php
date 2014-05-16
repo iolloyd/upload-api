@@ -35,8 +35,8 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $page = $app['request']->get('page') ?: 1; 
             $perPage = $app['request']->get('per_page') ?: 10;
 
-            $pager->setCurrentPage($page);
             $pager->setMaxPerPage($perPage);
+            $pager->setCurrentPage($page);
 
             return $pager;
         });
@@ -44,7 +44,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
         $app['paginator.response.json'] = $app->protect(function ($model, $groups) use ($app) {
             $hostUrl = $app['request']->getHttpHost() . $app['request']->getPathInfo();
             $pager   = $app['paginator']($model);
-            $params = $app['request']->query->all();
+            $params  = $app['request']->query->all();
             $links   = $this->getLinks($hostUrl, $params, $pager);
 
             $serializer  = SerializerBuilder::create()->build();
