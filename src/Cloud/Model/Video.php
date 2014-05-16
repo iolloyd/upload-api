@@ -13,11 +13,13 @@
 namespace Cloud\Model;
 
 use DateTime;
-use JsonSerializable;
 use Doctrine\Common\Collections\ArrayCollection;
+use JMS\Serializer\Annotation\Exclude;
+use JsonSerializable;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
+use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
@@ -45,6 +47,7 @@ class Video extends AbstractModel implements JsonSerializable
     use Traits\UpdatedAtTrait;
     use Traits\CompanyTrait;
 
+
     /**
      * @ORM\Column(type="integer")
      * @ORM\Version
@@ -53,11 +56,13 @@ class Video extends AbstractModel implements JsonSerializable
 
     /**
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"list", "list.videos", "details", "details.videos"})
      */
     protected $title;
 
     /**
      * @ORM\Column(type="text", nullable=true)
+     * @JMS\Groups({"details", "details.videos"})
      */
     protected $description;
 
