@@ -66,7 +66,21 @@ class ScheduleCommand extends Command
             $args = [];
         }
 
-        $token = ResqueScheduler::enqueueIn(10, $queue, $class, $args, $trackStatus);
+        if (!class_exists($class)) {
+            throw new \InvalidArgumentException(sprintf('Job class %s does not exist', $class));
+        } elseif (!is_subclass_of($class, 'Cloud\Job\AbstractJob')) {
+            throw new \InvalidArgumentException(sprintf('Job class %s does not extend Cloud\Job\AbstractJob', $class));
+        }
+
+        if ($input->hasOption('in')) {
+            $in = $input->getOption('in');
+            $output->writeln($formatter->formatSection(date('c'), 'enqueing <info>' . $class . '</info> in <comment>' . $in . '</comment> seconds...'));
+            $status = call_user_func($class . '::enqueueIn', $in, $args, $queue);
+        } else {
+            throw new \InvalidArgumentException('Must have one of `--in=<seconds>` or `--at=<timestamp>`');
+        }
+
+        $token = explode(':', (string) $status)[1];
 
         if ($trackStatus) {
             $status = new JobStatus($token);
