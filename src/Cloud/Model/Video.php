@@ -82,11 +82,13 @@ class Video extends AbstractModel implements JsonSerializable
      * @see STATUS_COMPLETE
      *
      * @ORM\Column(type="string", length=16)
+     * @JMS\Groups({"list", "list.videos", "details", "details.videos"})
      */
     protected $status = self::STATUS_DRAFT;
 
     /**
      * @ORM\Column(type="boolean")
+     * @JMS\Groups({"list", "list.videos", "details", "details.videos"})
      */
     protected $isDraft = true;
 
@@ -98,6 +100,7 @@ class Video extends AbstractModel implements JsonSerializable
      *   mappedBy="video",
      *   cascade={"persist", "remove"}
      * )
+     * @JMS\Groups({"details.videos"})
      */
     protected $inbounds;
 
@@ -109,31 +112,37 @@ class Video extends AbstractModel implements JsonSerializable
      *   mappedBy="video",
      *   cascade={"persist", "remove"}
      * )
+     * @JMS\Groups({"details.videos"})
      */
     protected $outbounds;
 
     /**
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"details.videos"})
      */
     protected $filename;
 
     /**
      * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Groups({"details.videos"})
      */
     protected $filesize;
 
     /**
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"details.videos"})
      */
     protected $filetype;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Groups({"details.videos"})
      */
     protected $publishedAt;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Groups({"details.videos"})
      */
     protected $completedAt;
 

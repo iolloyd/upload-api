@@ -41,31 +41,37 @@ class User extends AbstractModel
      *   inversedBy="users"
      * )
      * @CX\Company
+     * @JMS\Groups({"details.user"})
      */
     protected $company;
 
     /**
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"details.user"})
      */
     protected $name;
 
     /**
      * @ORM\Column(type="string", unique=true)
+     * @JMS\Groups({"details.user"})
      */
     protected $email;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @JMS\Groups({"details.user"})
      */
     protected $password;
 
     /**
      * #OneToMany(targetEntity="Video", mappedBy="created_by")
+     * @JMS\Groups({"details.user"})
      */
     protected $videos;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Groups({"details.user"})
      */
     protected $lastLoginAt;
 
