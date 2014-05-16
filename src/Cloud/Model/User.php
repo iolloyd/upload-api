@@ -1,4 +1,14 @@
 <?php
+/**
+ * cloudxxx-api (http://www.cloud.xxx)
+ *
+ * Copyright (C) 2014 Really Useful Limited.
+ * Proprietary code. Usage restrictions apply.
+ *
+ * @copyright  Copyright (C) 2014 Really Useful Limited
+ * @license    Proprietary
+ */
+
 
 namespace Cloud\Model;
 
@@ -65,6 +75,7 @@ class User extends AbstractModel
     public function __construct()
     {
         $this->videos = new ArrayCollection();
+        $this->videoInbounds = new ArrayCollection();
     }
 
     /**
@@ -177,11 +188,28 @@ class User extends AbstractModel
     /**
      * Get the videos created by this user
      *
-     * @return Collection
+     * @return array 
      */
     public function getVideos()
     {
-        return $this->users;
+        $inbounds = $this->getVideoInbounds();
+        return $inbounds;
+
+        var_dump($inbounds); die;
+        $videos = [];
+        foreach ($this->getVideoInbounds() as $inbound) {
+            $videos[] = $inbound;
+        }
+
+        return $videos;
+    }
+
+    /**
+     * Get the video inbounds
+     */
+    public function getVideoInbounds()
+    {
+        return $this->videoInbounds;
     }
 
     /**
