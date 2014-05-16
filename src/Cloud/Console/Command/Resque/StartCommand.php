@@ -138,6 +138,8 @@ EOT
 
         // process loop
 
+        $exitCode = 0;
+
         while (count($processes) > 0) {
             pcntl_signal_dispatch();
 
@@ -148,6 +150,16 @@ EOT
 
                 $output->write($process->getIncrementalOutput());
                 $output->write('<error>' . $process->getIncrementalErrorOutput() . '</error>');
+
+                if ($process->isTerminated()) {
+                    $exitCode = max($exitCode, $process->getExitCode());
+                }
+
+                if ($process->isTerminated() && !$process->isSuccessful()) {
+                    array_walk($processes, function ($process) {
+                        $process->stop();
+                    });
+                }
 
                 if (!$process->isRunning()) {
                     unset($processes[$i]);
@@ -160,6 +172,8 @@ EOT
         if ($input->hasOption('pid')) {
             unlink($input->getOption('pid'));
         }
+
+        return $exitCode;
     }
 
     /**
