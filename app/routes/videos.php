@@ -12,6 +12,7 @@
 use Cloud\Model\Video;
 use Cloud\Model\VideoOutbound;
 use Symfony\Component\HttpFoundation\Request;
+use JMS\Serializer\SerializerBuilder;
 
 /**
  * Get a video
@@ -30,12 +31,11 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
  */
 $app->get('/videos', function(Request $request) use ($app)
 {
-    $videoPager = $app['paginator']('cx:video');
-
-    $videos = $videoPager->getCurrentPageResults();
-
-    return $app->json($videos);
+    $groups = ['details', 'details.companies'];
+    $pagedView = $app['paginator.response.json']('cx:video', $groups);
+    return $pagedView;
 })
+->bind('listAllVideos')
 //->secure('ROLE_USER');
 ;
 
@@ -53,8 +53,6 @@ $app->post('/videos', function(Request $request) use ($app)
     $video->setStatus($request->get('status'));
     $video->setFilename($request->get('filename'));
     $video->setFilesize($request->get('filesize'));
-
-    // TODO inbounds? outbounds?
 
     $app['em']->persist($video);
     $app['em']->flush();
