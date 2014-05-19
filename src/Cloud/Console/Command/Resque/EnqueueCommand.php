@@ -52,8 +52,6 @@ EOT
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->getApplication()->setCatchExceptions(false);
-
         $queue       = $input->getOption('queue');
         $class       = $input->getArgument('class');
         $trackStatus = $input->getOption('track');
