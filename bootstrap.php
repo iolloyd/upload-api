@@ -17,6 +17,11 @@ $configs = [
 ];
 $app->register(new Herrera\Wise\WiseServiceProvider(), [
     'wise.path' => 'app/config/',
+    'wise.options' => [
+        'parameters' => [
+            'env' => $_SERVER,
+        ],
+    ],
 ]);
 $app['config'] = array_reduce($configs, function (array $data, $file) use ($app) {
     try { return array_replace_recursive($data, $app['wise']->load($file)); }

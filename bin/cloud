@@ -11,7 +11,9 @@ chdir(dirname(__DIR__));
 require 'autoload.php';
 require 'bootstrap.php';
 
-$cli = new \Cloud\Console\Application($app, 'cloudxxx', '0.1.0');
+$cli = new Cloud\Console\Application($app, 'cloudxxx', '0.1.0');
+
+// cloud commands
 
 $cli->addCommands([
     new Cloud\Console\Command\Development\ServerCommand(),
@@ -21,21 +23,24 @@ $cli->addCommands([
     new Cloud\Console\Command\Resque\ScheduleCommand(),
 ]);
 
-/*
-  $finder = new Finder();
-  $finder
-      ->files()
-      ->in('src/Cloud/Job/')
-      ->name('*.php')
-  ;
-  foreach ($finder as $file) {
-      $className = 'Cloud\\Job\\' . str_replace('/', '\\', substr($file->getRelativePathname(), 0, -4));
-      if (class_exists($className) && is_subclass_of($className, 'Cloud\Job\AbstractJob')) {
-          $commands[] = new $className;
-      }
-  }
-  $commands[] = new \CloudOutbound\YouPorn\Job\DemoCombined();
- */
+// jobs
+
+$finder = new Symfony\Component\Finder\Finder();
+$finder
+    ->files()
+    ->in('src/Cloud/Job/')
+    ->name('*.php')
+;
+foreach ($finder as $file) {
+    $className = 'Cloud\\Job\\' . str_replace('/', '\\', substr($file->getRelativePathname(), 0, -4));
+    if (class_exists($className) && is_subclass_of($className, 'Cloud\Job\AbstractJob')) {
+        $cli->add(new $className);
+    }
+}
+
+$cli->add(new \CloudOutbound\YouPorn\Job\DemoCombined());
+
+// run
 
 $app->boot();
 $cli->run();

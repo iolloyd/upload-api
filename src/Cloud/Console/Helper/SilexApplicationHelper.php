@@ -9,7 +9,7 @@ use Symfony\Component\Console\Helper\Helper;
 /**
  * Silex application CLI helper
  */
-class ApplicationHelper extends Helper implements SilexAwareInterface
+class SilexApplicationHelper extends Helper implements SilexAwareInterface
 {
     use SilexAwareTrait;
 
@@ -20,6 +20,7 @@ class ApplicationHelper extends Helper implements SilexAwareInterface
      */
     public function __construct(\Cloud\Silex\Application $app)
     {
+        $this->setApplication($app);
     }
 
     /**
