@@ -16,6 +16,8 @@ use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
+use JMS\Serializer\Annotation as JMS;
+
 
 /**
  * @ORM\Entity
