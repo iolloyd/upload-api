@@ -21,6 +21,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
+use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
@@ -194,7 +195,7 @@ class User extends AbstractModel
     /**
      * Get the videos created by this user
      *
-     * @return array 
+     * @return array
      */
     public function getVideos()
     {
