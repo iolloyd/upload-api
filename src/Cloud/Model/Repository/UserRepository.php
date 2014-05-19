@@ -26,7 +26,7 @@ class UserRepository extends EntityRepository
      */
     public function loadUserByUsername($username)
     {
-        $user = $this->findOnyBy(['email' => $username]);
+        $user = $this->findOneBy(['email' => $username]);
 
         if (!$user) {
             throw new UsernameNotFoundException(sprintf('User with email "%s" not found', $username));

@@ -277,7 +277,7 @@ class User extends AbstractModel
      */
     public function getPassword()
     {
-        return null;
+        return $this->password;
     }
 
     /**
