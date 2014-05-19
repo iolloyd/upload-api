@@ -51,7 +51,9 @@ $app->register(new Cloud\Silex\Provider\CorsHeadersServiceProvider(), [
     ],
 ]);
 
-$app->register(new Cloud\Silex\Provider\ModelListServiceProvider());
+$app->register(new Silex\Provider\UrlGeneratorServiceProvider());
+
+$app->register(new Cloud\Silex\Provider\DoctrinePaginatorServiceProvider());
 
 // run
 $app->boot();

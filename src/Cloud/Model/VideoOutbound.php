@@ -14,6 +14,7 @@ namespace Cloud\Model;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
+use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
@@ -34,6 +35,7 @@ class VideoOutbound extends AbstractModel
     /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Video", inversedBy="outbounds")
+     * @JMS\Groups({"details.outbounds"})
      */
     protected $video;
 
@@ -44,43 +46,51 @@ class VideoOutbound extends AbstractModel
      * @see STATUS_ERROR
      *
      * @ORM\Column(type="string", length=16)
+     * @JMS\Groups({"details.outbounds"})
      */
     protected $status = self::STATUS_PENDING;
 
     /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Tubesite")
+     * @JMS\Groups({"details.outbounds"})
      */
     protected $tubesite;
 
     /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="TubesiteUser")
+     * @JMS\Groups({"details.outbounds"})
      */
     protected $tubesiteUser;
 
     /**
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"details.outbounds"})
      */
     protected $externalId;
 
     /**
      * @ORM\Column(type="string")
+     * @JMS\Groups({"details.outbounds"})
      */
     protected $filename;
 
     /**
      * @ORM\Column(type="integer")
+     * @JMS\Groups({"details.outbounds"})
      */
     protected $filesize;
 
     /**
      * @ORM\Column(type="string")
+     * @JMS\Groups({"details.outbounds"})
      */
     protected $filetype;
 
     /**
      * @ORM\Column(type="json_array")
+     * @JMS\Groups({"details.outbounds"})
      */
     protected $params = [];
 
