@@ -25,7 +25,8 @@
 
         "kamisama/php-resque-ex": "~1.2",
         "kamisama/php-resque-ex-scheduler": "dev-master",
-        "pagerfanta/pagerfanta": "~1.0"
+        "pagerfanta/pagerfanta": "~1.0",
+        "jms/serializer": "0.16.0"
     },
 
     "require-dev": {
