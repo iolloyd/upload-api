@@ -42,7 +42,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
         });
 
         $app['paginator.response.json'] = $app->protect(function ($model, $groups) use ($app) {
-            $hostUrl = $app['request']->getHttpHost() . $app['request']->getPathInfo();
+            $hostUrl = $app['request']->getSchemeAndHttpHost() . $app['request']->getPathInfo();
             $pager   = $app['paginator']($model);
             $params  = $app['request']->query->all();
             $links   = $this->getLinks($hostUrl, $params, $pager);
@@ -89,8 +89,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
     protected function getLastLink($hostUrl, $params, $pager)
     {
-        $params['page'] = ($pager->count() / $pager->getMaxPerPage()) - 1;
-
+        $params['page'] = floor($pager->count() / $pager->getMaxPerPage());
         $params = http_build_query($params);
         $prev = sprintf('<%s?%s>; rel="last"', $hostUrl, $params);
 
