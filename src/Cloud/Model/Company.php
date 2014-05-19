@@ -17,6 +17,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
+use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
@@ -30,6 +31,7 @@ class Company extends AbstractModel implements JsonSerializable
 
     /**
      * @ORM\Column(type="string")
+     * @JMS\Groups({"list", "details", "list.companies", "details.companies"})
      */
     protected $title;
 
@@ -39,6 +41,7 @@ class Company extends AbstractModel implements JsonSerializable
      *   mappedBy="company",
      *   cascade={"persist", "remove"}
      * )
+     * @JMS\Groups({"details.companies"})
      */
     protected $users;
 

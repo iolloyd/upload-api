@@ -16,6 +16,8 @@ use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
+use JMS\Serializer\Annotation as JMS;
+
 
 /**
  * @ORM\Entity
@@ -37,18 +39,21 @@ class VideoInbound extends AbstractModel
 
     /**
      * @ORM\Column(type="string", length=48)
+     * @JMS\Groups({"details.inbounds"})
      */
     protected $token;
 
     /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Video", inversedBy="inbounds")
+     * @JMS\Groups({"details.inbounds"})
      */
     protected $video;
 
     /**
      * #JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="User")
+     * @JMS\Groups({"details.inbounds"})
      */
     protected $created_by;
 
@@ -64,21 +69,25 @@ class VideoInbound extends AbstractModel
 
     /**
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"details.inbounds"})
      */
     protected $filename;
 
     /**
      * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Groups({"details.inbounds"})
      */
     protected $filesize;
 
     /**
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"details.inbounds"})
      */
     protected $filetype;
 
     /**
      * #Column(type="datetime", nullable=true)
+     * @JMS\Groups({"details.inbounds"})
      */
     protected $expiresAt;
 

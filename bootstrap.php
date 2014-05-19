@@ -30,6 +30,11 @@ $app->register(new Silex\Provider\DoctrineServiceProvider(), [
 \Doctrine\Common\Annotations\AnnotationRegistry::registerAutoloadNamespace(
     'Cloud\Doctrine\Annotation', 'src/'
 );
+
+\Doctrine\Common\Annotations\AnnotationRegistry::registerAutoloadNamespace(
+    'JMS\Serializer\Annotation', 'vendor/jms/serializer/src'
+);
+
 $app->extend('dbs.event_manager', function ($managers, $app) {
     foreach ($app['dbs.options'] as $name => $options) {
         $managers[$name]->addEventSubscriber(new Cloud\Doctrine\TimestampEventSubscriber());

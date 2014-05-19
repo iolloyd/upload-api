@@ -21,6 +21,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
+use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
@@ -41,31 +42,37 @@ class User extends AbstractModel
      *   inversedBy="users"
      * )
      * @CX\Company
+     * @JMS\Groups({"details.user"})
      */
     protected $company;
 
     /**
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"details.user"})
      */
     protected $name;
 
     /**
      * @ORM\Column(type="string", unique=true)
+     * @JMS\Groups({"details.user"})
      */
     protected $email;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @JMS\Groups({"details.user"})
      */
     protected $password;
 
     /**
      * #OneToMany(targetEntity="Video", mappedBy="created_by")
+     * @JMS\Groups({"details.user"})
      */
     protected $videos;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Groups({"details.user"})
      */
     protected $lastLoginAt;
 
@@ -188,7 +195,7 @@ class User extends AbstractModel
     /**
      * Get the videos created by this user
      *
-     * @return array 
+     * @return array
      */
     public function getVideos()
     {
