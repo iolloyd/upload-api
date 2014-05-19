@@ -46,6 +46,8 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $pager   = $app['paginator']($model);
             $params  = $app['request']->query->all();
             $links   = $this->getLinks($hostUrl, $params, $pager);
+            $totalRange = $this->getTotalRangeLink($hostUrl, $params, $pager);
+            $range      = $this->getRangeLink($hostUrl, $params, $pager);
 
             $serializer  = SerializerBuilder::create()->build();
             $jsonContent = $serializer->serialize(
@@ -56,6 +58,8 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
             $response = $app->json(json_decode($jsonContent));
             $response->headers->add(['Link' => $links]);
+            $response->headers->add(['X-Total-Range' => $totalRange]);
+            $response->headers->add(['X-Range' => $range]);
 
             return $response;
         });
@@ -70,56 +74,29 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
     protected function getLinks($hostUrl, $params, $pager)
     {
-        $first = $this->getFirstLink($hostUrl, $params, $pager);
-        $last = $this->getLastLink($hostUrl, $params, $pager);
-        $prev = $this->getPreviousLink($hostUrl, $params, $pager);
-        $next = $this->getNextLink($hostUrl, $params, $pager);
+        $link = $this->getLink($hostUrl, $params, $pager);
 
-        return implode(', ', [$first, $last, $prev, $next]);
+        $links = [
+            $link(1, 'first'),
+            $link(floor($pager->count() / $pager->getMaxPerPage()), 'last'),
+            $pager->hasPreviousPage() ? $link($pager->getPreviousPage(), 'prev') : "",
+            $pager->hasNextPage() ? $link($pager->getNextLink(), 'next') : "",
+        ];
+
+        return implode(', ', $links);
     }
 
-    protected function getFirstLink($hostUrl, $params, $pager)
+    protected function getLink($hostUrl, $params, $pager)
     {
-        $params['page'] = 1;
-        $params = http_build_query($params);
-        $prev = sprintf('<%s?%s>; rel="first"', $hostUrl, $params);
+        return function($page, $rel) use ($hostUrl, $params) {
 
-        return $prev;
-    }
-
-    protected function getLastLink($hostUrl, $params, $pager)
-    {
-        $params['page'] = floor($pager->count() / $pager->getMaxPerPage());
-        $params = http_build_query($params);
-        $prev = sprintf('<%s?%s>; rel="last"', $hostUrl, $params);
-
-        return $prev;
-    }
-
-    protected function getPreviousLink($hostUrl, $params, $pager)
-    {
-        if ($pager->hasPreviousPage() ) {
-            $params['page'] = $pager->getPreviousPage();
+            $params['page'] = $page;
             $params = http_build_query($params);
-            $prev = sprintf('<%s?%s>; rel="prev"', $hostUrl, $params);
-        } else {
-            $prev = '';
-        }
-        return $prev;
+            $link = sprintf('<%s?%s>; rel="%s"', $hostUrl, $params, $rel);
+
+            return $link;
+        };
+
     }
-
-    protected function getNextLink($hostUrl, $params, $pager)
-    {
-        if ($pager->hasNextPage() ) {
-            $params['page'] = $pager->getNextPage();
-            $params = http_build_query($params);
-            $next  = sprintf('<%s?%s>; rel="next" ', $hostUrl, $params);
-        } else {
-            $next = '';
-
-        }
-        return $next;
-    }
-
 }
 
