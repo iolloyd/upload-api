@@ -4,6 +4,30 @@ HOST: http://api.cloud.xxx
 # cloud
 cloud API is a *video upload management* service for tube paysite webmasters.
 
+# Group Company
+
+Company-related resource for *Company API*.
+
+## Company [/companies/{id}]
+A single Company object. It represents a single company
+
+The Company has the following attributes:
+
+- id
+- title
+
+# Group User
+User-related resources of *User API*.
+
+## User [/users/{id}]
+A single User object. It represents a single user.
+
+The User has the following attributes:
+
+- email
+- id
+- name
+
 # Group Video
 Video-related resources of *Video API*.
 
@@ -13,10 +37,12 @@ A single Video object. The Video resource is the central resource in the Video A
 The Video resource has the following attributes:
 
 - id
+- email
+- company
+- content
 - created_at
 - description
-- content
-
+-
 The states *id* and *created_at* are assigned by the Video API at the moment of creation.
 
 

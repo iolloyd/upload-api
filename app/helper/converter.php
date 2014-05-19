@@ -19,6 +19,14 @@ $app['converter'] = $app->protect(function($entityName) use ($app) {
     return new DoctrineOrmConverter($app['em'], $entityName);
 });
 
+$app['converter.company'] = $app['converter'](
+    'Cloud\Model\Company'
+);
+
+$app['converter.user'] = $app['converter'](
+    'Cloud\Model\User'
+);
+
 $app['converter.video'] = $app['converter'](
     'Cloud\Model\Video'
 );
