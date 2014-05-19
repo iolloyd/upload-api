@@ -51,14 +51,13 @@ EOF
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $app = $this->getHelper('Silex')->getApp();
-        $mode = $app->config('mode');
+        $app = $this->getHelper('silex')->getApplication();
 
-        if ($mode != 'development') {
+        if ($app['env'] != 'development') {
             $output->writeln('<error>Running PHP built-in server in production environment is NOT recommended!</error>');
         }
 
-        $output->writeln(sprintf("Server running on <info>http://%s</info>...", $input->getArgument('address')));
+        $output->writeln(sprintf('Server running on <info>http://%s</info>...', $input->getArgument('address')));
 
         $builder = new ProcessBuilder([
             PHP_BINARY,
