@@ -49,7 +49,9 @@ class DoctrineOrmConverter
         $entity = $this->em->find($this->entityName, (int) $id);
 
         if (!$entity) {
-            throw new NotFoundHttpException(sprintf('Entity #%d does not exist', $id));
+            throw new NotFoundHttpException(
+                sprintf('Entity #%d does not exist', $id)
+            );
         }
 
         return $entity;
@@ -64,10 +66,11 @@ class DoctrineOrmConverter
     {
         $entity = $this->em->getRepository($this->entityName)->findAll();
         if (!$entities) {
-            throw new NotFoundHttpException(sprintf('Entities #%d does not exist', $id));
+            throw new NotFoundHttpException(
+                sprintf('Entities #%d does not exist', $id)
+            );
         }
 
         return $entities;
-
     }
 }
