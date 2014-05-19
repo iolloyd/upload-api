@@ -41,7 +41,7 @@ class Company extends AbstractModel implements JsonSerializable
      *   mappedBy="company",
      *   cascade={"persist", "remove"}
      * )
-     * @JMS\Groups({"list.companies", "details.companies"})
+     * @JMS\Groups({"details.companies"})
      */
     protected $users;
 
