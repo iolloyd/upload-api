@@ -46,13 +46,13 @@ class Application extends BaseApplication
     {
         $this->app = $app;
         $version = sprintf('0.0.0 (%s)', $app['env']);
- 
+
         parent::__construct($name, $version);
 
         $this->getDefinition()->addOption(
-            new InputOption('--env', 
-            null, 
-            InputOption::VALUE_REQUIRED, 
+            new InputOption('--env',
+            null,
+            InputOption::VALUE_REQUIRED,
             'Silex application mode: development, staging, production', $app['env'])
         );
     }
@@ -137,7 +137,7 @@ class Application extends BaseApplication
     {
         $helpers = parent::getDefaultHelperSet();
 
-        $helpers->set(new Helper\ApplicationHelper($this->app), 'app');
+        $helpers->set(new Helper\SilexApplicationHelper($this->app), 'silex');
         $helpers->set(new EntityManagerHelper($this->app['em']), 'em');
         $helpers->set(new ConnectionHelper($this->app['db']), 'db');
 
