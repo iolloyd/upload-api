@@ -23,6 +23,10 @@ $app['converter.company'] = $app['converter'](
     'Cloud\Model\Company'
 );
 
+$app['converter.tag'] = $app['converter'](
+    'Cloud\Model\Tag'
+);
+
 $app['converter.user'] = $app['converter'](
     'Cloud\Model\User'
 );
@@ -39,4 +43,14 @@ $app['converter.outbound'] = $app['converter'](
     'Cloud\Model\VideoOutbound'
 );
 
+$app['converter.tags.from.request'] = $app->protect(function($tags) use ($app) {
+  $tags = json_decode($tags);
+  $tags = array_map(function($x) use ($app) {
+      return $app['converter.tag']->convert($x->id);
+    },
+    $tags
+  );
+
+  return $tags;
+});
 
