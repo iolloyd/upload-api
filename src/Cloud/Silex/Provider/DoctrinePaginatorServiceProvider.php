@@ -35,8 +35,9 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $page = $app['request']->get('page') ?: 1; 
             $perPage = $app['request']->get('per_page') ?: 10;
 
-            $pager->setMaxPerPage($perPage);
-            $pager->setCurrentPage($page);
+            $pager
+                ->setMaxPerPage($perPage)
+                ->setCurrentPage($page);
 
             return $pager;
         });
@@ -45,9 +46,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $hostUrl = $app['request']->getSchemeAndHttpHost() . $app['request']->getPathInfo();
             $pager   = $app['paginator']($model);
             $params  = $app['request']->query->all();
-            $links   = $this->getLinks($hostUrl, $params, $pager);
-            $totalRange = $this->getTotalRangeLink($hostUrl, $params, $pager);
-            $range      = $this->getRangeLink($hostUrl, $params, $pager);
+            $navlinks   = $this->getLinks($hostUrl, $params, $pager);
 
             $serializer  = SerializerBuilder::create()->build();
             $jsonContent = $serializer->serialize(
@@ -57,9 +56,8 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             );
 
             $response = $app->json(json_decode($jsonContent));
-            $response->headers->add(['Link' => $links]);
-            $response->headers->add(['X-Total-Range' => $totalRange]);
-            $response->headers->add(['X-Range' => $range]);
+            $response->headers->add(['Link' => $navlinks['link']]);
+            $response->headers->add(['X-Pagination-Range' => $navlinks['range']]);
 
             return $response;
         });
@@ -75,15 +73,25 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
     protected function getLinks($hostUrl, $params, $pager)
     {
         $link = $this->getLink($hostUrl, $params, $pager);
+        $currentPage = $pager->getCurrentPage();
+        $pageSize = $pager->getMaxPerPage();
+        $lastPage = ceil($pager->count() / $pageSize);
+        $totalItemCount = $pager->getNbResults();
 
-        $links = [
+        $navlink = [
             $link(1, 'first'),
-            $link(floor($pager->count() / $pager->getMaxPerPage()), 'last'),
+            $link($lastPage, 'last'),
             $pager->hasPreviousPage() ? $link($pager->getPreviousPage(), 'prev') : "",
-            $pager->hasNextPage() ? $link($pager->getNextLink(), 'next') : "",
+            $pager->hasNextPage() ? $link($pager->getNextPage(), 'next') : "",
         ];
+        $rangelink = $this->getRangeLinks($currentPage, $pageSize, $lastPage, $totalItemCount);
 
-        return implode(', ', $links);
+        $navlink = str_replace(', ,', ', ', implode(', ', $navlink));
+
+        return [
+            'link' => $navlink,
+            'range' => $rangelink,
+        ];
     }
 
     protected function getLink($hostUrl, $params, $pager)
@@ -98,5 +106,18 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
         };
 
     }
+
+    /*
+     * X-Pagination-Range: items 1-10/250; pages 1/25
+     */
+    protected function getRangeLinks($currentPage, $pageSize, $lastPage, $totalItemCount)
+    {
+        $currentItem = ($currentPage * $pageSize) - $pageSize;
+        $lastItemOfPage = min($currentItem + $pageSize - 1, $totalItemCount);
+        $links = "X-Pagination-Range: items $currentItem-$lastItemOfPage/$totalItemCount; page $currentPage/$lastPage";
+
+        return $links;
+    }
+
 }
 
