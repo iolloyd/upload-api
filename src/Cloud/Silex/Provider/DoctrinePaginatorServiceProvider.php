@@ -32,7 +32,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $adapter = new DoctrineCollectionAdapter($list);
             $pager = new Pagerfanta($adapter);
 
-            $page = $app['request']->get('page') ?: 1; 
+            $page = $app['request']->get('page') ?: 1;
             $perPage = $app['request']->get('per_page') ?: 10;
 
             $pager
@@ -42,18 +42,33 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return $pager;
         });
 
-        $app['paginator.response.json'] = $app->protect(function ($model, $groups) use ($app) {
-            $hostUrl = $app['request']->getSchemeAndHttpHost() . $app['request']->getPathInfo();
-            $pager   = $app['paginator']($model);
-            $params  = $app['request']->query->all();
-            $navlinks   = $this->getLinks($hostUrl, $params, $pager);
-
-            $serializer  = SerializerBuilder::create()->build();
+        $app['serializer'] = $app->protect(function($results, $groups) {
+            $serializer = SerializerBuilder::create()->build();
             $jsonContent = $serializer->serialize(
-                $pager->getCurrentPageResults(),
-                'json', 
-                \JMS\Serializer\SerializationContext::create()->setGroups($groups)
+              $results,
+              'json',
+              \JMS\Serializer\SerializationContext::create()->setGroups($groups)
             );
+            return $jsonContent;
+        });
+
+        $app['single.response.json'] = $app->protect(function ($model, $groups) use ($app) {
+
+            $params  = $app['request']->query->all();
+            $jsonContent = $app['serializer']($model, $groups);
+
+            $response = $app->json(json_decode($jsonContent));
+
+            return $response;
+        });
+
+        $app['paginator.response.json'] = $app->protect(function ($model, $groups) use ($app) {
+
+            $hostUrl = $app['request']->getSchemeAndHttpHost() . $app['request']->getPathInfo();
+            $params  = $app['request']->query->all();
+            $pager   = $app['paginator']($model);
+            $navlinks = $this->getLinks($hostUrl, $params, $pager);
+            $jsonContent = $app['serializer']($pager->getCurrentPageResults(), $groups);
 
             $response = $app->json(json_decode($jsonContent));
             $response->headers->add(['Link' => $navlinks['link']]);
@@ -104,7 +119,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
     }
 
-    /*
+    /**
      * X-Pagination-Range: items 1-10/250; pages 1/25
      */
     protected function getRangeLinks($currentPage, $pageSize, $lastPage, $totalItemCount)
