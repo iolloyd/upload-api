@@ -24,8 +24,9 @@ use JMS\Serializer\Annotation as JMS;
 /**
  * @ORM\Entity
  * @ORM\HasLifecycleCallbacks
+ * @JMS\AccessType("public_method")
  */
-class Video extends AbstractModel implements JsonSerializable
+class Video extends AbstractModel
 {
     const STATUS_DRAFT    = 'draft';
     const STATUS_PENDING  = 'pending';
@@ -56,18 +57,20 @@ class Video extends AbstractModel implements JsonSerializable
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "list.videos", "details", "details.videos"})
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $title;
 
     /**
      * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"details", "details.videos"})
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $description;
 
     /**
      * @ORM\ManyToMany(targetEntity="Tag")
+     * @JMS\Readonly
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $tags;
 
@@ -82,13 +85,21 @@ class Video extends AbstractModel implements JsonSerializable
      * @see STATUS_COMPLETE
      *
      * @ORM\Column(type="string", length=16)
-     * @JMS\Groups({"list", "list.videos", "details", "details.videos"})
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $status = self::STATUS_DRAFT;
 
     /**
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     * @JMS\ReadOnly
+     */
+    protected $thumbnail;
+
+    /**
      * @ORM\Column(type="boolean")
-     * @JMS\Groups({"list", "list.videos", "details", "details.videos"})
+     * @JMS\Accessor(getter="isDraft")
+     * @JMS\ReadOnly
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $isDraft = true;
 
@@ -100,6 +111,7 @@ class Video extends AbstractModel implements JsonSerializable
      *   mappedBy="video",
      *   cascade={"persist", "remove"}
      * )
+     * @JMS\ReadOnly
      * @JMS\Groups({"details.videos"})
      */
     protected $inbounds;
@@ -112,6 +124,7 @@ class Video extends AbstractModel implements JsonSerializable
      *   mappedBy="video",
      *   cascade={"persist", "remove"}
      * )
+     * @JMS\ReadOnly
      * @JMS\Groups({"details.videos"})
      */
     protected $outbounds;
@@ -143,6 +156,7 @@ class Video extends AbstractModel implements JsonSerializable
     /**
      * @ORM\Column(type="datetime", nullable=true)
      * @JMS\Groups({"details.videos"})
+     * @JMS\ReadOnly
      */
     protected $completedAt;
 
@@ -338,7 +352,7 @@ class Video extends AbstractModel implements JsonSerializable
         }
 
         $this->status = $status;
-        $this->is_draft = ($status == self::STATUS_DRAFT);
+        $this->isDraft = ($status == self::STATUS_DRAFT);
 
         return $this;
     }
@@ -360,7 +374,7 @@ class Video extends AbstractModel implements JsonSerializable
      */
     public function isDraft()
     {
-        return $this->isDraft;
+        return $this->isDraft === true;
     }
 
     /**
@@ -468,32 +482,91 @@ class Video extends AbstractModel implements JsonSerializable
     }
 
     /**
+     * Returns the associated inbounds
+     *
      * @return array
      */
-    public function jsonSerialize()
-    {
-        return [
-            'id'          => $this->getId(),
-            'version'     => $this->getVersion(),
-            'created_at'  => $this->getCreatedAt()->format(DateTime::ISO8601),
-            'updated_at'  => $this->getUpdatedAt()->format(DateTime::ISO8601),
-            'status'      => $this->getStatus(),
-            'is_draft'    => $this->isDraft(),
-            'title'       => $this->getTitle(),
-            'description' => $this->getDescription(),
-            'tags'        => $this->getTags()->toArray(),
-            'filename'    => $this->getFilename(),
-        ];
-    }
-
     public function getVideoInbounds()
     {
         return $this->inbounds;
     }
 
+    /**
+     * Returns the associated outbounds
+     *
+     * @return array
+     */
     public function getVideoOutbounds()
     {
         return $this->outbounds;
+    }
+
+    /**
+     * Returns the video thumbnail image
+     *
+     * @return string
+     */
+    public function getThumbnail()
+    {
+      $thumbnails = ['tri', 'squ', 'sta', 'env',];
+      $thumbnail = $thumbnails[rand(0, count($thumbnails)-1)] . '.png';
+
+      return $thumbnail;
+    }
+
+    /**
+     * Sets the video thumbnail
+     *
+     * @param string $thumbnail
+     *
+     * @return $this
+     */
+    public function setThumbnail($thumbnail)
+    {
+      $this->thumbnail = $thumbnail;
+
+      return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getPublishedAt()
+    {
+      return $this->publishedAt;
+    }
+
+    /**
+     * Sets the published date
+     *
+     * @param  DateTime $date
+     *
+     * @return Video
+     */
+    public function setPublishedAt(\DateTime $date)
+    {
+      $this->publishedAt = $date;
+
+      return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getCompletedAt()
+    {
+      return $this->completedAt;
+    }
+
+    /**
+     * @param DateTime $date the date of completion
+     *
+     * @return Video
+     */
+    public function setCompletedAt(\DateTime $date)
+    {
+      $this->completedAt = $date;
+      return $this;
     }
 
 }
