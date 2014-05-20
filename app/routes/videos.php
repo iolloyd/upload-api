@@ -19,7 +19,9 @@ use JMS\Serializer\SerializerBuilder;
  */
 $app->get('/videos/{video}', function(Video $video) use ($app)
 {
-    return $app->json($video);
+    $groups = ['list', 'details.videos',];
+
+    return $app['single.response.json']($video, $groups);
 })
 ->assert('video', '\d+')
 ->convert('video', 'converter.video:convert')
@@ -31,7 +33,7 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
  */
 $app->get('/videos', function(Request $request) use ($app)
 {
-    $groups = ['details', 'details.companies'];
+    $groups = ['list.videos', 'details.videos', 'list', ];
     $pagedView = $app['paginator.response.json']('cx:video', $groups);
     return $pagedView;
 })
