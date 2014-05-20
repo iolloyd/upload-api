@@ -171,6 +171,11 @@ class Video extends AbstractModel implements JsonSerializable
         return $this->version;
     }
 
+    public function setVersion($version)
+    {
+      $this->version = $version;
+    }
+
     /**
      * Set the creating user
      *
