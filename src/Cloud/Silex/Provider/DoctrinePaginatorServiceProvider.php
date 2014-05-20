@@ -75,29 +75,26 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
         $link = $this->getLink($hostUrl, $params, $pager);
         $currentPage = $pager->getCurrentPage();
         $pageSize = $pager->getMaxPerPage();
-        $lastPage = ceil($pager->count() / $pageSize);
+        $lastPage = $pager->getNbPages();
         $totalItemCount = $pager->getNbResults();
 
         $navlink = [
-            $link(1, 'first'),
-            $link($lastPage, 'last'),
-            $pager->hasPreviousPage() ? $link($pager->getPreviousPage(), 'prev') : "",
-            $pager->hasNextPage() ? $link($pager->getNextPage(), 'next') : "",
+            $link('first', 1),
+            $link('last', $lastPage),
+            $pager->hasPreviousPage() ? $link('prev', $pager->getPreviousPage()) : "",
+            $pager->hasNextPage()     ? $link('next', $pager->getNextPage())     : "",
         ];
+
         $rangelink = $this->getRangeLinks($currentPage, $pageSize, $lastPage, $totalItemCount);
 
         $navlink = str_replace(', ,', ', ', implode(', ', $navlink));
 
-        return [
-            'link' => $navlink,
-            'range' => $rangelink,
-        ];
+        return ['link' => $navlink, 'range' => $rangelink,];
     }
 
     protected function getLink($hostUrl, $params, $pager)
     {
-        return function($page, $rel) use ($hostUrl, $params) {
-
+        return function($rel, $page) use ($hostUrl, $params) {
             $params['page'] = $page;
             $params = http_build_query($params);
             $link = sprintf('<%s?%s>; rel="%s"', $hostUrl, $params, $rel);
