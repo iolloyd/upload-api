@@ -93,23 +93,16 @@ class VideoInbound extends AbstractModel
 
     /**
      * Constructor
+     *
+     * @param Video $video must be passed to create an inbound
+     *
      */
-    public function __construct(Video $video = null)
+    public function __construct(Video $video, User $user)
     {
         $generator = new UriSafeTokenGenerator();
         $this->setToken($generator->generateToken());
-
-        if ($video) {
-            $this->setVideo($video);
-        }
-    }
-
-    /**
-     * Set the creator
-     */
-    public function setCreatedBy(User $user)
-    {
-        $this->created_by = $user;
+        $this->setVideo($video);
+        $this->setCreatedBy($user);
     }
 
     /**
@@ -302,5 +295,14 @@ class VideoInbound extends AbstractModel
             $this->getFilename()
         );
     }
+
+    /**
+     * Set the creator
+     */
+    protected function setCreatedBy(User $user)
+    {
+        $this->created_by = $user;
+    }
+
 }
 
