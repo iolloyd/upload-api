@@ -97,6 +97,11 @@ class Video extends AbstractModel
     protected $isDraft = true;
 
     /**
+     * Orientation of video. Example: Straight, solo, gay.
+     */
+    protected $orientation;
+
+    /**
      * Outbound files: worker publish to tubesite
      *
      * @ORM\OneToMany(
@@ -134,6 +139,12 @@ class Video extends AbstractModel
      * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $title;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Stat", mappedBy="stats")
+     * @ORM\JoinColumn(name="id", referencedColumnName="id")
+     */
+    protected $stats;
 
     /**
      * @ORM\ManyToMany(targetEntity="Tag")
@@ -197,6 +208,16 @@ class Video extends AbstractModel
     public function getCreatedBy()
     {
         return $this->created_by;
+    }
+
+    /**
+     * Get the orientation of the video
+     *
+     * @return string
+     */
+    public function getOrientation()
+    {
+      return $this->orientation;
     }
 
     /**
