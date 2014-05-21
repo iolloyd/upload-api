@@ -137,6 +137,7 @@ class VideoInbound extends AbstractModel
     {
         $this->setCompany($video->getCompany());
         $this->video = $video;
+
         return $this;
     }
 
@@ -159,6 +160,7 @@ class VideoInbound extends AbstractModel
     public function setCompany(Company $company)
     {
         $this->company = $company;
+
         return $this;
     }
 
@@ -213,6 +215,7 @@ class VideoInbound extends AbstractModel
     public function setFilename($filename)
     {
         $this->filename = $filename;
+
         return $this;
     }
 
@@ -235,6 +238,7 @@ class VideoInbound extends AbstractModel
     public function setFilesize($filesize)
     {
         $this->filesize = $filesize;
+
         return $this;
     }
 
@@ -245,7 +249,7 @@ class VideoInbound extends AbstractModel
      */
     public function getFilesize()
     {
-        return $this->getVideo()->getFilesize;
+        return $this->filesize;
     }
 
     /**
@@ -257,6 +261,7 @@ class VideoInbound extends AbstractModel
     public function setFiletype($filetype)
     {
         $this->filetype = $filetype;
+
         return $this;
     }
 
