@@ -450,24 +450,6 @@ class Video extends AbstractModel
         return $this->filetype;
     }
 
-    //////////////////////////////////////////////////////////////////////////
-
-    /**
-     * @return array
-     */
-    protected function getSlugFields()
-    {
-        return ['id', 'title'];
-    }
-
-    /**
-     * @return bool
-     */
-    protected function shouldRegenerateSlugOnUpdate()
-    {
-        return $this->isDraft();
-    }
-
     /**
      * Returns the associated inbounds
      *
@@ -568,6 +550,24 @@ class Video extends AbstractModel
       }
 
       return $this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * @return array
+     */
+    protected function getSlugFields()
+    {
+        return ['id', 'title'];
+    }
+
+    /**
+     * @return bool
+     */
+    protected function shouldRegenerateSlugOnUpdate()
+    {
+        return $this->isDraft();
     }
 
 }
