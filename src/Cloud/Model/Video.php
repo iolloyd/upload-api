@@ -567,6 +567,8 @@ class Video extends AbstractModel
       foreach ($tags as $tag) {
         $this->tags[] = $tag;
       }
+
+      return $this;
     }
 
 }
