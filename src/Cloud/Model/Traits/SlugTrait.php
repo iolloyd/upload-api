@@ -22,6 +22,8 @@ trait SlugTrait
 {
     /**
      * @ORM\Column(type="string", unique=true)
+     * @JMS\Groups({"list", "details"})
+     * @JMS\ReadOnly
      */
     protected $slug;
 
