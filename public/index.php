@@ -19,15 +19,24 @@ require 'bootstrap.php';
 
 // security
 // TODO: move to Cloud\Silex\Provider\SecurityServiceProvider
+$app['user'] = $app->share(function () use ($app) {
+    $token = $app['security']->getToken();
+
+    if ($token && $app['security']->isGranted('ROLE_USER')) {
+        return $token->getUser();
+    }
+
+    return null;
+});
 $app['security.users'] = $app->share(function () use ($app) {
     return $app['em']->getRepository('cx:user');
 });
 $app->register(new Silex\Provider\SecurityServiceProvider(), [
     'security.firewalls' => [
         'default' => [
-            'pattern'   => '^.*$',
-            'users'     => $app['security.users'],
-            'form'      => [
+            'pattern' => '^.*$',
+            'users' => $app['security.users'],
+            'form' => [
                 'login_path'                     => '/session',
                 'default_target_path'            => '/session',
                 'failure_path'                   => '/session/failure',
@@ -74,9 +83,12 @@ $app->register(new Silex\Provider\SecurityServiceProvider(), [
 // providers
 $app->register(new Silex\Provider\SessionServiceProvider(), [
     'session.storage.options' => [
-        'name'            => 'CLOUD',
-        'cookie_lifetime' => $app['debug'] ? null : '2h',
-        'cookie_httponly' => true,
+        'name'                    => 'CLOUD',
+        'hash_function'           => 'sha256',
+        'hash_bits_per_character' => 6,
+        'cookie_lifetime'         => $app['debug'] ? 0 : 3600*24*6,
+        'cookie_secure'           => !$app['debug'],
+        'cookie_httponly'         => true,
     ],
 ]);
 $app->register(new Cloud\Silex\Provider\CorsHeadersServiceProvider(), [
