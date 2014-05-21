@@ -29,7 +29,7 @@ class CorsHeadersServiceProvider implements ServiceProviderInterface
             'allow_credentials' => false,
             'allow_origin'      => null,
             'max_age'           => 3600,
-            'expose_headers'    => [],
+            'expose_headers'    => ['Link'],
         ];
 
         $app['cors.options.initializer'] = $app->protect(function () use ($app) {
@@ -87,7 +87,7 @@ class CorsHeadersServiceProvider implements ServiceProviderInterface
             }
 
             if (count($options['expose_headers'])) {
-                $response->headers->set('Access-Control-Expose-Headers', implode(', ', $options['allow_headers']));
+                $response->headers->set('Access-Control-Expose-Headers', implode(', ', $options['expose_headers']));
             }
 
             $response->headers->set('Vary', 'Origin, Access-Control-Request-Headers, Access-Control-Request-Method, X-XSRF-TOKEN');
