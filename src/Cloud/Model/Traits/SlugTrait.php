@@ -94,9 +94,7 @@ trait SlugTrait
         $values = [];
 
         foreach ($fields as $field) {
-          if (!empty($this->{$field})) {
             $values[] = $this->{$field};
-          }
         }
 
         if (count($values) < 1) {

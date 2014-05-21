@@ -25,5 +25,31 @@ class Tag extends AbstractModel
     use Traits\IdTrait;
     use Traits\SlugTrait;
 
+    /**
+     * @ORM\Column(type="string")
+     */
+    protected $title;
+
+
+    /**
+     * Gets the title
+     * 
+     * @return string
+     */
+    public function getTitle()
+    {
+      return $this->title;
+    }
+
+    /**
+     * @param string $title
+     *
+     * @return Tag
+     */
+    public function setTitle($title)
+    {
+      $this->title = $title;
+    }
+
 }
 
