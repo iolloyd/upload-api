@@ -41,10 +41,12 @@ The Video resource has the following attributes:
 - company
 - content
 - created_at
+- updated_at
 - description
--
-The states *id* and *created_at* are assigned by the Video API at the moment of creation.
+- thumbnail
 
+The fields *id*, *created_at* and *updated_at* are assigned by the Video API at the moment of creation.
+The *updated_at* field is updated whenever the resource is changed.
 
 + Parameters
     + id (string) ... unique ID identifier of the Video
@@ -100,7 +102,7 @@ The Video Collection resource has the following attribute:
 
     + Headers
 
-            Link: <http:/api.cloud.xxx/videos>;rel="self"
+        Link: <http://api.cloud.xxx:8080/videos?page=1&per_page=10>; rel="first", <http://api.cloud.xxx:8080/videos?page=3&per_page=10>; rel="last", <http://api.cloud.xxx:8080/videos?page=1&per_page=10>; rel="prev", <http://api.cloud.xxx:8080/videos?page=3&per_page=10>; rel="next"
 
     + Body
 
@@ -117,7 +119,8 @@ The Video Collection resource has the following attribute:
 
 ### List All Videos [GET]
 + Parameters
-    + since (optional, string) ... Timestamp in ISO 8601 format: `YYYY-MM-DDTHH:MM:SSZ` Only Videos updated at or after this time are returned.
+    + page (optional, integer) ... Page required.
+    + per_page (optional, integer) ... Maximum number of entries.
 
 + Response 200
 
