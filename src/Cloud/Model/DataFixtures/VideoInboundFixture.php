@@ -30,7 +30,8 @@ class VideoInboundFixture extends AbstractFixture implements DependentFixtureInt
     public function load(ObjectManager $em)
     {
         $inbound = new VideoInbound(
-            $this->getReference('video')
+            $this->getReference('video'),
+            $this->getReference('user')
         );
 
         $inbound->setToken('token12345');
