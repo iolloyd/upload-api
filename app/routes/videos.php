@@ -76,14 +76,19 @@ $app->post('/videos/{video}', function(Video $video) use ($app)
         );
     }
 
-    $app['em']->transactional(function () use ($app, $video) {
-        $video->setUpdatedBy($app->session->user());
-        $video->setTitle($app->param('title'));
-        $video->setDescription($app->param('description'));
+    $app['em']->transactional(function () use ($request, $app, $video) {
+      $video->setTitle($request->get('title'));
+      $video->setDescription($request->get('description'));
+      $video->setFilename($request->get('filename'));
+      $video->setFilesize($request->get('filesize'));
+      $tags = $app['converter.tags.from.request']($request->get('tags'));
+      $video->addTags($tags);
     });
 
-    $app->json($video);
-});
+    $app->flush();
+    return $app->json($video);
+})
+->convert('video', 'converter.video:convert');
 
 /**
  * Publish a draft video when it's ready
