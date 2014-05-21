@@ -21,6 +21,8 @@ trait IdTrait
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue
+     * @JMS\Groups({"list", "details"})
+     * @JMS\ReadOnly
      */
     protected $id;
 
