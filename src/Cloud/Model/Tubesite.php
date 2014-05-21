@@ -28,11 +28,6 @@ class Tubesite extends AbstractModel
     use Traits\SlugTrait;
 
     /**
-     * @ORM\Column(type="string")
-     */
-    protected $title;
-
-    /**
      * @ORM\Column(type="text", nullable=true)
      */
     protected $description;
@@ -40,12 +35,17 @@ class Tubesite extends AbstractModel
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    protected $url;
+    protected $loginUrl;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="text")
      */
-    protected $loginUrl;
+    protected $orientation;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    protected $shortDescription;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -53,25 +53,23 @@ class Tubesite extends AbstractModel
     protected $signupUrl;
 
     /**
-     * Set the site name
-     *
-     * @param  string $title
-     * @return Site
+     * @ORM\Column(type="string")
      */
-    public function setTitle($title)
-    {
-        $this->title = $title;
-        return $this;
-    }
+    protected $title;
 
     /**
-     * Get the site name
+     * @ORM\Column(type="string")
+     */
+    protected $url;
+
+    /**
+     * Get the description
      *
      * @return string
      */
-    public function getTitle()
+    public function getDescription()
     {
-        return $this->title;
+        return $this->description;
     }
 
     /**
@@ -87,35 +85,13 @@ class Tubesite extends AbstractModel
     }
 
     /**
-     * Get the description
+     * Get the upload portal URL
      *
      * @return string
      */
-    public function getDescription()
+    public function getLoginUrl()
     {
-        return $this->description;
-    }
-
-    /**
-     * Set the end user URL
-     *
-     * @param  string $url
-     * @return Tubesite
-     */
-    public function setUrl($url)
-    {
-        $this->url = $url;
-        return $this;
-    }
-
-    /**
-     * Get the end user URL
-     *
-     * @return string
-     */
-    public function getUrl()
-    {
-        return $this->url;
+        return $this->loginUrl;
     }
 
     /**
@@ -129,15 +105,38 @@ class Tubesite extends AbstractModel
         $this->loginUrl = $loginUrl;
         return $this;
     }
+    public function getOrientation()
+    {
+        return $this->orientation;
+    }
+
+    public function setOrientation($orientation)
+    {
+        $this->orientation = $orientation;
+    }
 
     /**
-     * Get the upload portal URL
+     * Set the short description based
+     * on model data.
+     */
+    public function setShortDescription()
+    {
+        return sprintf('%s %s %s',
+            $this->getTitle(),
+            $this->getOrientation(),
+            $this->getUrl()
+        );
+
+    }
+
+    /**
+     * Get the CPP signup URL
      *
      * @return string
      */
-    public function getLoginUrl()
+    public function getSignupUrl()
     {
-        return $this->loginUrl;
+        return $this->signupUrl;
     }
 
     /**
@@ -153,12 +152,47 @@ class Tubesite extends AbstractModel
     }
 
     /**
-     * Get the CPP signup URL
+     * Get the site name
      *
      * @return string
      */
-    public function getSignupUrl()
+    public function getTitle()
     {
-        return $this->signupUrl;
+        return $this->title;
     }
+
+    /**
+     * Set the site name
+     *
+     * @param  string $title
+     * @return Site
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
+        return $this;
+    }
+
+    /**
+     * Get the end user URL
+     *
+     * @return string
+     */
+    public function getUrl()
+    {
+        return $this->url;
+    }
+
+    /**
+     * Set the end user URL
+     *
+     * @param  string $url
+     * @return Tubesite
+     */
+    public function setUrl($url)
+    {
+        $this->url = $url;
+        return $this;
+    }
+
 }

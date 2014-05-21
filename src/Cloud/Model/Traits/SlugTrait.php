@@ -38,6 +38,14 @@ trait SlugTrait
     }
 
     /**
+     * Set the slug value
+     */
+    public function setSlug($slug)
+    {
+      $this->slug = $slug;
+    }
+
+    /**
      * Get the fields used to generate the slug. Default: `['title']`
      *
      * @return array
@@ -86,11 +94,9 @@ trait SlugTrait
         $values = [];
 
         foreach ($fields as $field) {
-            $val = $this->{$field};
-
-            if (!empty($val)) {
-                $values[] = $val;
-            }
+          if (!empty($this->{$field})) {
+            $values[] = $this->{$field};
+          }
         }
 
         if (count($values) < 1) {
