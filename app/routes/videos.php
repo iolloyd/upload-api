@@ -54,7 +54,7 @@ $app->post('/videos', function(Request $request) use ($app)
 /**
  * Update a video
  */
-$app->post('/videos/{video}', function(Video $video) use ($app)
+$app->post('/videos/{video}', function(Video $video, Request $request) use ($app)
 {
     if (!$video->isDraft()) {
         return $app->jsonError(
