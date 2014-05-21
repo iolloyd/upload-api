@@ -49,13 +49,6 @@ $app->post('/videos', function(Request $request) use ($app)
     $user = $app->session->user;
     $video = new Video($user);
 
-    $video->setTitle($request->get('title'));
-    $video->setDescription($request->get('description'));
-    $video->setTags($request->get('tags'));
-    $video->setStatus($request->get('status'));
-    $video->setFilename($request->get('filename'));
-    $video->setFilesize($request->get('filesize'));
-
     $app['em']->persist($video);
     $app['em']->flush();
 
@@ -66,7 +59,7 @@ $app->post('/videos', function(Request $request) use ($app)
 /**
  * Update a video
  */
-$app->post('/videos/{video}', function(Video $video) use ($app)
+$app->post('/videos/{video}', function(Request $request, Video $video) use ($app)
 {
     if (!$video->isDraft()) {
         return $app->jsonError(
