@@ -23,7 +23,6 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
 })
 ->assert('video', '\d+')
 ->convert('video', 'converter.video:convert')
-// ->secure('ROLE_USER');
 ;
 
 /**
@@ -34,25 +33,14 @@ $app->get('/videos', function(Request $request) use ($app)
     $groups = ['details', 'details.companies'];
     $pagedView = $app['paginator.response.json']('cx:video', $groups);
     return $pagedView;
-})
-->bind('listAllVideos')
-//->secure('ROLE_USER');
-;
+});
 
 /**
  * Create new draft video
  */
 $app->post('/videos', function(Request $request) use ($app)
 {
-    $user = $app->session->user;
-    $video = new Video($user);
-
-    $video->setTitle($request->get('title'));
-    $video->setDescription($request->get('description'));
-    $video->setTags($request->get('tags'));
-    $video->setStatus($request->get('status'));
-    $video->setFilename($request->get('filename'));
-    $video->setFilesize($request->get('filesize'));
+    $video = new Video($app['user']);
 
     $app['em']->persist($video);
     $app['em']->flush();
@@ -75,7 +63,7 @@ $app->post('/videos/{video}', function(Video $video) use ($app)
     }
 
     $app['em']->transactional(function () use ($app, $video) {
-        $video->setUpdatedBy($app->session->user());
+        $video->setUpdatedBy($app['user']);
         $video->setTitle($app->param('title'));
         $video->setDescription($app->param('description'));
     });
@@ -98,7 +86,7 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
 
     $app['em']->transactional(function ($em) use ($app, $video, $outbound) {
         $video->setStatus(Video::STATUS_PENDING);
-        $video->setUpdatedBy($app->session->user());
+        $video->setUpdatedBy($app['user']);
 
         // TODO: refactor
 
