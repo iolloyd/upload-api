@@ -569,4 +569,18 @@ class Video extends AbstractModel
       return $this;
     }
 
+    /**
+     * @param array $tags
+     *
+     * @return Video
+     */
+    public function addTags($tags)
+    {
+      foreach ($tags as $tag) {
+        $this->tags[] = $tag;
+      }
+
+      return $this;
+    }
+
 }
