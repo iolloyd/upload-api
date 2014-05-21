@@ -299,7 +299,7 @@ class VideoInbound extends AbstractModel
     /**
      * Set the creator
      */
-    protected function setCreatedBy(User $user)
+    public function setCreatedBy(User $user)
     {
         $this->created_by = $user;
     }
