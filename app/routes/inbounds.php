@@ -17,12 +17,14 @@ use Cloud\Aws\S3\Model\FlowUpload;
 use GuzzleHttp\Mimetypes;
 
 /**
- * Create a new inbound upload and get 
+ * Create a new inbound upload and get
  * parameters for the form to * AWS S3
  */
 $app->post('/videos/:video/inbounds', function(Video $video) use ($app)
     {
         $inbound = new VideoInbound($video);
+
+        // TODO set $inbound->filename/size/type/expiresAt
 
         $app->em->persist($inbound);
         $app->em->flush();
@@ -52,15 +54,15 @@ $app->post('/videos/:video/inbounds', function(Video $video) use ($app)
 
         $json = [
             'id'         => $inbound->getId(),
-                'video'      => ['id' => $video->getId()],
-                'form'       => $form->getFormAttributes(),
-                'fields'     => $form->getFormInputs(),
-                'file_field' => 'file',
+            'video'      => ['id' => $video->getId()],
+            'form'       => $form->getFormAttributes(),
+            'fields'     => $form->getFormInputs(),
+            'file_field' => 'file',
             ];
 
         $json['fields'] = array_filter($json['fields']);
 
-        $app->json(201, $json);
+        $app->json($json, 201);
     }
 )
     ->convert('video', 'converter.video:convert');

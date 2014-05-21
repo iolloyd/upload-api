@@ -18,6 +18,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
+use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
@@ -291,6 +292,7 @@ class TubesiteUser extends AbstractModel implements JsonSerializable
     {
         return [
             'id' => $this->getId(),
+            'username' => $this->getUsername(),
         ];
     }
 }
