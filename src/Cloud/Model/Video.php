@@ -24,7 +24,6 @@ use JMS\Serializer\Annotation as JMS;
 /**
  * @ORM\Entity
  * @ORM\HasLifecycleCallbacks
- * @JMS\AccessType("public_method")
  */
 class Video extends AbstractModel
 {
@@ -69,7 +68,6 @@ class Video extends AbstractModel
 
     /**
      * @ORM\ManyToMany(targetEntity="Tag")
-     * @JMS\Readonly
      * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $tags;
@@ -91,14 +89,12 @@ class Video extends AbstractModel
 
     /**
      * @JMS\Groups({"list", "list.videos", "details.videos"})
-     * @JMS\ReadOnly
      */
     protected $thumbnail;
 
     /**
      * @ORM\Column(type="boolean")
      * @JMS\Accessor(getter="isDraft")
-     * @JMS\ReadOnly
      * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $isDraft = true;
@@ -111,7 +107,6 @@ class Video extends AbstractModel
      *   mappedBy="video",
      *   cascade={"persist", "remove"}
      * )
-     * @JMS\ReadOnly
      * @JMS\Groups({"details.videos"})
      */
     protected $inbounds;
@@ -124,7 +119,6 @@ class Video extends AbstractModel
      *   mappedBy="video",
      *   cascade={"persist", "remove"}
      * )
-     * @JMS\ReadOnly
      * @JMS\Groups({"details.videos"})
      */
     protected $outbounds;
@@ -156,7 +150,6 @@ class Video extends AbstractModel
     /**
      * @ORM\Column(type="datetime", nullable=true)
      * @JMS\Groups({"details.videos"})
-     * @JMS\ReadOnly
      */
     protected $completedAt;
 
@@ -183,11 +176,6 @@ class Video extends AbstractModel
     public function getVersion()
     {
         return $this->version;
-    }
-
-    public function setVersion($version)
-    {
-      $this->version = $version;
     }
 
     /**
@@ -567,6 +555,18 @@ class Video extends AbstractModel
     {
       $this->completedAt = $date;
       return $this;
+    }
+
+    /**
+     * @param string $tags a json encoded array of tags
+     *
+     * @return Video
+     */
+    public function addTags($tags)
+    {
+      foreach ($tags as $tag) {
+        $this->tags[] = $tag;
+      }
     }
 
 }
