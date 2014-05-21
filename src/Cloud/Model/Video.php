@@ -27,11 +27,6 @@ use JMS\Serializer\Annotation as JMS;
  */
 class Video extends AbstractModel
 {
-    const STATUS_DRAFT    = 'draft';
-    const STATUS_PENDING  = 'pending';
-    const STATUS_WORKING  = 'working';
-    const STATUS_COMPLETE = 'complete';
-
     /*
      * php-resque status codes:
      *
@@ -41,87 +36,28 @@ class Video extends AbstractModel
     const STATUS_COMPLETE = 4;
      */
 
+    const STATUS_DRAFT    = 'draft';
+    const STATUS_PENDING  = 'pending';
+    const STATUS_WORKING  = 'working';
+    const STATUS_COMPLETE = 'complete';
+
     use Traits\IdTrait;
     use Traits\SlugTrait;
     use Traits\CreatedAtTrait;
     use Traits\UpdatedAtTrait;
     use Traits\CompanyTrait;
 
-
     /**
-     * @ORM\Column(type="integer")
-     * @ORM\Version
+     * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Groups({"details.videos"})
      */
-    protected $version = 1;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
-     */
-    protected $title;
+    protected $completedAt;
 
     /**
      * @ORM\Column(type="text", nullable=true)
      * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $description;
-
-    /**
-     * @ORM\ManyToMany(targetEntity="Tag")
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
-     */
-    protected $tags;
-
-    /**
-     * The overall processing status for this video by the worker system. To
-     * query success or failure data, look at each individual inbound and
-     * outbound and query their status.
-     *
-     * @see STATUS_DRAFT
-     * @see STATUS_PENDING
-     * @see STATUS_WORKING
-     * @see STATUS_COMPLETE
-     *
-     * @ORM\Column(type="string", length=16)
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
-     */
-    protected $status = self::STATUS_DRAFT;
-
-    /**
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
-     */
-    protected $thumbnail;
-
-    /**
-     * @ORM\Column(type="boolean")
-     * @JMS\Accessor(getter="isDraft")
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
-     */
-    protected $isDraft = true;
-
-    /**
-     * Inbound files: user upload from browser
-     *
-     * @ORM\OneToMany(
-     *   targetEntity="VideoInbound",
-     *   mappedBy="video",
-     *   cascade={"persist", "remove"}
-     * )
-     * @JMS\Groups({"details.videos"})
-     */
-    protected $inbounds;
-
-    /**
-     * Outbound files: worker publish to tubesite
-     *
-     * @ORM\OneToMany(
-     *   targetEntity="VideoOutbound",
-     *   mappedBy="video",
-     *   cascade={"persist", "remove"}
-     * )
-     * @JMS\Groups({"details.videos"})
-     */
-    protected $outbounds;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -142,16 +78,79 @@ class Video extends AbstractModel
     protected $filetype;
 
     /**
+     * Inbound files: user upload from browser
+     *
+     * @ORM\OneToMany(
+     *   targetEntity="VideoInbound",
+     *   mappedBy="video",
+     *   cascade={"persist", "remove"}
+     * )
+     * @JMS\Groups({"details.videos"})
+     */
+    protected $inbounds;
+
+    /**
+     * @ORM\Column(type="boolean")
+     * @JMS\Accessor(getter="isDraft")
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     */
+    protected $isDraft = true;
+
+    /**
+     * Outbound files: worker publish to tubesite
+     *
+     * @ORM\OneToMany(
+     *   targetEntity="VideoOutbound",
+     *   mappedBy="video",
+     *   cascade={"persist", "remove"}
+     * )
+     * @JMS\Groups({"details.videos"})
+     */
+    protected $outbounds;
+
+    /**
      * @ORM\Column(type="datetime", nullable=true)
      * @JMS\Groups({"details.videos"})
      */
     protected $publishedAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
-     * @JMS\Groups({"details.videos"})
+     * The overall processing status for this video by the worker system. To
+     * query success or failure data, look at each individual inbound and
+     * outbound and query their status.
+     *
+     * @see STATUS_DRAFT
+     * @see STATUS_PENDING
+     * @see STATUS_WORKING
+     * @see STATUS_COMPLETE
+     *
+     * @ORM\Column(type="string", length=16)
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
-    protected $completedAt;
+    protected $status = self::STATUS_DRAFT;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     */
+    protected $title;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="Tag")
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     */
+    protected $tags;
+
+    /**
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     */
+    protected $thumbnail;
+
+    /**
+     * @ORM\Column(type="integer")
+     * @ORM\Version
+     */
+    protected $version = 1;
 
     //////////////////////////////////////////////////////////////////////////
 
