@@ -43,9 +43,9 @@ class TagFixture extends AbstractFixture
             'Webcam', 'Young/Old',
         ];
 
-        foreach ($tags as $slug) {
+        foreach ($tags as $title) {
             $tag = new Tag();
-            $tag->setSlug($slug);
+            $tag->setTitle($title);
             $em->persist($tag);
         }
 
