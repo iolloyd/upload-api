@@ -16,38 +16,37 @@ use Doctrine\Common\DataFixtures\AbstractFixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 
-use Cloud\Model\Video;
+use Cloud\Model\Stat;
 
 /**
- * Loads all standard tubesites
+ * Load test companies and test users
  */
-class VideoFixture extends AbstractFixture implements DependentFixtureInterface
+class StatFixture extends AbstractFixture implements DependentFixtureInterface
 {
     /**
      * {@inheritDoc}
      */
     public function load(ObjectManager $em)
     {
+        $stat = new Stat();
+        $stat->setPlays(rand(10, 1000));
+        $stat->setClicks(rand(100, 10000));
+        $stat->setRating(rand(1, 100));
+        $stat->setVideo(
+            $this->getReference('video')
+        );
 
-        foreach (range(1, 30) as $x) {
-            $video = new Video(
-                $this->getReference('user')
-            );
 
-            $video->setTitle('Eye iz vidayo' . $x);
-            $video->setDescription('Me iz dizcreyeber' . $x);
-            $em->persist($video);
-        }
-
+        $em->persist($stat);
         $em->flush();
-        $this->addReference('video', $video);
     }
 
     public function getDependencies()
     {
         return [
-            __NAMESPACE__ . '\UserFixture', 
+            __NAMESPACE__ . '\VideoFixture', 
         ];
     }
+
 
 }
