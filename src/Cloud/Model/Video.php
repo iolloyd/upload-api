@@ -42,10 +42,10 @@ class Video extends AbstractModel
     const STATUS_COMPLETE = 'complete';
 
     const ORIENTATION_GAY = 'gay';
-    const ORIENTATION_STRAIGHT = 'straight';
     const ORIENTATION_SOLO = 'solo';
     const ORIENTATION_SOLO_MALE = 'solo male';
     const ORIENTATION_SOLO_FEMALE = 'solo female';
+    const ORIENTATION_STRAIGHT = 'straight';
 
     use Traits\IdTrait;
     use Traits\CreatedAtTrait;
