@@ -80,13 +80,13 @@ class Video extends AbstractModel
      * @see STATUS_WORKING
      * @see STATUS_COMPLETE
      *
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $filesize;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true)
      * @JMS\Groups({"details.videos"})
      */
     protected $filetype;
@@ -578,10 +578,12 @@ class Video extends AbstractModel
      *
      * @return Video
      */
-    public function addTags($tags)
+    public function addTags($tags=null)
     {
-      foreach ($tags as $tag) {
-        $this->tags[] = $tag;
+      if ($tags) {
+        foreach ($tags as $tag) {
+          $this->tags[] = $tag;
+        }
       }
 
       return $this;

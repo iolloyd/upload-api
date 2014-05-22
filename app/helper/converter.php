@@ -44,13 +44,13 @@ $app['converter.outbound'] = $app['converter'](
 );
 
 $app['converter.tags.from.request'] = $app->protect(function($tags) use ($app) {
-  $tags = json_decode($tags);
-  $tags = array_map(function($x) use ($app) {
-      return $app['converter.tag']->convert($x->id);
-    },
-    $tags
-  );
+    $tags = json_decode($tags);
+    $tags = array_map(function($x) use ($app) {
+            return $app['converter.tag']->convert($x->id);
+        },
+        $tags
+    );
 
-  return $tags;
+    return $tags;
 });
 
