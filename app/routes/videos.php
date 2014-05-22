@@ -77,7 +77,7 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
     $app['em']->flush();
     $groups = ['list', 'details.videos',];
 
-    return $app['single.response.json']($video, $groups);
+    return $app['single.response.json']($video, $groups, true);
 })
 ->convert('video', 'converter.video:convert');
 
