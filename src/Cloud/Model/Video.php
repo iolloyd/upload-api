@@ -42,7 +42,6 @@ class Video extends AbstractModel
     const STATUS_COMPLETE = 'complete';
 
     use Traits\IdTrait;
-    use Traits\SlugTrait;
     use Traits\CreatedAtTrait;
     use Traits\UpdatedAtTrait;
     use Traits\CompanyTrait;
