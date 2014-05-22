@@ -66,8 +66,17 @@ class Video extends AbstractModel
     protected $filename;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
-     * @JMS\Groups({"details.videos"})
+     * The overall processing status for this video by the worker system. To
+     * query success or failure data, look at each individual inbound and
+     * outbound and query their status.
+     *
+     * @see STATUS_DRAFT
+     * @see STATUS_PENDING
+     * @see STATUS_WORKING
+     * @see STATUS_COMPLETE
+     *
+     * @ORM\Column(type="string", length=255)
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $filesize;
 
@@ -129,7 +138,7 @@ class Video extends AbstractModel
      * @see STATUS_WORKING
      * @see STATUS_COMPLETE
      *
-     * @ORM\Column(type="string", length=16)
+     * @ORM\Column(type="string")
      * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $status = self::STATUS_DRAFT;
