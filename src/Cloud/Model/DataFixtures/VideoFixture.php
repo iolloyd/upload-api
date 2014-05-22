@@ -36,6 +36,8 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
 
             $video->setTitle('Eye iz vidayo' . $x);
             $video->setDescription('Me iz dizcreyeber' . $x);
+            $video->setFilename('I iz filename' . $x);
+            $video->setFiletype(1);
             $em->persist($video);
         }
 
