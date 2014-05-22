@@ -59,7 +59,9 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
             $response = $app->json(json_decode($jsonContent));
             if ($headerLink) {
-                $link = $app['request']->getSchemeAndHttpHost() . $app['request']->getPathInfo();
+                $link = $app['request']->getSchemeAndHttpHost() .
+                        $app['request']->getPathInfo();
+
                 $response->headers->add(['Location' => $link]);
             }
 
