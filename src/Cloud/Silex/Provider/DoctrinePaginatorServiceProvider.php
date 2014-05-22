@@ -52,12 +52,16 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return $jsonContent;
         });
 
-        $app['single.response.json'] = $app->protect(function ($model, $groups) use ($app) {
+        $app['single.response.json'] = $app->protect(function ($model, $groups, $headerLink=false) use ($app) {
 
             $params  = $app['request']->query->all();
             $jsonContent = $app['serializer']($model, $groups);
 
             $response = $app->json(json_decode($jsonContent));
+            if ($headerLink) {
+                $link = 'todo';
+                $response->headers->add(['Link' => $link]);
+            }
 
             return $response;
         });
