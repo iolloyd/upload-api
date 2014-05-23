@@ -1,20 +1,52 @@
 FORMAT: 1A
 HOST: http://api.cloud.xxx
 
-# cloud
-cloud API is a *video upload management* service for tube paysite webmasters.
+# Cloud.xxx
+The cloud.xxx API is a *video upload management* service for tube paysite webmasters.
+
 
 # Group Company
 
 Company-related resource for *Company API*.
 
 ## Company [/companies/{id}]
-A single Company object. It represents a single company
 
+A single Company object. It represents a single company
 The Company has the following attributes:
 
 - id
 - title
+- created_at
+- updated_at
+
+
++ Model (application/json)
+
+    + Body
+
+        {
+            "id": 123,
+            "title": "From, inc.",
+            "created_at": "2014-07-16",
+            "updated_at": "2014-07-20"
+        }
+
+## Company [/companies/{id}]
+A single Company object. It represents a single company
+
+### Get a single company [GET]
+
++ Parameters
+    + id (integer) ... Unique ID of company.
+
++ Response (application/json)
+
+        {
+            "id": 123,
+            "title": "From, inc.",
+            "created_at": "2014-07-16",
+            "updated_at": "2014-07-20"
+        }
 
 # Group User
 User-related resources of *User API*.
@@ -28,133 +60,9 @@ The User has the following attributes:
 - id
 - name
 
-# Group Video
-Video-related resources of *Video API*.
-
-## Video [/videos/{id}]
-A single Video object. The Video resource is the central resource in the Video API. It represents one paste - a single text note.
-
-The Video resource has the following attributes:
-
-- id
-- email
-- company
-- content
-- created_at
-- updated_at
-- description
-- thumbnail
-
-The fields *id*, *created_at* and *updated_at* are assigned by the Video API at the moment of creation.
-The *updated_at* field is updated whenever the resource is changed.
-
-+ Parameters
-    + id (string) ... unique ID identifier of the Video
-
-+ Model (application/json)
-
-    JSON representation of Video Resource.
-    
-    + Headers
-
-            Link: <http:/api.cloud.xxx/videos/42>;rel="self"
-
-    + Body
-
-            {
-                "id": "42",
-                "created_at": "2014-04-14T02:15:15Z",
-                "description": "Description of Video",
-                "content": "String contents"
-            }
-
-## Retrieve a Single Video [GET]
-+ Response 200
-
-    [Video][]
-
-## Edit a Video [PATCH]
-To update a Video send a JSON with updated value for one or more of the Video resource attributes. All attributes values (states) from the previous version of this video.
-
-+ Request (application/json)
-
-        {
-            "content": "Updated file contents"
-        }
-
-+ Response 200
-
-    [Video][]
-
-## Delete a Video [DELETE]
-+ Response 204
-
-## Videos Collection [/videos{?since}]
-Collection of all Videos.
-
-The Video Collection resource has the following attribute:
-
-- total
-
-+ Model (application/json)
-
-    JSON representation of Video Collection Resource.
-
-    + Headers
-
-        Link: <http://api.cloud.xxx:8080/videos?page=1&per_page=10>; rel="first", <http://api.cloud.xxx:8080/videos?page=3&per_page=10>; rel="last", <http://api.cloud.xxx:8080/videos?page=1&per_page=10>; rel="prev", <http://api.cloud.xxx:8080/videos?page=3&per_page=10>; rel="next"
-
-    + Body
-
-            {
-                "id": 1,
-                "stats": {
-                    "plays": 59510,
-                    "rating": 0.13,
-                    "clicks": 45832
-            },
-            {
-                "title": "Lorem irure duis dolor aute sunt aliqua enim duis est exercitation enim dolor dolor.",
-                "duration": 2511
-            }
-                "tags": [
-                    { "id": 1, "slug": "fugiat" },
-                    { "id": 2, "slug": "nostrud" },
-                    { "id": 3, "slug": "aliqua" },
-                    { "id": 4, "slug": "elit" },
-                    { "id": 5, "slug": "exercitation" },
-                    { "id": 6, "slug": "dolor" }
-                ],
-                "status": "failed",
-                "thumbnail": "https://s3.amazonaws.com/cldsys-dev/static/thumbnail.png"
-            }
-
-### List All Videos [GET]
-+ Parameters
-    + page (optional, integer) ... Page required.
-    + per_page (optional, integer) ... Maximum number of entries.
-
-+ Response 200
-
-    [Videos Collection][]
-
-### Create a Video [POST]
-To create a new Video simply provide a JSON hash of the *title* and *description* attributes for the new Video.
-
-+ Request (application/json)
-
-        {
-            "description": "Description of Video",
-            "title": "Debbie does chocolate"
-        }
-
-+ Response 201 (application/json)
-
-    [Video][]
-
 # Group Session and State
 
-## Authorization [/v1/session]
+## Authorization [/session]
 
 ### Get state of session and global config [GET]
 
@@ -275,9 +183,162 @@ session and returns the anonymous session state.
                 }
             }
 
-# Group Videos
+# Group Video
+Video-related resources of *Video API*.
 
-## Videos [/v1/videos-x]
+## Video [/videos/{id}]
+A single Video object. The Video resource is the central resource in the Video API. It represents one paste - a single text note.
+
+The Video resource has the following attributes:
+
+- id
+- stats
+- title
+- duration
+- title
+- email
+- company
+- content
+- created_at
+- updated_at
+- description
+- thumbnail
+
+The fields *id*, *created_at* and *updated_at* are assigned by the Video API at the moment of creation.
+The *updated_at* field is updated whenever the resource is changed.
+
++ Parameters
+    + id (string) ... unique ID identifier of the Video
+    + page (integer) ... current page of results
+    + per_page (integer) ... maximum number of results per page
+
++ Model (application/json)
+
+    JSON representation of Video Resource.
+
+    + Headers
+
+            Link: <http:/api.cloud.xxx/videos?page=1>; rel="prev",
+                  <http:/api.cloud.xxx/videos?page=3>; rel="next",
+                  <http:/api.cloud.xxx/videos?page=1>; rel="first",
+                  <http:/api.cloud.xxx/videos?page=9>; rel="last"
+
+    + Body
+
+            {
+                "id": 1,
+                "stats": {
+                    "plays": 59510,
+                    "rating": 0.13,
+                    "clicks": 45832
+                },
+                "title": "Lorem duis est exercitation enim dolor dolor.",
+                "duration": 2511,
+                "tags": [
+                    { "id": 1, "slug": "fugiat" },
+                    { "id": 2, "slug": "nostrud" },
+                    { "id": 3, "slug": "aliqua" },
+                    { "id": 4, "slug": "elit" },
+                    { "id": 5, "slug": "exercitation" },
+                    { "id": 6, "slug": "dolor" }
+                ],
+                "status": "failed",
+                "thumbnail": "https://s3.amazonaws.com/cldsys-dev/static/thumbnail.png"
+            }
+
+
+## Retrieve a Single Video [GET]
++ Response 200
+
+    [Video][]
+
++ Parameters
+    + id (string) ... unique ID identifier of the Video
+
+## Edit a Video [PATCH]
+To update a Video send a JSON with updated value for one or more of the Video resource attributes. All attributes values (states) from the previous version of this video.
+
++ Request (application/json)
+
+        {
+            "content": "Updated file contents"
+        }
+
++ Response 200
+
+    [Video][]
+
+## Delete a Video [DELETE]
++ Response 204
+
++ Parameters
+    + id (string) ... unique ID identifier of the Video
+
+## Videos Collection [/videos{?page=1&per_page=10}]
+Collection of all Videos.
+
+The Video Collection resource has the following attribute:
+
+- total
+
++ Model (application/json)
+
+    JSON representation of Video Collection Resource.
+
+    + Headers
+
+        Link: <http://api.cloud.xxx:8080/videos?page=1&per_page=10>; rel="first", <http://api.cloud.xxx:8080/videos?page=3&per_page=10>; rel="last", <http://api.cloud.xxx:8080/videos?page=1&per_page=10>; rel="prev", <http://api.cloud.xxx:8080/videos?page=3&per_page=10>; rel="next"
+
+    + Body
+
+            {
+                "id": 1,
+                "stats": {
+                    "plays": 59510,
+                    "rating": 0.13,
+                    "clicks": 45832
+            },
+            {
+                "title": "Lorem irure duis dolor aute sunt aliqua enim duis est exercitation enim dolor dolor.",
+                "duration": 2511
+            }
+                "tags": [
+                    { "id": 1, "slug": "fugiat" },
+                    { "id": 2, "slug": "nostrud" },
+                    { "id": 3, "slug": "aliqua" },
+                    { "id": 4, "slug": "elit" },
+                    { "id": 5, "slug": "exercitation" },
+                    { "id": 6, "slug": "dolor" }
+                ],
+                "status": "failed",
+                "thumbnail": "https://s3.amazonaws.com/cldsys-dev/static/thumbnail.png"
+            }
+
+### List All Videos [GET]
++ Parameters
+    + page (optional, integer) ... Page required.
+    + per_page (optional, integer) ... Maximum number of entries.
+
++ Response 200
+
+    [Videos Collection][]
+
+### Create a Video [POST]
+To create a new Video simply provide a JSON hash of the *title* and *description* attributes for the new Video.
+
++ Request (application/json)
+
+        {
+            "description": "Description of Video",
+            "title": "Debbie does chocolate"
+        }
+
++ Response 201 (application/json)
+
+    [Video][]
+
+
+## Videos [/videos-x]
 
 ### Get list of videos [GET]
 
@@ -285,7 +346,7 @@ session and returns the anonymous session state.
 
         x
 
-## Create New Video [/v1/videos]
+## Create New Video [/videos]
 
 The upload process will be split into distinct steps:
 
@@ -304,13 +365,13 @@ The upload process will be split into distinct steps:
 
         {
             "id": "293881",
-            "url": "https://private-fca8-cloudxxx.apiary-mock.com/v1/videos/293881",
+            "url": "https://private-fca8-cloudxxx.apiary-mock.com/videos/293881",
             ...
         }
 
 ## Group Create New Video Cont
 
-### PATCH /v1/videos/{video_id}
+### PATCH /videos/{video_id}
 
 Save draft
 
@@ -318,17 +379,17 @@ Save draft
 
         {
             "id": "293881",
-            "url": "https://private-fca8-cloudxxx.apiary-mock.com/v1/videos/293881",
+            "url": "https://private-fca8-cloudxxx.apiary-mock.com/videos/293881",
             ...
         }
 
-### DELETE /v1/videos/{video_id}
+### DELETE /videos/{video_id}
 
 Delete draft
 
 + Response 204
 
-### POST /v1/videos/{video_id}/process
+### POST /videos/{video_id}/process
 
 When the video metadata is complete and the video file has been uploaded,
 the client notifies the server that the video can now be published to the
@@ -336,24 +397,27 @@ Tube sites
 
 + Response 204
 
-## Group Create New Video : File Uploads
+## Group File Uploads
 
 To avoid unnecessary traffic through our network, video files are posted
-directly to Amazon S3. The client requests all necessary details and prepares
-an upload form with the received data.
+directly to Amazon S3. The details are prepared in the browser or client enabling this 
+to happen.
 
 See http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-HTTPPOSTForms.html
 for more information.
 
-### POST /v1/videos/{video_id}/upload/prepare
+### POST /videos/{video_id}/upload/prepare
 
 Prepare upload form
+
++ Parameters
+  + id (integer) ... Unique ID of video
 
 + Response 200 (application/json)
 
         {
             "id": "DmqRpLQSNSoYjuXWm2",
-            "url": "https://private-fca8-cloudxxx.apiary-mock.com/v1/293881/uploads/DmqRpLQSNSoYjuXWm2",
+            "url": "https://private-fca8-cloudxxx.apiary-mock.com/293881/uploads/DmqRpLQSNSoYjuXWm2",
             "status": "pending",
             "form": {
                 "action": "https://cldsys-dev.s3.amazonaws.com/",
@@ -371,10 +435,15 @@ Prepare upload form
             "file_field": "file"
         }
 
-### POST /v1/videos/{video_id}/upload/process
+### POST /videos/{video_id}/upload/process
+
+Process the upload
 
 Once the file is uploaded to S3, the client notifies the server that the
 upload is complete and should be finalized
+
++ Parameters
+  + id (integer) ... Unique ID of video
 
 + Response 204
 
