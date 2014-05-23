@@ -16,3 +16,5 @@ composer.lock
 app/config/local.ini
 cache
 tags
+
+*.sh
