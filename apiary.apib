@@ -21,6 +21,7 @@ only include global options and endpoint information. If this response is
 received, a login page should be shown.
 
 + Request
+
     + Headers
 
             Cookie: SID=pdteahqeuvo6nmikcokvbl0eq4
@@ -78,6 +79,7 @@ to http://tools.ietf.org/html/draft-ietf-oauth-v2-28#section-5.2
         }
 
 + Response 200 (application/json)
+
     + Headers
 
             Set-Cookie: SID=pdteahqeuvo6nmikcokvbl0eq4; Secure; HttpOnly
@@ -146,6 +148,7 @@ The Company has the following attributes:
 
 
 + Parameters
+
     + id (integer) ... unique ID of the company.
 
 + Model (application/json)
@@ -193,7 +196,7 @@ The User has the following attributes:
 + Parameters
     + id (integer) ... The unique ID of the user
 
-+ Response
++ Response 200 (application/json)
 
         {
             "id": 1,
@@ -235,10 +238,7 @@ The *updated_at* field is updated whenever the resource is changed.
 
     + Headers
 
-            Link: <http:/api.cloud.xxx/videos?page=1>; rel="prev",
-                  <http:/api.cloud.xxx/videos?page=3>; rel="next",
-                  <http:/api.cloud.xxx/videos?page=1>; rel="first",
-                  <http:/api.cloud.xxx/videos?page=9>; rel="last"
+            Link: <http:/api.cloud.xxx/videos?page=1>; rel="prev",<http:/api.cloud.xxx/videos?page=3>; rel="next",<http:/api.cloud.xxx/videos?page=1>; rel="first",<http:/api.cloud.xxx/videos?page=9>; rel="last"
 
     + Body
 
@@ -303,10 +303,10 @@ To create a new Video simply provide a JSON hash of the *title* and *description
 
     + Body
 
-        {
-            "title": "Loerm ourf mwwe",
-            "description": "Soam kleu lout"
-        }
+            {
+                "title": "Loerm ourf mwwe",
+                "description": "Soam kleu lout"
+            }
 
 + Response 200 (application/json)
 
@@ -346,7 +346,7 @@ The Video Collection resource has the following attribute:
 
     + Headers
 
-        Link: <http://api.cloud.xxx:8080/videos?page=1&per_page=10>; rel="first", <http://api.cloud.xxx:8080/videos?page=3&per_page=10>; rel="last", <http://api.cloud.xxx:8080/videos?page=1&per_page=10>; rel="prev", <http://api.cloud.xxx:8080/videos?page=3&per_page=10>; rel="next"
+            Link: <http://api.cloud.xxx:8080/videos?page=1&per_page=10>; rel="first", <http://api.cloud.xxx:8080/videos?page=3&per_page=10>; rel="last", <http://api.cloud.xxx:8080/videos?page=1&per_page=10>; rel="prev", <http://api.cloud.xxx:8080/videos?page=3&per_page=10>; rel="next"
 
     + Body
 
@@ -377,9 +377,9 @@ The Video Collection resource has the following attribute:
 
 + Response 200 (application/json)
 
-    + Body
+        + Body
 
-        [Video][]
+            [Video][]
 
 
 The upload process will be split into distinct steps:
@@ -407,7 +407,7 @@ The upload process will be split into distinct steps:
 ## Group File Uploads
 
 To avoid unnecessary traffic through our network, video files are posted
-directly to Amazon S3. The details are prepared in the browser or client enabling this 
+directly to Amazon S3. The details are prepared in the browser or client enabling this
 to happen.
 
 See http://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-HTTPPOSTForms.html
@@ -418,6 +418,7 @@ for more information.
 Prepare upload form
 
 + Parameters
+
   + id (integer) ... Unique ID of video
 
 + Response 200 (application/json)
@@ -450,7 +451,7 @@ Once the file is uploaded to S3, the client notifies the server that the
 upload is complete and should be finalized
 
 + Parameters
+
   + id (integer) ... Unique ID of video
 
 + Response 204
-
