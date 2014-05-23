@@ -107,26 +107,26 @@ The Video Collection resource has the following attribute:
     + Body
 
             {
-                id: 1,
-                stats: {
-                    plays: 59510,
-                    rating: 0.13,
-                    clicks: 45832
+                "id": 1,
+                "stats": {
+                    "plays": 59510,
+                    "rating": 0.13,
+                    "clicks": 45832
             },
             {
-                title: "Lorem irure duis dolor aute sunt aliqua enim duis est exercitation enim dolor dolor.",
-                duration: 2511
+                "title": "Lorem irure duis dolor aute sunt aliqua enim duis est exercitation enim dolor dolor.",
+                "duration": 2511
             }
-                tags: [
-                    { id: 1, slug: "fugiat" },
-                    { id: 2, slug: "nostrud" },
-                    { id: 3, slug: "aliqua" },
-                    { id: 4, slug: "elit" },
-                    { id: 5, slug: "exercitation" },
-                    { id: 6, slug: "dolor" },
+                "tags": [
+                    { "id": 1, "slug": "fugiat" },
+                    { "id": 2, "slug": "nostrud" },
+                    { "id": 3, "slug": "aliqua" },
+                    { "id": 4, "slug": "elit" },
+                    { "id": 5, "slug": "exercitation" },
+                    { "id": 6, "slug": "dolor" }
                 ],
-                status: "failed",
-                thumbnail: "https://s3.amazonaws.com/cldsys-dev/static/thumbnail.png"
+                "status": "failed",
+                "thumbnail": "https://s3.amazonaws.com/cldsys-dev/static/thumbnail.png"
             }
 
 ### List All Videos [GET]
@@ -151,7 +151,7 @@ To create a new Video simply provide a JSON hash of the *title* and *description
 + Response 201 (application/json)
 
     [Video][]
-    
+
 # Group Session and State
 
 ## Authorization [/v1/session]
