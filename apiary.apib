@@ -4,6 +4,8 @@ HOST: http://api.cloud.xxx
 # Cloud.xxx
 The cloud.xxx API is a *video upload management* service for tube paysite webmasters.
 
+# Group Session and State
+
 ## Authorization [/session]
 
 ### Get state of session and global config [GET]
@@ -35,10 +37,11 @@ received, a login page should be shown.
         }
 
 + Response 200 (application/json)
+
     + Headers
-    
+
             Set-Cookie: SID=pdteahqeuvo6nmikcokvbl0eq4; Secure; HttpOnly
-    
+
     + Body
 
             {
@@ -76,11 +79,11 @@ to http://tools.ietf.org/html/draft-ietf-oauth-v2-28#section-5.2
 
 + Response 200 (application/json)
     + Headers
-    
+
             Set-Cookie: SID=pdteahqeuvo6nmikcokvbl0eq4; Secure; HttpOnly
-    
+
     + Body
-    
+
             {
                 "endpoints": {
                     "default": "http://private-68adf-cloudxxxng.apiary-mock.com"
@@ -110,8 +113,9 @@ To end the session, a `DELETE` request is sent. The server invalidates the
 session and returns the anonymous session state.
 
 + Response 200 (application/json)
+
     + Headers
-    
+
             Set-Cookie: SID=deleted; Secure; HttpOnly; expires=Thu, 01 Jan 1970 00:00:00 GMT
 
     + Body
@@ -141,7 +145,15 @@ The Company has the following attributes:
 - updated_at
 
 
++ Parameters
+    + id (integer) ... unique ID of the company.
+
 + Model (application/json)
+
+    JSON representation of the company resource.
+
+    + Headers
+        None
 
     + Body
 
@@ -152,24 +164,15 @@ The Company has the following attributes:
             "updated_at": "2014-07-20"
         }
 
-## Company [/companies/{id}]
-A single Company object. It represents a single company
-
 ### Get a single company [GET]
 
-+ Parameters
-    + id (integer) ... Unique ID of company.
++ Response 200
 
-+ Response (application/json)
+    [Company][]
 
-        {
-            "id": 123,
-            "title": "From, inc.",
-            "created_at": "2014-07-16",
-            "updated_at": "2014-07-20"
-        }
 
 # Group User
+
 User-related resources of *User API*.
 
 ## User [/users/{id}]
@@ -177,11 +180,32 @@ A single User object. It represents a single user.
 
 The User has the following attributes:
 
-- email
-- id
-- name
 
-# Group Session and State
+- id
+- company_id
+- name
+- email
+- last_login_at
+- created_at
+- updated_at
+
+### Get a single user [GET]
+
++ Parameters
+    + id (integer) ... The unique ID of the user
+
++ Response
+
+        {
+            "id": 1,
+            "company_id": 1,
+            "name": Test User,
+            "email": test@cloud.xxx,
+            "password": "*****"
+            "last_login_at": NULL,
+            "created_at": 2014-07-16 09:10:45,
+            "updated_at": 2014-07-20 09:11:25,
+        }
 
 # Group Video
 Video-related resources of *Video API*.
@@ -206,11 +230,6 @@ The Video resource has the following attributes:
 
 The fields *id*, *created_at* and *updated_at* are assigned by the Video API at the moment of creation.
 The *updated_at* field is updated whenever the resource is changed.
-
-+ Parameters
-    + id (string) ... unique ID identifier of the Video
-    + page (integer) ... current page of results
-    + per_page (integer) ... maximum number of results per page
 
 + Model (application/json)
 
@@ -248,31 +267,67 @@ The *updated_at* field is updated whenever the resource is changed.
 
 
 ## Retrieve a Single Video [GET]
-+ Response 200
-
-    [Video][]
 
 + Parameters
     + id (string) ... unique ID identifier of the Video
+
++ Response 200
+
+    [Video][]
 
 ## Edit a Video [PATCH]
 To update a Video send a JSON with updated value for one or more of the Video resource attributes. All attributes values (states) from the previous version of this video.
 
-+ Request (application/json)
-
-        {
-            "content": "Updated file contents"
-        }
++ Parameters
+    + id (string) ... unique ID identifier of the Video
 
 + Response 200
 
     [Video][]
 
-## Delete a Video [DELETE]
-+ Response 204
+## Create a Video [POST]
+
+The upload process will be split into distinct steps:
+
+ * Client creates new video
+ * Client enters the video metadata
+ * Client uploads the raw video file to Amazon S3
+ * Server validates the metadata and raw video file
+
+ * Client starts the upload process
+ * Server converts the raw video for each Tube
+ * Server upload the converted video to each Tube
+ * Client shows progress and status overall and for each Tube
+
+To create a new Video simply provide a JSON hash of the *title* and *description* attributes for the new Video.
+
++ Request (application/json)
+
+    + Body
+
+        {
+            "title": "Loerm ourf mwwe",
+            "description": "Soam kleu lout"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "id": "293881",
+            "url": "https://private-fca8-cloudxxx.apiary-mock.com/videos/293881",
+            ...
+        }
+
+### POST /videos/{id}/process
+
+When the video metadata is complete and the video file has been uploaded,
+the client notifies the server that the video can now be published to the
+Tube sites
 
 + Parameters
-    + id (string) ... unique ID identifier of the Video
+    + id (integer) ... Unique ID of the video
+
++ Response 204
 
 ## Videos Collection [/videos{?page=1&per_page=10}]
 Collection of all Videos.
@@ -280,6 +335,12 @@ Collection of all Videos.
 The Video Collection resource has the following attribute:
 
 - total
+- videos
+
++ Parameters
+    + id (string) ... unique ID identifier of the Video
+    + page (optional, integer) ... current page of results
+    + per_page (optional, integer) ... maximum number of results per page
 
 + Model (application/json)
 
@@ -314,39 +375,14 @@ The Video Collection resource has the following attribute:
                 "thumbnail": "https://s3.amazonaws.com/cldsys-dev/static/thumbnail.png"
             }
 
-### List All Videos [GET]
-+ Parameters
-    + page (optional, integer) ... Page required.
-    + per_page (optional, integer) ... Maximum number of entries.
-
-+ Response 200
-
-    [Videos Collection][]
-
-### Create a Video [POST]
-To create a new Video simply provide a JSON hash of the *title* and *description* attributes for the new Video.
-
-+ Request (application/json)
-
-        {
-            "description": "Description of Video",
-            "title": "Debbie does chocolate"
-        }
-
-+ Response 201 (application/json)
-
-    [Video][]
-
-
-## Videos [/videos-x]
-
 ### Get list of videos [GET]
 
 + Response 200 (application/json)
 
-        x
+    + Body
 
-## Create New Video [/videos]
+        [Video][]
+
 
 The upload process will be split into distinct steps:
 
@@ -369,33 +405,6 @@ The upload process will be split into distinct steps:
             ...
         }
 
-## Group Create New Video Cont
-
-### PATCH /videos/{video_id}
-
-Save draft
-
-+ Response 200 (application/json)
-
-        {
-            "id": "293881",
-            "url": "https://private-fca8-cloudxxx.apiary-mock.com/videos/293881",
-            ...
-        }
-
-### DELETE /videos/{video_id}
-
-Delete draft
-
-+ Response 204
-
-### POST /videos/{video_id}/process
-
-When the video metadata is complete and the video file has been uploaded,
-the client notifies the server that the video can now be published to the
-Tube sites
-
-+ Response 204
 
 ## Group File Uploads
 
