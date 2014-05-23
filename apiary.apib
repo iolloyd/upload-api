@@ -4,64 +4,6 @@ HOST: http://api.cloud.xxx
 # Cloud.xxx
 The cloud.xxx API is a *video upload management* service for tube paysite webmasters.
 
-
-# Group Company
-
-Company-related resource for *Company API*.
-
-## Company [/companies/{id}]
-
-A single Company object. It represents a single company
-The Company has the following attributes:
-
-- id
-- title
-- created_at
-- updated_at
-
-
-+ Model (application/json)
-
-    + Body
-
-        {
-            "id": 123,
-            "title": "From, inc.",
-            "created_at": "2014-07-16",
-            "updated_at": "2014-07-20"
-        }
-
-## Company [/companies/{id}]
-A single Company object. It represents a single company
-
-### Get a single company [GET]
-
-+ Parameters
-    + id (integer) ... Unique ID of company.
-
-+ Response (application/json)
-
-        {
-            "id": 123,
-            "title": "From, inc.",
-            "created_at": "2014-07-16",
-            "updated_at": "2014-07-20"
-        }
-
-# Group User
-User-related resources of *User API*.
-
-## User [/users/{id}]
-A single User object. It represents a single user.
-
-The User has the following attributes:
-
-- email
-- id
-- name
-
-# Group Session and State
-
 ## Authorization [/session]
 
 ### Get state of session and global config [GET]
@@ -182,6 +124,64 @@ session and returns the anonymous session state.
                     "foo": "bar"
                 }
             }
+
+
+# Group Company
+
+Company-related resource for *Company API*.
+
+## Company [/companies/{id}]
+
+A single Company object. It represents a single company
+The Company has the following attributes:
+
+- id
+- title
+- created_at
+- updated_at
+
+
++ Model (application/json)
+
+    + Body
+
+        {
+            "id": 123,
+            "title": "From, inc.",
+            "created_at": "2014-07-16",
+            "updated_at": "2014-07-20"
+        }
+
+## Company [/companies/{id}]
+A single Company object. It represents a single company
+
+### Get a single company [GET]
+
++ Parameters
+    + id (integer) ... Unique ID of company.
+
++ Response (application/json)
+
+        {
+            "id": 123,
+            "title": "From, inc.",
+            "created_at": "2014-07-16",
+            "updated_at": "2014-07-20"
+        }
+
+# Group User
+User-related resources of *User API*.
+
+## User [/users/{id}]
+A single User object. It represents a single user.
+
+The User has the following attributes:
+
+- email
+- id
+- name
+
+# Group Session and State
 
 # Group Video
 Video-related resources of *Video API*.
