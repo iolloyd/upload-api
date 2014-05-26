@@ -15,12 +15,9 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Get a user
  */
-$app->get('/companies/{company}', function(Company $company) use ($app)
+$app->get('/dev', function() use ($app)
 {
-    return $app->json($company);
+    return $app->json("dev");
 })
-->assert('company', '\d+')
-->convert('company', 'converter.company:convert')
-// ->secure('ROLE_USER');
 ;
 
