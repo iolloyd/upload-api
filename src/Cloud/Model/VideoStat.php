@@ -23,28 +23,31 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity
  * @ORM\HasLifecycleCallbacks
  */
-class stat extends AbstractModel
+class VideoStat extends AbstractModel
 {
     use Traits\IdTrait;
 
     /**
      * @ORM\JoinColumn(nullable=false)
-     * @ORM\ManyToOne(targetEntity="Video", inversedBy="stats")
+     * @ORM\ManyToOne(targetEntity="Video", inversedBy="stat")
      */
     protected $video;
 
     /**
      * @ORM\Column(type="integer")
+     * @JMS\Groups({"list", "list.videos", "details.videos", "stat"})
      */
     protected $plays;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $rating;
 
     /**
      * @ORM\Column(type="integer")
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
     protected $clicks;
 
@@ -76,6 +79,16 @@ class stat extends AbstractModel
     public function setClicks($clicks)
     {
         $this->clicks = $clicks;
+    }
+
+    public function getDuration()
+    {
+        return $this->duration;
+    }
+
+    public function setDuration($duration)
+    {
+        $this->duration = $duration;
     }
 
     public function setVideo($video)

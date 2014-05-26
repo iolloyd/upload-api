@@ -32,7 +32,7 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
  */
 $app->get('/videos', function(Request $request) use ($app)
 {
-    $groups = ['list.videos', 'details.videos', 'list', ];
+    $groups = ['list.videos', 'details.videos', 'list', 'stats'];
     $pagedView = $app['paginator.response.json']('cx:video', $groups);
     return $pagedView;
 });
@@ -66,18 +66,19 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
         );
     }
 
-    $video->setTitle($request->get('title'));
-    $video->setDescription($request->get('description'));
-    $video->setFilename($request->get('filename'));
-    $video->setFilesize($request->get('filesize'));
-    $tags = $app['converter.tags.from.request']($request->get('tags'));
-    $video->addTags($tags);
 
-    $app['em']->persist($video);
-    $app['em']->flush();
+    $app['em']->transactional(function ($em) use ($app, $video, $request) {
+        $video->setTitle($request->get('title'));
+        $video->setDescription($request->get('description'));
+        $video->setFilename($request->get('filename'));
+        $video->setFilesize($request->get('filesize'));
+        $tags = $app['converter.tags.from.request']($request->get('tags'));
+        $video->setTags($tags);
+    });
+
     $groups = ['list', 'details.videos',];
 
-    return $app['single.response.json']($video, $groups, true);
+    return $app['single.response.json']($video, $groups);
 })
 ->convert('video', 'converter.video:convert');
 
