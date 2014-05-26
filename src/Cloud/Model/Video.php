@@ -43,8 +43,6 @@ class Video extends AbstractModel
 
     const ORIENTATION_GAY = 'gay';
     const ORIENTATION_SOLO = 'solo';
-    const ORIENTATION_SOLO_MALE = 'solo male';
-    const ORIENTATION_SOLO_FEMALE = 'solo female';
     const ORIENTATION_STRAIGHT = 'straight';
 
     use Traits\IdTrait;
@@ -90,6 +88,12 @@ class Video extends AbstractModel
      * @JMS\Groups({"details.videos"})
      */
     protected $filetype;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     * @JMS\Groups({"details.videos"})
+     */
+    protected $duration;
 
     /**
      * Inbound files: user upload from browser
@@ -155,8 +159,11 @@ class Video extends AbstractModel
     protected $title;
 
     /**
-     * @ORM\OneToMany(targetEntity="Stat", mappedBy="stats")
-     * @ORM\JoinColumn(name="id", referencedColumnName="id")
+     * @ORM\OneToMany(targetEntity="VideoStat",
+     *   mappedBy="video",
+     *   cascade={"persist", "remove"}
+     *   )
+     * @JMS\Groups({"list", "list.videos", "details.videos", "stats"})
      */
     protected $stats;
 
@@ -167,7 +174,8 @@ class Video extends AbstractModel
     protected $tags;
 
     /**
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"list", "list.videos", "details.videos", "stats"})
      */
     protected $thumbnail;
 
@@ -578,15 +586,25 @@ class Video extends AbstractModel
      *
      * @return Video
      */
-    public function addTags($tags=null)
+    public function setTags($tags)
     {
-      if ($tags) {
-        foreach ($tags as $tag) {
-          $this->tags[] = $tag;
-        }
+      $this->tags->clear();
+
+      foreach ($tags as $tag) {
+          $this->addTag($tag);
       }
 
       return $this;
+    }
+
+    public function setDuration($duration)
+    {
+        $this->duration = $duration;
+    }
+
+    public function getDuration()
+    {
+        return $this->duration;
     }
 
     //////////////////////////////////////////////////////////////////////////
