@@ -17,6 +17,7 @@ use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 
 use Cloud\Model\Video;
+use Cloud\Model\VideoStat;
 
 /**
  * Loads all standard tubesites
@@ -39,7 +40,18 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
             $video->setFilename('I iz filename' . $x);
             $video->setFiletype(1);
             $video->setFilesize(111223);
+            $video->setDuration(rand(10*60, 30*60));
+            $thumbnails = ['foo', 'bar', 'waz', 'kim', 'yas', 'bot', 'tir'];
+            $video->setThumbnail($thumbnails[rand(1, count($thumbnails)-1)].'.png');
+
+            $stat = new VideoStat();
+            $stat->setPlays(rand(10, 1000));
+            $stat->setClicks(rand(100, 10000));
+            $stat->setRating(rand(1, 100));
+            $stat->setVideo($video);
+
             $em->persist($video);
+            $em->persist($stat);
         }
 
         $em->flush();
@@ -49,7 +61,7 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
     public function getDependencies()
     {
         return [
-            __NAMESPACE__ . '\UserFixture', 
+            __NAMESPACE__ . '\UserFixture',
         ];
     }
 
