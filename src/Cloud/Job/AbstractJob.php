@@ -119,6 +119,8 @@ abstract class AbstractJob extends Command
 
         $code = $this->run($input, $output);
         $message = $output->fetch();
+
+        return $message;
     }
 
     /**
