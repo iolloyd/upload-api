@@ -60,7 +60,7 @@ class DemoCombined extends AbstractJob
     /**
      * Initializes the job
      */
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output, $entityManager)
     {
         $this->httpSession = new HttpClient([
             'base_url' => 'http://www.youporn.com/',
@@ -73,7 +73,7 @@ class DemoCombined extends AbstractJob
             ],
         ]);
 
-        $this->em = $this->getHelper('em')->getEntityManager();
+        $this->em = $entityManager;
     }
 
     /**
