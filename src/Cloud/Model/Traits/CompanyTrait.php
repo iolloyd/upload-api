@@ -11,17 +11,20 @@
 
 namespace Cloud\Model\Traits;
 
+use Cloud\Model\Company;
+
 trait CompanyTrait
 {
     /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Company")
+     * @JMS\Groups({"list", "details"})
      * @CX\Company
      */
     protected $company;
 
     /**
-     * Set the parent company
+     * Set the company who created the model
      *
      * @param  Company $company
      * @return CompanyTrait
@@ -41,4 +44,5 @@ trait CompanyTrait
     {
         return $this->company;
     }
+
 }
