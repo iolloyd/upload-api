@@ -47,8 +47,10 @@ class Video extends AbstractModel
 
     use Traits\IdTrait;
     use Traits\CreatedAtTrait;
+    use Traits\CreatedByTrait;
     use Traits\UpdatedAtTrait;
     use Traits\CompanyTrait;
+    use Traits\SlugTrait;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
@@ -165,7 +167,7 @@ class Video extends AbstractModel
      *   )
      * @JMS\Groups({"list", "list.videos", "details.videos", "stats"})
      */
-    protected $stats;
+    protected $stat;
 
     /**
      * @ORM\ManyToMany(targetEntity="Tag")
@@ -195,9 +197,6 @@ class Video extends AbstractModel
         $this->tags = new ArrayCollection();
         $this->inbounds = new ArrayCollection();
         $this->outbounds = new ArrayCollection();
-        $this->created_by = $user;
-        $this->updated_by = $user;
-        $this->setCompany($user->getCompany());
     }
 
     /**
@@ -211,28 +210,6 @@ class Video extends AbstractModel
     }
 
     /**
-     * Set the creating user
-     *
-     * @param  User $created_by
-     * @return Video
-     */
-    public function setCreatedBy(User $created_by)
-    {
-        $this->created_by = $created_by;
-        return $this;
-    }
-
-    /**
-     * Get the creating user
-     *
-     * @return User
-     */
-    public function getCreatedBy()
-    {
-        return $this->created_by;
-    }
-
-    /**
      * Get the orientation of the video
      *
      * @return string
@@ -240,50 +217,6 @@ class Video extends AbstractModel
     public function getOrientation()
     {
       return $this->orientation;
-    }
-
-    /**
-     * Set the updating user
-     *
-     * @param  User $updated_by
-     * @return Video
-     */
-    public function setUpdatedBy(User $updated_by)
-    {
-        $this->updated_by = $updated_by;
-        return $this;
-    }
-
-    /**
-     * Get the updating user
-     *
-     * @return User
-     */
-    public function getUpdatedBy()
-    {
-        return $this->updated_by;
-    }
-
-    /**
-     * Set the parent company
-     *
-     * @param  Company $company
-     * @return Video
-     */
-    public function setCompany(Company $company)
-    {
-        $this->company = $company;
-        return $this;
-    }
-
-    /**
-     * Set the parent company
-     *
-     * @return Company
-     */
-    public function getCompany()
-    {
-        return $this->company;
     }
 
     /**
