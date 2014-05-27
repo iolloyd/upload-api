@@ -75,7 +75,7 @@ class IdentityEventSubscriber extends AbstractEventSubscriber
                 $value = $metadata->getFieldValue($object, $fieldName);
 
                 if ($value !== null) {
-                    // TODO Decide on the logic for different user
+                    return;
                 }
 
                 $user = $this->getSecurity()->getToken()->getUser();
@@ -87,7 +87,7 @@ class IdentityEventSubscriber extends AbstractEventSubscriber
                 $value = $metadata->getFieldValue($object, $fieldName);
 
                 if ($value !== null) {
-                    // TODO Decide on the logic for different company
+                    return;
                 }
 
                 $user = $this->getSecurity()->getToken()->getUser();
