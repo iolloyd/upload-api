@@ -44,12 +44,13 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
         $app['serializer'] = $app->protect(function($results, $groups) {
             $serializer = SerializerBuilder::create()->build();
-            $jsonContent = $serializer->serialize(
-              $results,
-              'json',
-              \JMS\Serializer\SerializationContext::create()->setGroups($groups)
-            );
-            return $jsonContent;
+            if ($groups) {
+                $setGroups = \JMS\Serializer\SerializationContext::create()->setGroups($groups);
+            } else {
+                $setGroups = null;
+            }
+            $jsonContent = $serializer->serialize($results, 'json', $setGroups);
+            return json_decode($jsonContent);
         });
 
         $app['single.response.json'] = $app->protect(function ($model, $groups, $headerLink=true) use ($app) {
@@ -57,7 +58,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $params  = $app['request']->query->all();
             $jsonContent = $app['serializer']($model, $groups);
 
-            $response = $app->json(json_decode($jsonContent));
+            $response = $app->json($jsonContent);
             if ($headerLink) {
                 $link = $app['request']->getSchemeAndHttpHost() .
                         $app['request']->getPathInfo();
@@ -76,7 +77,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $navlinks = $this->getLinks($hostUrl, $params, $pager);
             $jsonContent = $app['serializer']($pager->getCurrentPageResults(), $groups);
 
-            $response = $app->json(json_decode($jsonContent));
+            $response = $app->json($jsonContent);
             $response->headers->add(['Link' => $navlinks['link']]);
             $response->headers->add(['X-Pagination-Range' => $navlinks['range']]);
 
