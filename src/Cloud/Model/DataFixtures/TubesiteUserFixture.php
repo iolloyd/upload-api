@@ -45,8 +45,12 @@ class TubesiteUserFixture extends AbstractFixture implements DependentFixtureInt
 
         $xhamsterUser->setUsername('Ruseful2011');
         $xhamsterUser->setPassword('...'); // update db manually
-        $xhamsterUser->setExternalId(0);
-        //$xhamsterUser->setParam('content_partner_site_id', 2242);
+        $xhamsterUser->setExternalId(2021166);
+        $xhamsterUser->setParam('site', [
+            'id' => 4265,
+            'title' => 'Kissing HD',
+            'description' => 'KissingHD.com',
+        ]);
 
         $em->persist($youpornUser);
         $em->persist($xhamsterUser);
