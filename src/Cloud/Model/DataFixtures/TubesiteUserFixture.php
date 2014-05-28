@@ -38,10 +38,22 @@ class TubesiteUserFixture extends AbstractFixture implements DependentFixtureInt
         $youpornUser->setExternalId(4864148);
         $youpornUser->setParam('content_partner_site_id', 2242);
 
+        $xhamsterUser = new TubesiteUser(
+            $this->getReference('xhamster'),
+            $this->getReference('cumulus')
+        );
+
+        $xhamsterUser->setUsername('Ruseful2011');
+        $xhamsterUser->setPassword('...'); // update db manually
+        $xhamsterUser->setExternalId(0);
+        //$xhamsterUser->setParam('content_partner_site_id', 2242);
+
         $em->persist($youpornUser);
+        $em->persist($xhamsterUser);
         $em->flush();
 
         $this->addReference('youporn-user', $youpornUser);
+        $this->addReference('xhamster-user', $xhamsterUser);
     }
 
     /**
