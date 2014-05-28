@@ -17,11 +17,11 @@ use Cloud\Model\VideoOutbound;
 use CloudOutbound\Exception\AccountLockedException;
 use CloudOutbound\Exception\AccountMismatchException;
 use CloudOutbound\Exception\AccountStateException;
-use CloudOutbound\Exception\BadRequestException;
+use CloudOutbound\Exception\InternalInconsistencyException;
 use CloudOutbound\Exception\LoginException;
 use CloudOutbound\Exception\UnexpectedResponseException;
-use CloudOutbound\Exception\UnexpectedStateException;
 use CloudOutbound\Exception\UnexpectedValueException;
+use CloudOutbound\Exception\UploadException;
 use CloudOutbound\XHamster\HttpClient;
 use GuzzleHttp\Url;
 use GuzzleHttp\Cookie\SetCookie;
@@ -122,7 +122,7 @@ class DemoCombined extends AbstractJob
             $this->login($tubeuser);
 
             if (!$this->isLoggedIn($tubeuser)) {
-                throw new UnexpectedStateException('Login succeeded but still no access');
+                throw new InternalInconsistencyException('Login succeeded but still no access');
             }
         }
 
@@ -454,7 +454,7 @@ class DemoCombined extends AbstractJob
 
         $errors = array_combine($matches['field'], $matches['error']);
 
-        throw new BadRequestException(
+        throw new UploadException(
             'xHamster metadata validation failed: '
             . implode(', ', $errors)
             . ' (' . json_encode($errors) . ')'
@@ -650,7 +650,7 @@ class DemoCombined extends AbstractJob
         // error
 
         if (!$match) {
-            throw new UnexpectedStateException(
+            throw new InternalInconsistencyException(
                 'Could not find uploaded file on the status page to '
                 . 'detect external id'
             );
@@ -702,7 +702,7 @@ class DemoCombined extends AbstractJob
         // error
 
         if (!$match) {
-            throw new UnexpectedStateException(sprintf(
+            throw new InternalInconsistencyException(sprintf(
                 'Could not find `%d` on the video status pages',
                 $externalId
             ));
@@ -736,7 +736,7 @@ class DemoCombined extends AbstractJob
 
                 default:
                     throw new UnexpectedValueException(sprintf(
-                        'Unknown status `%s` for outbound `%d`',
+                        'Unexpected status `%s` for outbound `%d`',
                         $match['status'], $outbound->getId()
                     ));
                     break;

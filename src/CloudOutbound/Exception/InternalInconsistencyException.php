@@ -11,7 +11,7 @@
 
 namespace CloudOutbound\Exception;
 
-class UnexpectedStateException extends \DomainException implements ExceptionInterface
+class InternalInconsistencyException extends \DomainException implements ExceptionInterface
 {
 }
 
