@@ -43,7 +43,7 @@ $app->register(new Silex\Provider\DoctrineServiceProvider(), [
 $app->extend('dbs.event_manager', function ($managers, $app) {
     foreach ($app['dbs.options'] as $name => $options) {
         $managers[$name]->addEventSubscriber(new Cloud\Doctrine\TimestampEventSubscriber());
-        $managers[$name]->addEventSubscriber(new Cloud\Doctrine\SecurityEventSubscriber($app));
+        $managers[$name]->addEventSubscriber(new Cloud\Doctrine\IdentityEventSubscriber($app));
     }
     return $managers;
 });
