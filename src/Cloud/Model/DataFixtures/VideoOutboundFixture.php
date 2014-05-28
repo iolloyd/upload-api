@@ -22,7 +22,7 @@ use Cloud\Model\VideoOutbound;
 /**
  * Loads all standard tubesites
  */
-class VideoOutboundFixture extends AbstractFixture implements DependentFixtureInterface   
+class VideoOutboundFixture extends AbstractFixture implements DependentFixtureInterface
 {
     /**
      * {@inheritDoc}
@@ -33,7 +33,7 @@ class VideoOutboundFixture extends AbstractFixture implements DependentFixtureIn
             $this->getReference('video')
         );
 
-        $outbound->setStatus('pending');
+        $outbound->setStatus('complete');
 
         $outbound->setTubesite(
             $this->getReference('youporn')
@@ -61,7 +61,7 @@ class VideoOutboundFixture extends AbstractFixture implements DependentFixtureIn
     public function getDependencies()
     {
         return [
-            __NAMESPACE__ . '\VideoFixture', 
+            __NAMESPACE__ . '\VideoFixture',
         ];
     }
 

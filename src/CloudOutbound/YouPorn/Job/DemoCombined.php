@@ -20,7 +20,17 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
+/**
+ * YouPorn Demo
+ *
+ * HD video requirements:
+ *
+ *  - aspect ratio of 16:9
+ *  - higher than 720p and
+ *  - bitrate higher than 4000kbps
+ */
 class DemoCombined extends AbstractJob
 {
     /**
@@ -53,7 +63,7 @@ class DemoCombined extends AbstractJob
             ->setDefinition([
                 new InputArgument('videooutbound', InputArgument::REQUIRED),
             ])
-            ->setName('job:youporn:demo')
+            ->setName('job:demo:youporn')
         ;
     }
 
@@ -189,7 +199,7 @@ class DemoCombined extends AbstractJob
 
         if ($response->getStatusCode() == 200) {
             $dom = new DomCrawler();
-            $dom->addContent((string) $response->getBody());
+            $dom->addHtmlContent((string) $response->getBody());
 
             try {
                 $message = $dom->filter('.loginForm .errorRed')->text();
