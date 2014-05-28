@@ -14,6 +14,13 @@ namespace CloudOutbound\YouPorn\Job;
 use Cloud\Job\AbstractJob;
 use Cloud\Model\TubesiteUser;
 use Cloud\Model\VideoOutbound;
+use CloudOutbound\Exception\AccountMismatchException;
+use CloudOutbound\Exception\AccountStateException;
+use CloudOutbound\Exception\LoginException;
+use CloudOutbound\Exception\InternalInconsistencyException;
+use CloudOutbound\Exception\UnexpectedResponseException;
+use CloudOutbound\Exception\UnexpectedValueException;
+use CloudOutbound\Exception\UploadException;
 use CloudOutbound\YouPorn\HttpClient;
 use GuzzleHttp\Post\PostFile;
 use Symfony\Component\Console\Input\InputArgument;
@@ -157,11 +164,11 @@ class DemoCombined extends AbstractJob
         // verify
 
         if (strtolower($data['username']) != strtolower($tubeuser->getUsername())) {
-            throw new \Exception('YouPorn `username` does not match our username');
+            throw new AccountMismatchException('YouPorn `username` does not match our username');
         }
 
         if (!$data['content_partner']) {
-            throw new \Exception('YouPorn user is not a content partner account: `content_parter` not set');
+            throw new AccountStateException('YouPorn user is not a content partner account: `content_parter` not set');
         }
 
         return true;
@@ -190,7 +197,7 @@ class DemoCombined extends AbstractJob
 
         if ($response->getStatusCode() == 302) {
             if (!$this->isLoggedIn($tubeuser)) {
-                throw new \Exception('Login post succeeded but still no access');
+                throw new InternalInconsistencyException('Login post succeeded but still no access');
             }
             return;
         }
@@ -207,12 +214,12 @@ class DemoCombined extends AbstractJob
                 $message = 'unknown error; could not extract error from response body';
             }
 
-            throw new \Exception('Login failed: ' . $message);
+            throw new LoginException('Login failed: ' . $message);
         }
 
         // other error
 
-        throw new \Exception(sprintf(
+        throw new UnexpectedResponseException(sprintf(
             'Login failed: server error; (%d) %s',
             $response->getStatusCode(),
             $response->getReasonPhrase()
@@ -236,7 +243,7 @@ class DemoCombined extends AbstractJob
         ]);
 
         if ($response->getStatusCode() != 302) {
-            throw new \Exception(sprintf(
+            throw new UnexpectedResponseException(sprintf(
                 'Logout failed: server error; (%d) %s',
                 $response->getStatusCode(),
                 $response->getReasonPhrase()
@@ -273,7 +280,7 @@ class DemoCombined extends AbstractJob
         // verify
 
         if ($data['video_id'] != $outbound->getExternalId()) {
-            throw new \Exception('YouPorn `video_id` does not match our external id');
+            throw new InternalInconsistencyException('YouPorn `video_id` does not match our external id');
         }
 
         // persist
@@ -298,6 +305,13 @@ class DemoCombined extends AbstractJob
 
                 case 'refused':
                     $outbound->setStatus(VideoOutbound::STATUS_ERROR);
+                    break;
+
+                default:
+                    throw new UnexpectedValueException(sprintf(
+                        'Unexpected status `%s` for outbound `%d`',
+                        $data['status'], $outbound->getId()
+                    ));
                     break;
             }
         });
@@ -370,7 +384,7 @@ class DemoCombined extends AbstractJob
         // verify
 
         if ($data['size'] != $outbound->getFilesize()) {
-            throw new \Exception('YouPorn `size` does not match our filesize');
+            throw new InternalInconsistencyException('YouPorn `size` does not match our filesize');
         }
     }
 
@@ -423,7 +437,7 @@ class DemoCombined extends AbstractJob
         // verify
 
         if (!$data['success']) {
-            throw new \Exception(sprintf(
+            throw new UploadException(sprintf(
                 'YouPorn metadata post and video submit failed: %s',
                 json_encode($data)
             ));
