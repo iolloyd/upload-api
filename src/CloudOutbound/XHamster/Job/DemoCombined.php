@@ -14,6 +14,14 @@ namespace CloudOutbound\XHamster\Job;
 use Cloud\Job\AbstractJob;
 use Cloud\Model\TubesiteUser;
 use Cloud\Model\VideoOutbound;
+use CloudOutbound\Exception\AccountLockedException;
+use CloudOutbound\Exception\AccountMismatchException;
+use CloudOutbound\Exception\AccountStateException;
+use CloudOutbound\Exception\BadRequestException;
+use CloudOutbound\Exception\LoginException;
+use CloudOutbound\Exception\UnexpectedResponseException;
+use CloudOutbound\Exception\UnexpectedStateException;
+use CloudOutbound\Exception\UnexpectedValueException;
 use CloudOutbound\XHamster\HttpClient;
 use GuzzleHttp\Url;
 use GuzzleHttp\Cookie\SetCookie;
@@ -59,16 +67,6 @@ class DemoCombined extends AbstractJob
      * @var array
      */
     protected $forbiddenStrings = ['<', '>'];
-
-    /**
-     * @var Url
-     */
-    protected $uploadBaseUrl;
-
-    /**
-     * @var string
-     */
-    protected $uploadId;
 
     /**
      * Configures this job
@@ -124,7 +122,7 @@ class DemoCombined extends AbstractJob
             $this->login($tubeuser);
 
             if (!$this->isLoggedIn($tubeuser)) {
-                throw new \Exception('Login succeeded but still no access');
+                throw new UnexpectedStateException('Login succeeded but still no access');
             }
         }
 
@@ -189,27 +187,27 @@ class DemoCombined extends AbstractJob
         // verify
 
         if (strpos($body, '<title>Edit Profile</title>') === false) {
-            throw new \Exception('Failed to fetch profile details page');
+            throw new UnexpectedResponseException('Failed to fetch profile details page');
         }
 
         if (strpos($body, '://upload.xhamster.com/producer_sites.php') === false) {
-            throw new \Exception('xHamster user is not a content partner account');
+            throw new AccountStateException('xHamster user is not a content partner account');
         }
 
         if (stripos($body, '://xhamster.com/user/' . $tubeuser->getUsername()) === false) {
-            throw new \Exception('xHamster response does not contain expected username');
+            throw new AccountMismatchException('xHamster response does not contain expected username');
         }
 
         $username = $this->getCookie('USERNAME');
 
         if (strtolower($username) != strtolower($tubeuser->getUsername())) {
-            throw new \Exception('xHamster username cookie does not match our username');
+            throw new AccountMismatchException('xHamster username cookie does not match our username');
         }
 
         $uid = $this->getCookie('UID');
 
         if ($tubeuser->getExternalId() && $uid != $tubeuser->getExternalId()) {
-            throw new \Exception('xHamster UID cookie does not match our external ID');
+            throw new AccountMismatchException('xHamster UID cookie does not match our external ID');
         }
 
         $pwd = $this->getCookie('PWD');
@@ -293,7 +291,7 @@ class DemoCombined extends AbstractJob
         );
 
         if (!$count) {
-            throw new \Exception('Login failed: unknown error; could not extract error from response body: ' . $body);
+            throw new UnexpectedResponseException('Login failed: unknown error; could not extract error from response body: ' . $body);
         }
 
         $errors = array_combine($matches['field'], $matches['error']);
@@ -302,24 +300,24 @@ class DemoCombined extends AbstractJob
         }, $errors);
 
         if ($errors['#loginCaptcha']) {
-            throw new \Exception(sprintf(
+            throw new AccountLockedException(sprintf(
                 'xHamster login failed: xHamster account is blocked with captcha. '
                 . 'Log in directly on the tubesite to unblock and then '
                 . 'try again.'
             ));
         } elseif ($errors['username']) {
-            throw new \Exception(sprintf(
+            throw new LoginException(sprintf(
                 'xHamster login failed: invalid username; (%s)',
                 $errors['username']
             ));
         } elseif ($errors['password']) {
-            throw new \Exception(sprintf(
+            throw new LoginException(sprintf(
                 'xHamster login failed: invalid password; (%s)',
                 $errors['password']
             ));
         }
 
-        throw new \Exception(sprintf('xHamster login failed: unknown error; (%s)', $body));
+        throw new UnexpectedResponseException(sprintf('xHamster login failed: unknown error; (%s)', $body));
     }
 
     /**
@@ -360,7 +358,7 @@ class DemoCombined extends AbstractJob
         }
 
         if ($error) {
-            throw new \Exception('Could not get CPP sites: ' . $error);
+            throw new UnexpectedResponseException('Could not get CPP sites: ' . $error);
         }
 
         // success
@@ -402,7 +400,7 @@ class DemoCombined extends AbstractJob
         ]);
 
         if ($response->getStatusCode() != 302) {
-            throw new \Exception('Failed to get redirect for loadbalanced upload host');
+            throw new UnexpectedResponseException('Failed to get redirect for loadbalanced upload host');
         }
 
         $redirectUrl = Url::fromString($response->getHeader('Location'));
@@ -447,7 +445,7 @@ class DemoCombined extends AbstractJob
         );
 
         if (!$count) {
-            throw new \Exception(
+            throw new UnexpectedResponseException(
                 'xHamster metadata validation failed: '
                 . 'unknown error; could not extract error from response body: '
                 . $body
@@ -456,7 +454,7 @@ class DemoCombined extends AbstractJob
 
         $errors = array_combine($matches['field'], $matches['error']);
 
-        throw new \Exception(
+        throw new BadRequestException(
             'xHamster metadata validation failed: '
             . implode(', ', $errors)
             . ' (' . json_encode($errors) . ')'
@@ -489,7 +487,7 @@ class DemoCombined extends AbstractJob
         // error
 
         if (!$count) {
-            throw new \Exception(
+            throw new UnexpectedResponseException(
                 'xHamster prepare failed: could not '
                 . 'extract upload ID from response body: '
                 . $body
@@ -561,11 +559,11 @@ class DemoCombined extends AbstractJob
         // error
 
         if (strpos($body, 'UberUpload.redirectAfterUpload') === false) {
-            throw new \Exception('xHamster upload failed: ' . $body);
+            throw new UnexpectedResponseException('xHamster upload failed: ' . $body);
         }
 
         if (strpos($body, $uploadId) === false) {
-            throw new \Exception(sprintf(
+            throw new UnexpectedResponseException(sprintf(
                 'xHamster upload failed: Response does not include expected '
                     . 'id `%s`: %s',
                 $uploadId,
@@ -611,7 +609,7 @@ class DemoCombined extends AbstractJob
             $error = 'unknown error; could not extract error from response body';
         }
 
-        throw new \Exception('xHamster submit failed: ' . $error);
+        throw new UnexpectedResponseException('xHamster submit failed: ' . $error);
     }
 
     /**
@@ -652,7 +650,7 @@ class DemoCombined extends AbstractJob
         // error
 
         if (!$match) {
-            throw new \Exception(
+            throw new UnexpectedStateException(
                 'Could not find uploaded file on the status page to '
                 . 'detect external id'
             );
@@ -704,7 +702,7 @@ class DemoCombined extends AbstractJob
         // error
 
         if (!$match) {
-            throw new \Exception(sprintf(
+            throw new UnexpectedStateException(sprintf(
                 'Could not find `%d` on the video status pages',
                 $externalId
             ));
@@ -733,8 +731,14 @@ class DemoCombined extends AbstractJob
 
                 case self::STATUS_REPOST:
                 case self::STATUS_DELETED:
-                default:
                     $outbound->setStatus(VideoOutbound::STATUS_ERROR);
+                    break;
+
+                default:
+                    throw new UnexpectedValueException(sprintf(
+                        'Unknown status `%s` for outbound `%d`',
+                        $match['status'], $outbound->getId()
+                    ));
                     break;
             }
         });
@@ -761,7 +765,7 @@ class DemoCombined extends AbstractJob
         }
 
         if ($error) {
-            throw new \Exception('Could not get video list: ' . $error);
+            throw new UnexpectedResponseException('Could not get video list: ' . $error);
         }
 
         // success
