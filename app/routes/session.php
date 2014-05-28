@@ -17,12 +17,18 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
  */
 $sessionData = function () use ($app)
 {
+    $tags = $app['em']->getRepository('cx:tag')->findAll();
+    $tags = array_map(function($x) use ($app) {
+        return $app['serializer']($x, []);}, $tags
+    );
+    $json['config']['tags'] = $tags;
     $data = [
         'endpoints' => [
             //'default' => $app['config']['baseurl'],
         ],
         'config' => [
             'env' => $app['env'],
+            'tags' => $tags
         ],
     ];
 
@@ -79,11 +85,6 @@ $app->post('/session', function (Request $request) use ($app, $sessionData)
     // success
 
     $json = $sessionData();
-    $tags = $app['em']->getRepository('cx:tag')->findAll();
-    $tags = array_map(function($x) use ($app) {
-        return $app['serializer']($x, []);}, $tags
-    );
-    $json['config']['tags'] = $tags;
     return $app->json($json);
 });
 
