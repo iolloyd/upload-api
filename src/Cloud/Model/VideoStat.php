@@ -35,7 +35,7 @@ class VideoStat extends AbstractModel
 
     /**
      * @ORM\Column(type="integer")
-     * @JMS\Groups({"list", "list.videos", "details.videos", "stat"})
+     * @JMS\Groups({"list", "list.videos", "details.videos", "video_stat"})
      */
     protected $plays;
 
