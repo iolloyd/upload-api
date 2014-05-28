@@ -33,6 +33,12 @@ use Symfony\Component\DomCrawler\Crawler as DomCrawler;
  */
 class DemoCombined extends AbstractJob
 {
+    const STATUS_NOT_CONVERTED = 'Not converted';
+    const STATUS_REPOST        = 'Repost';
+    const STATUS_PUBLICATION   = 'Publication';
+    const STATUS_DELETED       = 'Deleted';
+    const STATUS_ACTIVE        = 'Active';
+
     /**
      * @var EntityManager
      */
@@ -90,7 +96,7 @@ class DemoCombined extends AbstractJob
                 'stats' => 76,
             ],
             'defaults' => [
-                'debug' => true, // $output->isVerbose(),
+                'debug' => $output->isVerbose(),
             ],
         ]);
 
@@ -128,38 +134,36 @@ class DemoCombined extends AbstractJob
             '1'
         );
 
-        //$sites = $this->getCppSites();
-        //var_dump($sites); exit;
-
-        //$uploadBaseUrl = $this->getUploadBaseUrl();
-        //$this->validateVideo($uploadBaseUrl, $outbound);
-        //$this->prepareVideo($uploadBaseUrl, $outbound);
-        //$this->uploadVideo($uploadBaseUrl, $outbound);
-        //$this->submitVideo($uploadBaseUrl, $outbound);
-
-        $this->refreshVideoStatus($outbound);
-
-        return 0;
-
-        // --
+        // $sites = $this->getCppSites(); var_dump($sites); exit;
 
         if ($outbound->getExternalId()) {
 
-            $output->writeln('<info>VideoOutbound has externalId set, only refreshing status...</info>');
+            $output->write('<info>VideoOutbound has externalId set, only refreshing status ... </info>');
             $this->refreshVideoStatus($outbound);
+            $output->writeln('<comment>' . $outbound->getStatus() . '</comment>');
 
         } else {
 
-            $output->writeln('<info>Starting YouPorn outbound upload...</info>');
+            $output->writeln('<info>Starting <comment>xHamster</comment> outbound upload...</info>');
 
-            $output->writeln('<info> + creating draft</info>');
-            $this->createVideo($outbound);
+            $output->writeln('<info> + selecting server</info>');
+            $uploadBaseUrl = $this->getUploadBaseUrl();
 
-            $output->writeln('<info> + uploading video file</info>');
-            $this->uploadVideo($outbound);
+            $output->writeln('<info> + validating video</info>');
+            $this->validateVideo($uploadBaseUrl, $outbound);
+
+            $output->writeln('<info> + preparing upload</info>');
+            $this->prepareVideo($uploadBaseUrl, $outbound);
+
+            $output->writeln('<info> + uploading video</info>');
+            $this->uploadVideo($uploadBaseUrl, $outbound);
 
             $output->writeln('<info> + submitting</info>');
-            $this->submitVideo($outbound);
+            $this->submitVideo($uploadBaseUrl, $outbound);
+
+            $output->write('<info> + detecting external id ... </info>');
+            $this->detectExternalId($outbound);
+            $output->writeln('<comment>' . $outbound->getExternalId() . '</comment>');
         }
 
         $this->logout($tubeuser);
@@ -174,8 +178,6 @@ class DemoCombined extends AbstractJob
      */
     protected function isLoggedIn(TubesiteUser $tubeuser)
     {
-        return true;
-
         $response = $this->httpSession->get('/edit_profile.php');
 
         if ($response->getStatusCode() != 200) {
@@ -211,6 +213,14 @@ class DemoCombined extends AbstractJob
         }
 
         $pwd = $this->getCookie('PWD');
+
+        // persist
+
+        $this->em->transactional(function ($em) use ($tubeuser, $username, $uid, $pwd) {
+            $tubeuser->setParam('USERNAME', $username);
+            $tubeuser->setParam('UID', $uid);
+            $tubeuser->setParam('PWD', $pwd);
+        });
 
         return true;
     }
@@ -604,34 +614,55 @@ class DemoCombined extends AbstractJob
         throw new \Exception('xHamster submit failed: ' . $error);
     }
 
-    protected function getUploadData(VideoOutbound $outbound)
+    /**
+     * Detect the external ID for the video we just submitted
+     *
+     * Assume that immediately after the submit call, our video is on the top
+     * of the list. Validate that this first video matches expected status,
+     * title and site. If all looks good, take the `vid` and store it.
+     *
+     * Unfortunately, xHamster does not return their video id anywhere during
+     * the upload process, so we have to extract it like this.
+     *
+     * @return void
+     */
+    protected function detectExternalId(VideoOutbound $outbound)
     {
         $video    = $outbound->getVideo();
         $tubeuser = $outbound->getTubesiteUser();
 
-        return [
-            // TODO: refactor
-            'slot1_title' =>
-                substr(str_replace($this->forbiddenStrings, ' ', 'TEST - ' . $video->getTitle()), 0, 60),
-            'slot1_descr' =>
-                substr(str_replace($this->forbiddenStrings, ' ', 'TEST PLEASE REJECT - ' . $video->getDescription()), 0, 500),
+        $expectedSite  = $tubeuser->getParam('site')['title'];
+        $expectedTitle = substr(str_replace($this->forbiddenStrings, ' ', 'TEST - ' . $video->getTitle()), 0, 60); // FIXME: refactor
 
-            'slot1_site' => $tubeuser->getParam('site')['id'],
+        $list = $this->getVideosList(1);
+        $match = null;
 
-            // TODO: pull from video tags
-            //'slot1_chanell' => '',
-            'slot1_chanell' => '.15',
-            'slot1_channels15' => '',
+        foreach ($list as $item) {
+            if ($item['status'] == self::STATUS_NOT_CONVERTED
+                && $item['added'] == '1 minute ago'
+                && $item['site'] == $expectedSite
+                && $item['title'] == $expectedTitle
+            ) {
+                $match = $item;
+                var_dump($match);
+                break;
+            }
+        }
 
-            'slot1_fileType'  => '',
-            'slot1_http_url'  => '',
-            'slot1_http_user' => '',
-            'slot1_http_pass' => '',
-            'slot1_ftp_url'   => '',
-            'slot1_ftp_user'  => '',
-            'slot1_ftp_pass'  => '',
-            'slot1_file'      => $outbound->getFilename(),
-        ];
+        // error
+
+        if (!$match) {
+            throw new \Exception(
+                'Could not find uploaded file on the status page to '
+                . 'detect external id'
+            );
+        }
+
+        // success
+
+        $this->em->transactional(function ($em) use ($outbound, $match) {
+            $outbound->setExternalId($match['id']);
+        });
     }
 
     /**
@@ -649,19 +680,22 @@ class DemoCombined extends AbstractJob
      */
     protected function refreshVideoStatus(VideoOutbound $outbound)
     {
-        $data = null;
         $externalId = $outbound->getExternalId();
 
+        // find video on paginated html lists
+
+        $match = null;
+
         for (
-            $i = 1; $videos = $this->getVideosList($i), count($videos) > 1; $i++
+            $i = 1; $list = $this->getVideosList($i), count($list) > 1; $i++
         ) {
-            if (isset($videos[$externalId])) {
+            if (isset($list[$externalId])) {
                 // found the video
-                $data = $videos[$externalId];
+                $match = $list[$externalId];
                 break;
             }
 
-            if (max(array_keys($videos)) < $externalId) {
+            if (max(array_keys($list)) < $externalId) {
                 // we paginated past the id we search for
                 break;
             }
@@ -669,7 +703,7 @@ class DemoCombined extends AbstractJob
 
         // error
 
-        if (!$data) {
+        if (!$match) {
             throw new \Exception(sprintf(
                 'Could not find `%d` on the video status pages',
                 $externalId
@@ -678,7 +712,32 @@ class DemoCombined extends AbstractJob
 
         // success
 
-        var_dump($data); exit;
+        //var_dump($match); exit;
+
+        $this->em->transactional(function ($em) use ($outbound, $match) {
+            $params = array_intersect_key($match, array_flip([
+                'status',
+            ]));
+
+            $outbound->addParams($params);
+
+            switch($match['status']) {
+                case self::STATUS_NOT_CONVERTED:
+                    $outbound->setStatus(VideoOutbound::STATUS_WORKING);
+                    break;
+
+                case self::STATUS_PUBLICATION:
+                case self::STATUS_ACTIVE:
+                    $outbound->setStatus(VideoOutbound::STATUS_COMPLETE);
+                    break;
+
+                case self::STATUS_REPOST:
+                case self::STATUS_DELETED:
+                default:
+                    $outbound->setStatus(VideoOutbound::STATUS_ERROR);
+                    break;
+            }
+        });
     }
 
     protected function getVideosList($page = 1)
@@ -740,6 +799,36 @@ class DemoCombined extends AbstractJob
         //var_dump($videos); exit;
 
         return $videos;
+    }
+
+    protected function getUploadData(VideoOutbound $outbound)
+    {
+        $video    = $outbound->getVideo();
+        $tubeuser = $outbound->getTubesiteUser();
+
+        return [
+            // TODO: refactor
+            'slot1_title' =>
+                substr(str_replace($this->forbiddenStrings, ' ', 'TEST - ' . $video->getTitle()), 0, 60),
+            'slot1_descr' =>
+                substr(str_replace($this->forbiddenStrings, ' ', 'TEST PLEASE REJECT - ' . $video->getDescription()), 0, 500),
+
+            'slot1_site' => $tubeuser->getParam('site')['id'],
+
+            // TODO: pull from video tags
+            //'slot1_chanell' => '',
+            'slot1_chanell' => '.15',
+            'slot1_channels15' => '',
+
+            'slot1_fileType'  => '',
+            'slot1_http_url'  => '',
+            'slot1_http_user' => '',
+            'slot1_http_pass' => '',
+            'slot1_ftp_url'   => '',
+            'slot1_ftp_user'  => '',
+            'slot1_ftp_pass'  => '',
+            'slot1_file'      => $outbound->getFilename(),
+        ];
     }
 
     /**
