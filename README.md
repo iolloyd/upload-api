@@ -58,16 +58,11 @@ Each job has the possibility of four states:
     3 => Failed
     4 => Complete
 
-Slim Extensions
+Silex Extensions
 ---------------
 
-We use an extended class `Cloud\Slim\Slim` with support for injecting
-callable functions into `$app`.
-
-The convention is to follow Node.js Express when deciding which
-functionality to include directly in `$app`:
-
-    $app->json(array $body)
+We use an extended class `Cloud\Silex\Application` with support for injecting
+callable functions into `$app` based on [Pimple](http://pimple.sensiolabs.org/).
 
 Filesystem Layout
 -----------------
@@ -82,6 +77,9 @@ handled in the `cloudxxx-ng` Angular.js application.
         config/
             development.php
             production.php.dist
+        helper/
+            converter.php 
+            ...
         routes/
             session.php
             member.php
@@ -109,15 +107,20 @@ the application mode to that variable's value. Each file has the `$app`
 variable with all its injected dependencies available.
 
 ```php
-<?php
-// app/config/development.php
+// app/config/development.ini
 
-$app->configureMode('development', function () use ($app) {
-    $app->config([
-        'debug' => true,
-        'log.enabled' => false,
-    ]);
-});
+[db.options]
+driver   = pdo_mysql
+host     = localhost
+dbname   = cloudxxx
+user     = root
+password = root
+charset  = utf8
+
+[s3]
+secret = foo
+key = bar
+
 ```
 
 ### app/routes/
