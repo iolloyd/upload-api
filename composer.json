@@ -22,6 +22,7 @@
         "guzzlehttp/guzzle": "~4.0",
         "guzzlehttp/streams": "~1.1",
         "aws/aws-sdk-php": "~2.6",
+        "aws/aws-sdk-php-silex": "~1.1",
 
         "kamisama/php-resque-ex": "~1.2",
         "kamisama/php-resque-ex-scheduler": "dev-master",

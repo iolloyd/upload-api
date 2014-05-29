@@ -39,6 +39,7 @@ foreach ($finder as $file) {
 }
 
 $cli->add(new \CloudOutbound\YouPorn\Job\DemoCombined());
+$cli->add(new \CloudOutbound\XHamster\Job\DemoCombined());
 
 // run
 

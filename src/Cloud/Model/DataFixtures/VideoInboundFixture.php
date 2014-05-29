@@ -22,7 +22,7 @@ use Cloud\Model\VideoInbound;
 /**
  * Loads all standard tubesites
  */
-class VideoInboundFixture extends AbstractFixture implements DependentFixtureInterface   
+class VideoInboundFixture extends AbstractFixture implements DependentFixtureInterface
 {
     /**
      * {@inheritDoc}
@@ -34,6 +34,7 @@ class VideoInboundFixture extends AbstractFixture implements DependentFixtureInt
             $this->getReference('user')
         );
 
+        $inbound->setStatus('complete');
         $inbound->setToken('token12345');
         $inbound->setFilename('video inbound filename');
         $inbound->setCreatedBy(
@@ -49,7 +50,7 @@ class VideoInboundFixture extends AbstractFixture implements DependentFixtureInt
     public function getDependencies()
     {
         return [
-            __NAMESPACE__ . '\VideoFixture', 
+            __NAMESPACE__ . '\VideoFixture',
         ];
     }
 
