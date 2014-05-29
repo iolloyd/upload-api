@@ -56,11 +56,19 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
             $stat->setRating(rand(1, 100));
             $stat->setVideo($video);
 
+            $video->setTitle('Test Video ' . $x);
+            $video->setDescription('Description description description');
+
+            $video->setFilename('video_filename.mp4');
+            $video->setFilesize(1024*1024*1);
+            $video->setFiletype('video/mp4');
+
             $em->persist($video);
             $em->persist($stat);
         }
 
         $em->flush();
+
         $this->addReference('video', $video);
     }
 
