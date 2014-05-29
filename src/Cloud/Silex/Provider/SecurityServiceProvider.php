@@ -12,11 +12,6 @@
 namespace Cloud\Silex\Provider;
 
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Tools\Pagination\Paginator;
-use JMS\Serializer\SerializerBuilder;
-use Pagerfanta\Adapter\ArrayAdapter;
-use Pagerfanta\Adapter\DoctrineCollectionAdapter;
-use Pagerfanta\Pagerfanta;
 use Silex\Application;
 use Silex\ServiceProviderInterface;
 
@@ -84,7 +79,7 @@ class SecurityServiceProvider implements ServiceProviderInterface
     /**
      * {@inheritDoc}
      */
-    public function boot(\Silex\Application $app)
+    public function boot(Application $app)
     {
     }
 }
