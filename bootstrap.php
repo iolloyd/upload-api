@@ -30,7 +30,7 @@ $app['config'] = array_reduce($configs, function (array $data, $file) use ($app)
 
 // db
 $app->register(new Silex\Provider\DoctrineServiceProvider(), [
-    'db.options' => $app['config']['db.options'],
+    'db.options' => $app['config']['db'],
 ]);
 \Doctrine\Common\Annotations\AnnotationRegistry::registerAutoloadNamespace(
     'Cloud\Doctrine\Annotation', 'src/'
@@ -67,6 +67,11 @@ $app->extend('orm.ems.config', function ($configs, $app) {
     return $configs;
 });
 $app['em'] = $app['orm.em'];
+
+// aws
+$app->register(new Aws\Silex\AwsServiceProvider(), array(
+    'aws.config' => $app['config']['aws'],
+));
 
 // loader
 $app->register(new Cloud\Silex\Loader(), [
