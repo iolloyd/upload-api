@@ -67,7 +67,7 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
     }
 
 
-    $app['em']->transactional(function ($em) use ($app, $video, $request) {
+    $app['em']->transactional(function () use ($app, $video, $request) {
         $video->setTitle($request->get('title'));
         $video->setDescription($request->get('description'));
         $video->setFilename($request->get('filename'));
@@ -99,9 +99,6 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
         $video->setStatus(Video::STATUS_PENDING);
         $video->setUpdatedBy($app['user']);
 
-        // TODO: refactor
-
-        $inbound  = $video->getVideoInbounds()->last();
         $tubeuser = $app['em']->getRepository('cx:tubesiteuser')->findAll()[0];
 
         $outbound->setTubesite($tubeuser->getTubesite());
