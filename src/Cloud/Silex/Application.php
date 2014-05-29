@@ -13,8 +13,10 @@ namespace Cloud\Silex;
 
 use Silex\Application as BaseApplication;
 use Silex\Application\SecurityTrait;
+use Silex\Application\MonologTrait;
 
 class Application extends BaseApplication
 {
     use SecurityTrait;
+    use MonologTrait;
 }
