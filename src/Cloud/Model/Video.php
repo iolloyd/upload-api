@@ -14,8 +14,6 @@ namespace Cloud\Model;
 
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
-use JMS\Serializer\Annotation\Exclude;
-use JsonSerializable;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
@@ -290,7 +288,7 @@ class Video extends AbstractModel
     /**
      * Get the tags
      *
-     * @return Collection
+     * @return ArrayCollection
      */
     public function getTags()
     {
@@ -301,6 +299,7 @@ class Video extends AbstractModel
      * Set the processing status
      *
      * @param  string $status
+     * @throws \InvalidArgumentException
      * @return Video
      */
     public function setStatus($status)
@@ -343,7 +342,7 @@ class Video extends AbstractModel
     /**
      * Get the inbound file transfers for this video
      *
-     * @return Collection
+     * @return ArrayCollection
      */
     public function getInbounds()
     {
@@ -353,7 +352,7 @@ class Video extends AbstractModel
     /**
      * Get the outbound file transfers for this video
      *
-     * @return Collection
+     * @return ArrayCollection
      */
     public function getOutbounds()
     {
@@ -543,6 +542,8 @@ class Video extends AbstractModel
     //////////////////////////////////////////////////////////////////////////
 
     /**
+     * Overrides method in SlugTrait
+     *
      * @return array
      */
     protected function getSlugFields()

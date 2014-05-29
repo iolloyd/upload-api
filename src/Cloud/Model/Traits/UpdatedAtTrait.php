@@ -22,7 +22,7 @@ trait UpdatedAtTrait
     /**
      * Set the updated at date
      *
-     * @param  DateTime $updatedAt
+     * @param \DateTime $updatedAt
      * @return UpdatedAtTrait
      */
     public function setUpdatedAt(\DateTime $updatedAt)
@@ -34,7 +34,7 @@ trait UpdatedAtTrait
     /**
      * Get the updated at date
      *
-     * @return DateTime
+     * @return \DateTime
      */
     public function getUpdatedAt()
     {
