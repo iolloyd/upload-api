@@ -18,3 +18,9 @@ cache
 tags
 
 *.sh
+mysql-connector-java-5.1.29-bin.jar
+mysql-connector-license.txt
+
+.idea
+development.log
+data/*
