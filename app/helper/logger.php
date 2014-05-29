@@ -22,10 +22,8 @@ $app->register(new \Silex\Provider\MonologServiceProvider(), [
     'monolog.logfile' => $logFolder . '/development.log',
     'monolog.streamHandler' => function() use ($app) {
         return new \Monolog\Handler\StreamHandler($app['monolog.logfile']);
-    }
+    },
 ]);
-
-$app['monolog']->pushHandler($app['monolog.streamHandler']);
 
 $app['monolog.factory'] = $app->protect(function ($name) use ($app) {
     $log = new $app['monolog.logger.class']($name);
@@ -41,4 +39,9 @@ $app['monolog.dev'] = $app->share(function() use ($app) {
 $app['monolog.app'] = $app->share(function() use ($app) {
     return $app['monolog.factory']('app');
 });
+
+$app['monolog']->pushHandler($app['monolog.streamHandler']);
+$app['monolog.dev']->pushHandler($app['monolog.streamHandler']);
+$app['monolog.app']->pushHandler($app['monolog.streamHandler']);
+
 
