@@ -9,11 +9,7 @@
  * @license    Proprietary
  */
 
-
 namespace Cloud\Model;
-
-use JsonSerializable;
-use Doctrine\Common\Collections\ArrayCollection;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
@@ -21,7 +17,6 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
- * @ORM\HasLifecycleCallbacks
  */
 class VideoStat extends AbstractModel
 {
@@ -29,25 +24,25 @@ class VideoStat extends AbstractModel
 
     /**
      * @ORM\JoinColumn(nullable=false)
-     * @ORM\ManyToOne(targetEntity="Video", inversedBy="stat")
+     * @ORM\OneToOne(targetEntity="Video", mappedBy="stat")
      */
     protected $video;
 
     /**
      * @ORM\Column(type="integer")
-     * @JMS\Groups({"list", "list.videos", "details.videos", "video_stat"})
+     * @JMS\Groups({"list", "details", "list.videos", "details.videos"})
      */
     protected $plays;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     * @ORM\Column(type="float")
+     * @JMS\Groups({"list", "details", "list.videos", "details.videos"})
      */
     protected $rating;
 
     /**
      * @ORM\Column(type="integer")
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     * @JMS\Groups({"list", "details", "list.videos", "details.videos"})
      */
     protected $clicks;
 
@@ -94,12 +89,5 @@ class VideoStat extends AbstractModel
     public function setVideo($video)
     {
         $this->video = $video;
-    }
-
-    public function getDependencies()
-    {
-        return [
-            __NAMESPACE__ . '\VideoFixture',
-        ];
     }
 }

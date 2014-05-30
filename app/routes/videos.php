@@ -70,8 +70,6 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
     $app['em']->transactional(function () use ($app, $video, $request) {
         $video->setTitle($request->get('title'));
         $video->setDescription($request->get('description'));
-        $video->setFilename($request->get('filename'));
-        $video->setFilesize($request->get('filesize'));
         $tags = $app['converter.tags.from.request']($request->get('tags'));
         $video->setTags($tags);
     });
@@ -88,33 +86,38 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
 $app->post('/videos/{video}/publish', function(Video $video) use ($app)
 {
     if (!$video->isDraft()) {
-        return $app->jsonError(
-            400, 'invalid_status', 'Video must be in draft status'
-        );
+        return $app->json([
+            'error' => 'invalid_status',
+            'error_details' => 'Video must be in draft status',
+        ], 400);
     }
 
-    $outbound = new VideoOutbound($video);
-
-    $app['em']->transactional(function ($em) use ($app, $video, $outbound) {
+    $app['em']->transactional(function ($em) use ($app, $video) {
         $video->setStatus(Video::STATUS_PENDING);
-        $video->setUpdatedBy($app['user']);
 
-        $tubeuser = $app['em']->getRepository('cx:tubesiteuser')->findAll()[0];
+        $tubeusers = $app['em']->getRepository('cx:tubesiteuser')->findAll();
 
-        $outbound->setTubesite($tubeuser->getTubesite());
-        $outbound->setTubesiteUser($tubeuser);
-        $outbound->setFilename($video->getFilename());
-        $outbound->setFilesize($video->getFilesize());
-        $outbound->setFiletype($video->getFiletype());
+        foreach ($tubeusers as $tubeuser) {
+            $outbound = new VideoOutbound($video);
 
-        $em->persist($outbound);
+            $outbound->setTubesite($tubeuser->getTubesite());
+            $outbound->setTubesiteUser($tubeuser);
+            $outbound->setFilename($video->getFilename());
+            $outbound->setFilesize($video->getFilesize());
+            $outbound->setFiletype($video->getFiletype());
+
+            $em->persist($outbound);
+        }
     });
 
-    Resque::enqueue(
-        'default',
-        'CloudOutbound\YouPorn\Job\DemoCombined',
-        ['videooutbound' => $outbound->getId()]
-    );
+    //Resque::enqueue(
+        //'default',
+        //'CloudOutbound\YouPorn\Job\DemoCombined',
+        //['videooutbound' => $outbound->getId()]
+    //);
 
-    $app->json($video);
-});
+    return $app['single.response.json']($video, ['details', 'details.videos', 'details.outbounds']);
+})
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert')
+;
