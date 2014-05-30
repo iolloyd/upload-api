@@ -57,7 +57,7 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
             $stat = new VideoStat();
             $stat->setPlays($plays);
             $stat->setClicks($clicks);
-            $stat->setRating(rand(1, 100));
+            $stat->setRating(rand(1, 100) / 100);
             $stat->setVideo($video);
 
             $video->setTitle('Test Video ' . $x);
