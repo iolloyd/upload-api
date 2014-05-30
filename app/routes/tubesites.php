@@ -25,7 +25,7 @@ use Symfony\Component\HttpFoundation\Request;
  */
 $app->get('/tubesites/{tubesite}', function(Tubesite $tubesite) use ($app)
 {
-    $groups = ['list', 'details.tubesite',];
+    $groups = ['details.tubesites', 'list'];
     return $app['single.response.json']($tubesite, $groups);
 })
     ->assert('tubesite', '\d+')
@@ -37,7 +37,7 @@ $app->get('/tubesites/{tubesite}', function(Tubesite $tubesite) use ($app)
  */
 $app->get('/tubesites', function(Request $request) use ($app)
 {
-    $groups = ['list.tubesites', 'details.tubesites', 'list', 'stats'];
+    $groups = ['details.tubesites', 'list'];
     $pagedView = $app['paginator.response.json']('cx:tubesite', $groups);
     return $pagedView;
 });
