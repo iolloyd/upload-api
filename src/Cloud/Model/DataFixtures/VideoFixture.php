@@ -30,7 +30,7 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
     public function load(ObjectManager $em)
     {
 
-        foreach (range(1, 30) as $x) {
+        foreach (range(1, 5) as $x) {
             $video = new Video(
                 $this->getReference('user')
             );
