@@ -29,6 +29,7 @@ class Tubesite extends AbstractModel
 
     /**
      * @ORM\Column(type="text", nullable=true)
+     * @JMS\Groups({"details.tubesites"})
      */
     protected $description;
 
@@ -44,6 +45,7 @@ class Tubesite extends AbstractModel
 
     /**
      * @ORM\Column(type="text", nullable=true)
+     * @JMS\Groups({"details.tubesites"})
      */
     protected $shortDescription;
 
@@ -54,11 +56,13 @@ class Tubesite extends AbstractModel
 
     /**
      * @ORM\Column(type="string")
+     * @JMS\Groups({"details.tubesites"})
      */
     protected $title;
 
     /**
      * @ORM\Column(type="string")
+     * @JMS\Groups({"details.tubesites"})
      */
     protected $url;
 
