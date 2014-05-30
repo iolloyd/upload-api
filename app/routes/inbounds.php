@@ -20,16 +20,16 @@ use GuzzleHttp\Mimetypes;
  * Create a new inbound upload and get
  * parameters for the form to * AWS S3
  */
-$app->post('/videos/:video/inbounds', function(Video $video) use ($app)
+$app->post('/videos/{video}/inbounds', function(Video $video) use ($app)
     {
-        $inbound = new VideoInbound($video);
+        $inbound = new VideoInbound($video, $app['security']->getToken()->getUser());
 
         // TODO set $inbound->filename/size/type/expiresAt
 
-        $app->em->persist($inbound);
-        $app->em->flush();
+        $app['em']->persist($inbound);
+        $app['em']->flush();
 
-        $form = new PostObject($app->s3, $app->config('s3.bucket'), [
+        $form = new PostObject($app['aws']->get('s3'), $app['config']['aws']['bucket'], [
             'ttd'                             => '+24 hours',
             'acl'                             => CannedAcl::PRIVATE_ACCESS,
             'success_action_status'           => 200,
@@ -58,19 +58,21 @@ $app->post('/videos/:video/inbounds', function(Video $video) use ($app)
             'form'       => $form->getFormAttributes(),
             'fields'     => $form->getFormInputs(),
             'file_field' => 'file',
-            ];
+        ];
 
         $json['fields'] = array_filter($json['fields']);
 
-        $app->json($json, 201);
+        return $app->json($json, 201);
     }
 )
-    ->convert('video', 'converter.video:convert');
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert')
+;
 
 /**
  * Complete chunk upload and combine chunks into single file
  */
-$app->post('/videos/:video/inbounds/:videoinbound/complete', 
+$app->post('/videos/{video}/inbounds/{inbound}/complete',
     function(Video $video, VideoInbound $inbound) use ($app)
     {
         if ($inbound->getVideo() != $video) {
@@ -83,13 +85,12 @@ $app->post('/videos/:video/inbounds/:videoinbound/complete',
 
         // init
 
-        $app->em->transactional(function ($em) use ($inbound) {
+        $app['em']->transactional(function ($em) use ($inbound) {
             $inbound->setStatus('working');
         });
 
         $upload = new FlowUpload(
-            $app->s3,
-            $app->config('s3.bucket'),
+            $app['aws']->get('s3'), $app['config']['aws']['bucket'],
             $inbound->getStorageChunkPath() . '/',
             []
         );
@@ -98,15 +99,18 @@ $app->post('/videos/:video/inbounds/:videoinbound/complete',
         try {
             $upload->validate();
         } catch (RuntimeException $e) {
-            $app->em->transactional(function ($em) use ($inbound) {
+            $app['em']->transactional(function ($em) use ($inbound) {
                 $inbound->setStatus('error');
             });
 
-            return $app->jsonError($e->getCode() ?: 400, 'invalid_upload', $e->getMessage());
+            return $app->json([
+                'error' => 'invalid_upload',
+                'error_details' => $e->getMessage(),
+            ], 400);
         }
 
         // combine
-        $app->em->transactional(function ($em) use ($video, $inbound, $upload) {
+        $app['em']->transactional(function ($em) use ($video, $inbound, $upload) {
             $mimetypes = Mimetypes::getInstance();
             $meta      = $upload->getMetadata();
 
@@ -130,17 +134,21 @@ $app->post('/videos/:video/inbounds/:videoinbound/complete',
             $inbound->setStatus('complete');
         });
 
-        return $app->json('OK', 201);
+        $groups = ['details', 'details.videos', 'details.inbounds'];
+        return $app['single.response.json']($video, $groups);
     }
 )
-    ->convert('video', 'converter.video:convert')
-    ->convert('inbound', 'converter.inbound:convert');
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert')
+->assert('inbound', '\d+')
+->convert('inbound', 'converter.inbound:convert')
+;
 
 /**
  * Abort chunk upload and delete chunks
  */
 $app->delete(
-    '/videos/:video/inbounds/:inbound',
+    '/videos/{video}/inbounds/{inbound}',
     function(Video $video, VideoInbound $inbound) use ($app)
     {
         if ($inbound->getVideo() != $video) {
@@ -152,8 +160,7 @@ $app->delete(
         }
 
         $upload = new FlowUpload(
-            $app->s3,
-            $app->config('s3.bucket'),
+            $app['aws']->get('s3'), $app['config']['aws']['bucket'],
             $key,
             []
         );
@@ -161,5 +168,8 @@ $app->delete(
         $app->json(iterator_to_array($upload->deleteChunks()));
     }
 )
-    ->convert('video', 'converter.video:convert')
-    ->convert('inbound', 'converter.inbound:convert');
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert')
+->assert('inbound', '\d+')
+->convert('inbound', 'converter.inbound:convert')
+;

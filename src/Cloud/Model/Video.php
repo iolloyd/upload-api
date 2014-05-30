@@ -48,7 +48,6 @@ class Video extends AbstractModel
     use Traits\CreatedByTrait;
     use Traits\UpdatedAtTrait;
     use Traits\CompanyTrait;
-    use Traits\SlugTrait;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
@@ -64,7 +63,7 @@ class Video extends AbstractModel
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"details.videos"})
+     * @JMS\Groups({"details", "details.videos"})
      */
     protected $filename;
 
@@ -79,13 +78,13 @@ class Video extends AbstractModel
      * @see STATUS_COMPLETE
      *
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     * @JMS\Groups({"details", "details.videos"})
      */
     protected $filesize;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @JMS\Groups({"details.videos"})
+     * @JMS\Groups({"details", "details.videos"})
      */
     protected $filetype;
 
@@ -159,13 +158,14 @@ class Video extends AbstractModel
     protected $title;
 
     /**
-     * @ORM\OneToMany(targetEntity="VideoStat",
+     * @ORM\OneToOne(
+     *   targetEntity="VideoStat",
      *   mappedBy="video",
      *   cascade={"persist", "remove"}
-     *   )
-     * @JMS\Groups({"list", "list.videos", "details.videos", "stats"})
+     * )
+     * @JMS\Groups({"list", "list.videos", "details.videos"})
      */
-    protected $stat;
+    protected $stats;
 
     /**
      * @ORM\ManyToMany(targetEntity="Tag")
