@@ -3,6 +3,9 @@
  * Silex Application Bootstrap
  */
 
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
 $app = new Cloud\Silex\Application();
 $app['route_class'] = 'Cloud\Silex\Route';
 
@@ -60,6 +63,7 @@ $app->register(new Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider
         ],
     ],
 ]);
+
 $app->extend('orm.ems.config', function ($configs, $app) {
     foreach ($app['orm.ems.options'] as $name => $options) {
         $configs[$name]->setNamingStrategy(new Doctrine\ORM\Mapping\UnderscoreNamingStrategy());
@@ -69,12 +73,16 @@ $app->extend('orm.ems.config', function ($configs, $app) {
 $app['em'] = $app['orm.em'];
 
 // aws
-$app->register(new Aws\Silex\AwsServiceProvider(), array(
+$app->register(new Aws\Silex\AwsServiceProvider(), [
     'aws.config' => $app['config']['aws'],
-));
+]);
 
-// loader
-$app->register(new Cloud\Silex\Loader(), [
+$app->register(new \Cloud\Monolog\Provider\LogServiceProvider(), [
+]);
+
+$app['logger.name'] = 'cloudxxx';
+
+$app->register(new \Cloud\Silex\Loader(), [
     'loader.path' => 'app/',
     'loader.extensions' => [
         'php',
@@ -82,3 +90,34 @@ $app->register(new Cloud\Silex\Loader(), [
 ]);
 
 $app['load']('helper');
+
+if ( $app['debug'] ) {
+    $logger = new \Doctrine\DBAL\Logging\DebugStack();
+    $app['db.config']->setSQLLogger($logger);
+    /*
+    $app->error(function(\Exception $e, $code) use ($app, $logger) {
+        if ( $e instanceof PDOException and count($logger->queries) ) {
+            $query = array_pop($logger->queries);
+            $app['monolog']->err($query['sql'], [
+                'params' => $query['params'],
+                'types' => $query['types']
+            ]);
+        }
+    });
+     */
+
+    $app->after(function(Request $request, Response $response) use ($app, $logger) {
+        foreach ( $logger->queries as $query ) {
+            $app['monolog']->debug($query['sql'], [
+                'params' => $query['params'],
+                'types' => $query['types']
+            ]);
+        }
+    });
+}
+
+$app->finish(function(Request $request, Response $response) use ($app) {
+    $app['logger']->addInfo($request);
+    $app['logger']->addInfo($response);
+});
+
