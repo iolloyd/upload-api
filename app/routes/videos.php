@@ -12,7 +12,6 @@
 use Cloud\Model\Video;
 use Cloud\Model\VideoOutbound;
 use Symfony\Component\HttpFoundation\Request;
-use JMS\Serializer\SerializerBuilder;
 
 /**
  * Get a video
@@ -32,6 +31,7 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
  */
 $app->get('/videos', function(Request $request) use ($app)
 {
+    $app['monolog.production']->addInfo("TESTALL /videos/");
     $groups = ['list.videos', 'details.videos', 'list', 'stats'];
     $pagedView = $app['paginator.response.json']('cx:video', $groups);
     return $pagedView;
