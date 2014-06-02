@@ -14,6 +14,7 @@ namespace Cloud\Silex\Provider;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use JMS\Serializer\SerializerBuilder;
+use JMS\Serializer\SerializationContext;
 use Pagerfanta\Adapter\ArrayAdapter;
 use Pagerfanta\Adapter\DoctrineCollectionAdapter;
 use Pagerfanta\Pagerfanta;
@@ -42,14 +43,20 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return $pager;
         });
 
-        $app['serializer'] = $app->protect(function($results, $groups) {
-            $serializer = SerializerBuilder::create()->build();
+        $app['serializer'] = $app->protect(function($results, $groups = null) use ($app) {
+            $serializer = SerializerBuilder::create()
+                ->setDebug($app['debug'])
+                ->build();
+
+            $context = SerializationContext::create()
+                ->setSerializeNull(true);
+
             if ($groups) {
-                $setGroups = \JMS\Serializer\SerializationContext::create()->setGroups($groups);
-            } else {
-                $setGroups = null;
+                $context->setGroups($groups);
             }
-            $jsonContent = $serializer->serialize($results, 'json', $setGroups);
+
+            $jsonContent = $serializer->serialize($results, 'json', $context);
+
             return json_decode($jsonContent);
         });
 
