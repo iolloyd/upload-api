@@ -26,14 +26,43 @@ received, a login page should be shown.
 
             Cookie: SID=pdteahqeuvo6nmikcokvbl0eq4
 
-+ Response 401 (application/json)
+    + Response 401 (application/json)
 
         {
-            "endpoints": {
-                "default": "https://private-fca8-cloudxxx.apiary-mock.com"
+            "endpoints": [],
+            "config": {
+                "env": "development",
+                "tags": [
+                    {
+                        "title": "Amateur",
+                        "id": 1,
+                        "slug": "amateur"
+                    },
+                    {
+                        "title": "BBW",
+                        "id": 4,
+                        "slug": "bbw"
+                    },
+                    {
+                        "title": "Coed",
+                        "id": 12,
+                        "slug": "coed"
+                    },
+                    {
+                        "title": "Young/Old",
+                        "id": 69,
+                        "slug": "young-old"
+                    }
+                ]
             },
-            "options": {
-                "foo": "bar"
+            "user": {
+                "id": 1,
+                "name": "Test User",
+                "email": "test@cloud.xxx"
+            },
+            "company": {
+                "id": 1,
+                "title": "Cumulus, Inc."
             }
         }
 
