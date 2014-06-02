@@ -19,7 +19,7 @@ use Monolog\Handler\StreamHandler;
 $logFolder = dirname(dirname(__DIR__)) . '/data/logs';
 
 $app->register(new \Silex\Provider\MonologServiceProvider(), [
-    'monolog.logfile' => $logFolder . '/development.log',
+    'monolog.logfile' => $logFolder . '/x-development.log',
     'monolog.streamHandler' => function() use ($app) {
         return new \Monolog\Handler\StreamHandler($app['monolog.logfile']);
     },
