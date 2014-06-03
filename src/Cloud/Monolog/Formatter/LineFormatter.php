@@ -7,7 +7,7 @@ use Monolog\Formatter\NormalizerFormatter;
 
 class LineFormatter extends NormalizerFormatter
 {
-    const SIMPLE_FORMAT = "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n";
+    const SIMPLE_FORMAT = "[%datetime%] %channel%.%levelName%: %message% %context% %extra%\n";
 
     protected $format;
     protected $allowInlineLineBreaks;

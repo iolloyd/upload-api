@@ -18,6 +18,7 @@ namespace Cloud\Monolog\Provider;
 use Monolog\Formatter\JsonFormatter;
 
 use Monolog\Handler\FingersCrossedHandler;
+use Monolog\Handler\LogEntriesHandler;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -44,7 +45,7 @@ class LogServiceProvider implements ServiceProviderInterface
         $app['monolog.rotatingfile.maxfiles'] = $app['debug'] ? 2 : 7;
         $app['monolog.handler'] = function() use ($app){
 
-            $level = static::translateLevel($app['monolog.level']);
+            $level = self::translateLevel($app['monolog.level']);
             if ($app['debug'] == true) {
                 $handler = new StreamHandler($app['monolog.logfile'], $level);
                 $handler->setFormatter(new JsonFormatter());
@@ -59,7 +60,7 @@ class LogServiceProvider implements ServiceProviderInterface
                     $level
                 );
 
-            $activationLevel = static::translateLevel($app['monolog.fingerscrossed.level']);
+            $activationLevel = self::translateLevel($app['monolog.fingerscrossed.level']);
             if ($app['monolog.fingerscrossed']) {
                 $handler = new FingersCrossedHandler(
                     $app['monolog.fingerscrossed.handler'],
@@ -74,8 +75,26 @@ class LogServiceProvider implements ServiceProviderInterface
             return $handler;
         };
 
+        $token = $app['config']['logentries']['token'];
+        $app['monolog']->pushHandler(new LogEntriesHandler($token));
     }
 
+    public static function translateLevel($name)
+    {
+        // level is already translated to logger constant, return as-is
+        if (is_int($name)) {
+            return $name;
+        }
+
+        $levels = Logger::getLevels();
+        $upper = strtoupper($name);
+
+        if (!isset($levels[$upper])) {
+            throw new \InvalidArgumentException("Provided logging level '$name' does not exist. Must be a valid monolog logging level.");
+        }
+
+        return $levels[$upper];
+    }
     public function boot(Application $app)
     {
     }
