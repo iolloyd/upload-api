@@ -9,7 +9,6 @@
  * @license    Proprietary
  */
 
-
 namespace Cloud\Model;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -27,13 +26,14 @@ class Tag extends AbstractModel
 
     /**
      * @ORM\Column(type="string")
+     * @JMS\Groups({"list", "details"})
      */
     protected $title;
 
 
     /**
      * Gets the title
-     * 
+     *
      * @return string
      */
     public function getTitle()

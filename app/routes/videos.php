@@ -30,10 +30,7 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
  */
 $app->get('/videos', function(Request $request) use ($app)
 {
-    $app['monolog.production']->addInfo("TESTALL /videos/");
-    $groups = ['list.videos', 'details.videos', 'list', 'stats'];
-    $pagedView = $app['paginator.response.json']('cx:video', $groups);
-    return $pagedView;
+    return $app['paginator.response.json']('cx:video', ['list', 'list.videos']);
 });
 
 /**
@@ -46,11 +43,20 @@ $app->post('/videos', function(Request $request) use ($app)
     $app['em']->persist($video);
     $app['em']->flush();
 
-    $groups = ['list', 'details.videos',];
-
-    return $app['single.response.json']($video, $groups);
+    return $app['single.response.json']($video, ['details', 'details.videos']);
 });
 
+/**
+ * Get a video
+ */
+$app->get('/videos/{video}', function(Video $video) use ($app)
+{
+    $groups = ['details', 'details.videos'];
+    return $app['single.response.json']($video, $groups);
+})
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert')
+;
 
 /**
  * Update a video
@@ -58,13 +64,11 @@ $app->post('/videos', function(Request $request) use ($app)
 $app->post('/videos/{video}', function(Video $video, Request $request) use ($app)
 {
     if (!$video->isDraft()) {
-        return $app->jsonError(
-            400,
-            'invalid_status',
-            'Video must be in draft status'
-        );
+        return $app->json([
+            'error' => 'invalid_status',
+            'error_details' => 'Video must be in draft status',
+        ], 400);
     }
-
 
     $app['em']->transactional(function () use ($app, $video, $request) {
         $video->setTitle($request->get('title'));
@@ -73,11 +77,11 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
         $video->setTags($tags);
     });
 
-    $groups = ['list', 'details.videos',];
-
-    return $app['single.response.json']($video, $groups);
+    return $app['single.response.json']($video, ['details', 'details.videos']);
 })
-->convert('video', 'converter.video:convert');
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert')
+;
 
 /**
  * Publish a draft video when it's ready
