@@ -15,8 +15,7 @@
 
 namespace Cloud\Monolog\Provider;
 
-use Monolog\Formatter\JsonFormatter;
-
+use Cloud\Monolog\Formatter\LineFormatter;
 use Monolog\Handler\FingersCrossedHandler;
 use Monolog\Handler\LogEntriesHandler;
 use Monolog\Handler\RotatingFileHandler;
@@ -44,11 +43,10 @@ class LogServiceProvider implements ServiceProviderInterface
         $app['monolog.rotatingfile'] = true;
         $app['monolog.rotatingfile.maxfiles'] = $app['debug'] ? 2 : 7;
         $app['monolog.handler'] = function() use ($app){
-
             $level = self::translateLevel($app['monolog.level']);
             if ($app['debug'] == true) {
                 $handler = new StreamHandler($app['monolog.logfile'], $level);
-                $handler->setFormatter(new JsonFormatter());
+                $handler->setFormatter(new LineFormatter());
                 return $handler;
             }
 
@@ -56,7 +54,6 @@ class LogServiceProvider implements ServiceProviderInterface
                 $app['monolog.fingerscrossed.handler'] = new RotatingFileHandler(
                     $app['monolog.logfile'],
                     $app['monolog.rotatingfile.maxfiles'],
-                    // Depending on environment and type of thing logged
                     $level
                 );
 
@@ -70,13 +67,15 @@ class LogServiceProvider implements ServiceProviderInterface
                 $handler = $app['monolog.fingerscrossed.handler'];
             }
 
-            $handler->setFormatter(new JsonFormatter());
+            $handler->setFormatter(new LineFormatter());
 
             return $handler;
         };
 
         $token = $app['config']['logentries']['token'];
-        $app['monolog']->pushHandler(new LogEntriesHandler($token));
+        $app['monolog']->pushHandler(
+            new LogEntriesHandler($token)
+        );
     }
 
     public static function translateLevel($name)
