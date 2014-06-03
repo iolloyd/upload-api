@@ -28,7 +28,7 @@ class Company extends AbstractModel
 
     /**
      * @ORM\Column(type="string")
-     * @JMS\Groups({"list.companies", "details.companies"})
+     * @JMS\Groups({"list.companies", "details.companies", "details.videos"})
      */
     protected $title;
 
@@ -47,7 +47,7 @@ class Company extends AbstractModel
      */
     public function __construct()
     {
-        $this->users = new ArrayCollection();
+        $this->users = new ArrayCollection;
     }
 
     /**
