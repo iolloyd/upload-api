@@ -13,7 +13,6 @@
 namespace Cloud\Model;
 
 use DateTime;
-use JsonSerializable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Security\Core\User\AdvancedUserInterface;
 use Symfony\Component\Security\Core\User\EquatableInterface;
@@ -27,8 +26,7 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity
  * @ORM\Entity(repositoryClass="Cloud\Model\Repository\UserRepository")
  */
-class User extends AbstractModel
-    implements JsonSerializable, AdvancedUserInterface, EquatableInterface
+class User extends AbstractModel implements AdvancedUserInterface, EquatableInterface
 {
     use Traits\IdTrait;
     use Traits\CreatedAtTrait;
@@ -48,7 +46,7 @@ class User extends AbstractModel
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"details.user"})
+     * @JMS\Groups({"list.companies", "details.companies", "details.videos"})
      */
     protected $name;
 
@@ -60,7 +58,7 @@ class User extends AbstractModel
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @JMS\Groups({"details.user"})
+     * @JMS\Exclude
      */
     protected $password;
 
@@ -390,18 +388,6 @@ class User extends AbstractModel
     public function isEqualTo(UserInterface $user)
     {
         return $this->getUsername() == $user->getUsername();
-    }
-
-    /**
-     * @return array
-     */
-    public function jsonSerialize()
-    {
-        return [
-            'id' => $this->getId(),
-            'name' => $this->getName(),
-            'email' => $this->getEmail(),
-        ];
     }
 
     /**
