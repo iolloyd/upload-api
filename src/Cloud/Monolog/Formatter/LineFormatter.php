@@ -21,7 +21,7 @@ class LineFormatter extends NormalizerFormatter
     public function __construct($format = null, $dateFormat = null, $lineBreaks = false)
     {
         $this->format = $format ?: static::SIMPLE_FORMAT;
-        $this->allowInlineLineBreaks = $allowInlineLineBreaks;
+        $this->allowInlineLineBreaks = $lineBreaks;
         parent::__construct($dateFormat);
     }
 
@@ -72,19 +72,22 @@ class LineFormatter extends NormalizerFormatter
 
     protected function convertToString($data)
     {
-        if (null === $data || is_bool($data)) {
-            return var_export($data, true);
-        }
-
-        if (is_scalar($data)) {
+        if (null === $data || is_scalar($data)) {
             return (string) $data;
         }
 
-        if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
-            return $this->toJson($data, true);
+        if (is_object($data) && !get_object_vars($data)
+            || is_array($data) && !$data
+        ) {
+            return '';
         }
 
-        return str_replace('\\/', '/', @json_encode($data));
+        $data = $this->normalize($data);
+        if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+            return $this->toJson($data);
+        }
+
+        return str_replace('\\/', '/', json_encode($data));
     }
 
     protected function replaceNewlines($str)

@@ -119,7 +119,10 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
         //['videooutbound' => $outbound->getId()]
     //);
 
-    return $app['single.response.json']($video, ['details', 'details.videos', 'details.outbounds']);
+    return $app['single.response.json'](
+        $video,
+        ['details', 'details.videos', 'details.outbounds']
+    );
 })
 ->assert('video', '\d+')
 ->convert('video', 'converter.video:convert')
