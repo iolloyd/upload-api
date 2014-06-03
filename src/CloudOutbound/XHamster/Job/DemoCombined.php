@@ -573,7 +573,7 @@ class DemoCombined extends AbstractJob
 
         // success
 
-        var_dump($response); print((string) $response->getBody());
+        //var_dump($response); print((string) $response->getBody());
     }
 
     /**
@@ -642,7 +642,7 @@ class DemoCombined extends AbstractJob
                 && $item['title'] == $expectedTitle
             ) {
                 $match = $item;
-                var_dump($match);
+                //var_dump($match);
                 break;
             }
         }
