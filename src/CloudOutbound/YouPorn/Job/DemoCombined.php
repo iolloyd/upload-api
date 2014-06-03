@@ -350,14 +350,14 @@ class DemoCombined extends AbstractJob
     {
         // s3 object  TODO: refactor
 
-        $app   = $this->getHelper('slim')->getSlim();
-        $s3    = $app->s3;
+        $app = $this->getHelper('silex')->getApplication();
+        $s3  = $app['aws']->get('s3');
 
         $video = $outbound->getVideo();
         $key   = sprintf('videos/%d/raw/%s', $video->getId(), $video->getFilename());
 
         $object = $s3->getObject([
-            'Bucket' => $app->config('s3.bucket'),
+            'Bucket' => $app['config']['aws']['bucket'],
             'Key'    => $key,
         ]);
 
@@ -423,10 +423,9 @@ class DemoCombined extends AbstractJob
                     'videoedit[tags]' => '',
                     'videoedit[pornstars]' => '',
 
-                    //'videoedit[content_partner_site_id]' =>
-                        //(string) $tubeuser->getParam('content_partner_site_id'),
+                    'videoedit[content_partner_site_id]' =>
+                        $tubeuser->getParam('content_partner_site_id'),
 
-                    'videoedit[content_partner_site_id]' => '2242',
                     'videoedit[video_options_disable_commenting]' => '0', // $disableComments,
                 ],
             ]
