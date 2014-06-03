@@ -95,6 +95,9 @@ $app['load']('helper');
 
 if ( $app['debug'] ) {
     $app->register(new WhoopsServiceProvider);
+}
+
+if ($app['debug']) {
     $logger = new \Doctrine\DBAL\Logging\DebugStack();
     $app['db.config']->setSQLLogger($logger);
 
