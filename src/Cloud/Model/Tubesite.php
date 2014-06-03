@@ -28,43 +28,34 @@ class Tubesite extends AbstractModel
     use Traits\SlugTrait;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"details.tubesites"})
-     */
-    protected $description;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
-    protected $loginUrl;
-
-    /**
-     * @ORM\Column(type="text")
-     */
-    protected $orientation;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"details.tubesites"})
-     */
-    protected $shortDescription;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
-    protected $signupUrl;
-
-    /**
      * @ORM\Column(type="string")
-     * @JMS\Groups({"details.tubesites"})
+     * @JMS\Groups({"list", "details", "list.tubesites", "details.tubesites"})
      */
     protected $title;
 
     /**
+     * @ORM\Column(type="text", nullable=true)
+     * @JMS\Groups({"list.tubesites", "details.tubesites"})
+     */
+    protected $description;
+
+    /**
      * @ORM\Column(type="string")
-     * @JMS\Groups({"details.tubesites"})
+     * @JMS\Groups({"list.tubesites", "details.tubesites"})
      */
     protected $url;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"list.tubesites", "details.tubesites"})
+     */
+    protected $loginUrl;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"list.tubesites", "details.tubesites"})
+     */
+    protected $signupUrl;
 
     /**
      * Get the description

@@ -9,10 +9,8 @@
  * @license    Proprietary
  */
 
-
 namespace Cloud\Model;
 
-use JsonSerializable;
 use Doctrine\Common\Collections\ArrayCollection;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -21,9 +19,8 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
- * @ORM\HasLifecycleCallbacks
  */
-class Company extends AbstractModel implements JsonSerializable
+class Company extends AbstractModel
 {
     use Traits\IdTrait;
     use Traits\CreatedAtTrait;
@@ -31,7 +28,7 @@ class Company extends AbstractModel implements JsonSerializable
 
     /**
      * @ORM\Column(type="string")
-     * @JMS\Groups({"list", "details", "list.companies", "details.companies"})
+     * @JMS\Groups({"list.companies", "details.companies"})
      */
     protected $title;
 
@@ -110,17 +107,6 @@ class Company extends AbstractModel implements JsonSerializable
     public function getUsers()
     {
         return $this->users;
-    }
-
-    /**
-     * @return array
-     */
-    public function jsonSerialize()
-    {
-        return [
-            'id' => $this->getId(),
-            'title' => $this->getTitle(),
-        ];
     }
 
     /**
