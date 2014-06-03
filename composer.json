@@ -30,7 +30,9 @@
         "jms/serializer": "0.16.0",
         "monolog/monolog": "dev-master",
         "cobaia/monologdoctrine": "v1.0.1",
-        "ddtraceweb/monolog-parser": "1.2"
+        "ddtraceweb/monolog-parser": "1.2",
+        "logentries/logentries-monolog-handler": "dev-master",
+        "filp/whoops": "~1.0"
     },
 
     "require-dev": {
