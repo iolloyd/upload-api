@@ -19,7 +19,6 @@ use Symfony\Component\HttpFoundation\Request;
 $app->get('/videos/{video}', function(Video $video) use ($app)
 {
     $groups = ['list', 'details.videos',];
-
     return $app['single.response.json']($video, $groups);
 })
 ->assert('video', '\d+')
