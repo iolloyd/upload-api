@@ -7,7 +7,7 @@ use Monolog\Formatter\NormalizerFormatter;
 
 class LineFormatter extends NormalizerFormatter
 {
-    const SIMPLE_FORMAT = "[%datetime%] %channel%.%levelName%: %message% %context% %extra%\n";
+    const SIMPLE_FORMAT = "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n";
 
     protected $format;
     protected $allowInlineLineBreaks;
@@ -35,7 +35,9 @@ class LineFormatter extends NormalizerFormatter
         $output = $this->format;
         foreach ($vars['extra'] as $var => $val) {
             if (false !== strpos($output, '%extra.'.$var.'%')) {
-                $output = str_replace('%extra.'.$var.'%', $this->replaceNewlines($this->convertToString($val)), $output);
+                $string = $thsi->convertToString($val);
+                $cleanString = $this->replaceNewLines($string);
+                $output = str_replace('%extra.'.$var.'%', $cleanString, $output);
                 unset($vars['extra'][$var]);
             }
         }
@@ -63,11 +65,22 @@ class LineFormatter extends NormalizerFormatter
         $previousText = '';
         if ($previous = $e->getPrevious()) {
             do {
-                $previousText .= ', '.get_class($previous).': '.$previous->getMessage().' at '.$previous->getFile().':'.$previous->getLine();
+                $previousText .= ', '.get_class($previous) . ': '
+                . $this->messageFileLine($previous);
+
             } while ($previous = $previous->getPrevious());
         }
 
-        return '[object] ('.get_class($e).': '.$e->getMessage().' at '.$e->getFile().':'.$e->getLine().$previousText.')';
+        return '[object] ('.get_class($e).': '
+            . $this->messageFileLine($e)
+            . $previousText    . ')';
+    }
+
+    protected function messageFileLine(Exception $e)
+    {
+        return $e->getMessage() . ' at '
+            . $e->getFile()    . ':'
+            . $e->getLine();
     }
 
     protected function convertToString($data)
