@@ -21,7 +21,6 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
- * @ORM\HasLifecycleCallbacks
  */
 class Video extends AbstractModel
 {
@@ -57,13 +56,13 @@ class Video extends AbstractModel
 
     /**
      * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $description;
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"details", "details.videos"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $filename;
 
@@ -78,19 +77,21 @@ class Video extends AbstractModel
      * @see STATUS_COMPLETE
      *
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"details", "details.videos"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $filesize;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @JMS\Groups({"details", "details.videos"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $filetype;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     * @JMS\Groups({"details.videos"})
+     * Duration in seconds
+     *
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Groups({"list", "details"})
      */
     protected $duration;
 
@@ -102,19 +103,22 @@ class Video extends AbstractModel
      *   mappedBy="video",
      *   cascade={"persist", "remove"}
      * )
-     * @JMS\Groups({"details.videos"})
+     * @JMS\Groups({"details"})
      */
     protected $inbounds;
 
     /**
      * @ORM\Column(type="boolean")
      * @JMS\Accessor(getter="isDraft")
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $isDraft = true;
 
     /**
      * Orientation of video. Example: Straight, solo, gay.
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"list", "details"})
      */
     protected $orientation;
 
@@ -126,13 +130,13 @@ class Video extends AbstractModel
      *   mappedBy="video",
      *   cascade={"persist", "remove"}
      * )
-     * @JMS\Groups({"details.videos"})
+     * @JMS\Groups({"details"})
      */
     protected $outbounds;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
-     * @JMS\Groups({"details.videos"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $publishedAt;
 
@@ -147,13 +151,13 @@ class Video extends AbstractModel
      * @see STATUS_COMPLETE
      *
      * @ORM\Column(type="string")
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $status = self::STATUS_DRAFT;
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $title;
 
@@ -163,25 +167,26 @@ class Video extends AbstractModel
      *   mappedBy="video",
      *   cascade={"persist", "remove"}
      * )
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $stats;
 
     /**
      * @ORM\ManyToMany(targetEntity="Tag")
-     * @JMS\Groups({"list", "list.videos", "details.videos"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $tags;
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "list.videos", "details.videos", "stats"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $thumbnail;
 
     /**
      * @ORM\Column(type="integer")
      * @ORM\Version
+     * @JMS\Groups({"details"})
      */
     protected $version = 1;
 
