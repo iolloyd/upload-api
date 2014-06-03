@@ -20,14 +20,15 @@ If the client is not authenticated, the response will have a `401` status
 only include global options and endpoint information. If this response is
 received, a login page should be shown.
 
-+ Request
++ Request (application/json)
+
++ Response 201 (application/json)
 
     + Headers
 
-            Cookie: SID=pdteahqeuvo6nmikcokvbl0eq4
+            Set-Cookie: SID=pdteahqeuvo6nmikcokvbl0eq4; Secure; HttpOnly
 
-    + Response 401 (application/json)
-
+    + Body
         {
             "endpoints": [],
             "config": {
@@ -66,7 +67,6 @@ received, a login page should be shown.
             }
         }
 
-+ Response 200 (application/json)
 
     + Headers
 

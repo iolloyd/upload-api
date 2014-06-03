@@ -5,6 +5,8 @@
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Whoops\Provider\Silex\WhoopsServiceProvider;
+
 
 $app = new Cloud\Silex\Application();
 $app['route_class'] = 'Cloud\Silex\Route';
@@ -92,19 +94,9 @@ $app->register(new \Cloud\Silex\Loader(), [
 $app['load']('helper');
 
 if ( $app['debug'] ) {
+    $app->register(new WhoopsServiceProvider);
     $logger = new \Doctrine\DBAL\Logging\DebugStack();
     $app['db.config']->setSQLLogger($logger);
-    /*
-    $app->error(function(\Exception $e, $code) use ($app, $logger) {
-        if ( $e instanceof PDOException and count($logger->queries) ) {
-            $query = array_pop($logger->queries);
-            $app['monolog']->err($query['sql'], [
-                'params' => $query['params'],
-                'types' => $query['types']
-            ]);
-        }
-    });
-     */
 
     $app->after(function(Request $request, Response $response) use ($app, $logger) {
         foreach ( $logger->queries as $query ) {
