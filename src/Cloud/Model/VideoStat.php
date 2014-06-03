@@ -24,7 +24,7 @@ class VideoStat extends AbstractModel
 
     /**
      * @ORM\JoinColumn(nullable=false)
-     * @ORM\OneToOne(targetEntity="Video", mappedBy="stat")
+     * @ORM\OneToOne(targetEntity="Video", mappedBy="stats")
      */
     protected $video;
 
