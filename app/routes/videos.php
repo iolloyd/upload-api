@@ -22,8 +22,7 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
     return $app['single.response.json']($video, $groups);
 })
 ->assert('video', '\d+')
-->convert('video', 'converter.video:convert')
-;
+->convert('video', 'converter.video:convert');
 
 /**
  * Get list of videos
