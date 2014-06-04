@@ -13,14 +13,13 @@ namespace Cloud\Silex\Provider;
 
 use Doctrine\Common\Collections\Criteria;
 use JMS\Serializer\SerializerBuilder;
-use JMS\Serializer\SerializationContext;
-use Pagerfanta\Adapter\ArrayAdapter;
+
 use Pagerfanta\Adapter\DoctrineCollectionAdapter;
 use Pagerfanta\Pagerfanta;
 use Silex\Application;
 use Silex\ServiceProviderInterface;
 
-class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
+class DoctrinePaginationServiceProvider implements ServiceProviderInterface
 {
     /**
      * {@inheritDoc}
@@ -47,9 +46,12 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
                 ->setDebug($app['debug'])
                 ->build();
 
-            $context = SerializationContext::create()
-                ->setSerializeNull(true)
-                ->setGroups($groups);
+            $context = \JMS\Serializer\SerializationContext::create();
+            $context->setSerializeNull(true);
+
+            if (count($groups)) {
+                $context->setGroups($groups);
+            }
 
             $jsonContent = $serializer->serialize($results, 'json', $context);
 
@@ -58,7 +60,6 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
         $app['single.response.json'] = $app->protect(function ($model, $groups, $headerLink=true) use ($app) {
 
-            $params  = $app['request']->query->all();
             $jsonContent = $app['serializer']($model, $groups);
 
             $response = $app->json($jsonContent);
