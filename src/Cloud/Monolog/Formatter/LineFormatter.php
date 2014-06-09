@@ -79,7 +79,7 @@ class LineFormatter extends NormalizerFormatter
     protected function messageFileLine(Exception $e)
     {
         return $e->getMessage() . ' at '
-            . $e->getFile()    . ':'
+            . $e->getFile()  . ':'
             . $e->getLine();
     }
 

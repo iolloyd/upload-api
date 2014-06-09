@@ -16,6 +16,7 @@
 namespace Cloud\Monolog\Provider;
 
 use Cloud\Monolog\Formatter\LineFormatter;
+
 use Monolog\Handler\FingersCrossedHandler;
 use Monolog\Handler\LogEntriesHandler;
 use Monolog\Handler\RotatingFileHandler;
@@ -30,70 +31,45 @@ class LogServiceProvider implements ServiceProviderInterface
 {
     public function register(Application $app)
     {
-        $app->register(new MonologServiceProvider(), [
-            'monolog.name' => 'cloudxxx',
-        ]);
-        $app['monolog.logfile'] = 'data/logs/'.$app['env'].'.log';
-        $app['monolog.fingerscrossed'] = true;
-        $app['monolog.fingerscrossed.level'] = Logger::WARNING;
-        $app['monolog.fingerscrossed.handler'] = function() use ($app){
-            return new StreamHandler($app['monolog.logfile']);
-        };
+        $app->register(new MonologServiceProvider());
 
-        $app['monolog.rotatingfile'] = true;
-        $app['monolog.rotatingfile.maxfiles'] = $app['debug'] ? 2 : 7;
-        $app['monolog.handler'] = function() use ($app){
-            $level = self::translateLevel($app['monolog.level']);
-            if ($app['debug'] == true) {
-                $handler = new StreamHandler($app['monolog.logfile'], $level);
-                $handler->setFormatter(new LineFormatter());
-                return $handler;
-            }
+		$formatter = new LineFormatter();
 
-            if ($app['monolog.rotatingfile'])
-                $app['monolog.fingerscrossed.handler'] = new RotatingFileHandler(
-                    $app['monolog.logfile'],
-                    $app['monolog.rotatingfile.maxfiles'],
-                    $level
-                );
-
-            $activationLevel = self::translateLevel($app['monolog.fingerscrossed.level']);
-            if ($app['monolog.fingerscrossed']) {
-                $handler = new FingersCrossedHandler(
-                    $app['monolog.fingerscrossed.handler'],
-                    $activationLevel
-                );
-            } else {
-                $handler = $app['monolog.fingerscrossed.handler'];
-            }
-
-            $handler->setFormatter(new LineFormatter());
+		// Setup handler for logging to logEntries.com
+        $app['monolog.handler'] = function() use ($app, $formatter) {
+			$token = $app['config']['logentries']['token'];
+			$handler = new LogEntriesHandler($token, Logger::DEBUG);
+			$handler->setFormatter($formatter);
 
             return $handler;
         };
 
-        $token = $app['config']['logentries']['token'];
-        $app['monolog']->pushHandler(
-            new LogEntriesHandler($token)
-        );
+		// Setup handler for logging to the cli 
+        $app['monolog.handler.debug'] = function() use ($app, $formatter) {
+			$handler = new StreamHandler(fopen('php://stderr', 'w'), Logger::DEBUG);
+			$handler->setFormatter($formatter);
+
+            return $handler;
+        };
+
+		// Define a factory to allow components
+		// to setup their own namespaced loggers
+		$app['monolog.factory'] = $app->protect(function($name) use ($app) {
+			$logger = new Logger($name);
+			$logger->pushHandler($app['monolog.handler']);
+			$logger->pushHandler($app['monolog.handler.debug']);
+			$logger->pushProcessor(function($record) {
+				$record['extra']['user'] = 123;//$app['user'];
+
+				return $record;
+			});
+
+			return $logger;
+		});
+
+		$app['logger.debug'] = $app['monolog.factory']('deebug');
     }
 
-    public static function translateLevel($name)
-    {
-        // level is already translated to logger constant, return as-is
-        if (is_int($name)) {
-            return $name;
-        }
-
-        $levels = Logger::getLevels();
-        $upper = strtoupper($name);
-
-        if (!isset($levels[$upper])) {
-            throw new \InvalidArgumentException("Provided logging level '$name' does not exist. Must be a valid monolog logging level.");
-        }
-
-        return $levels[$upper];
-    }
     public function boot(Application $app)
     {
     }

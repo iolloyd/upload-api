@@ -1,12 +1,14 @@
 <?php
 
 use Cloud\Silex\Provider\CorsHeadersServiceProvider;
-use Cloud\Silex\Provider\DoctrinePaginationServiceProvider;
+use Cloud\Silex\Provider\DoctrinePaginatorServiceProvider;
 use Cloud\Silex\Security\ForbiddenErrorAuthenticationEntryPoint;
 use Cloud\Silex\Security\UnauthorizedErrorAuthenticationEntryPoint;
 use Silex\Provider\SecurityServiceProvider;
 use Silex\Provider\SessionServiceProvider;
 use Silex\Provider\UrlGeneratorServiceProvider;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Encoder\EncoderFactory;
 use Symfony\Component\Security\Http\Firewall\ChannelListener;
 use Symfony\Component\Security\Core\Encoder\BCryptPasswordEncoder;
@@ -110,7 +112,7 @@ $app->register(new CorsHeadersServiceProvider(), [
     ],
 ]);
 $app->register(new UrlGeneratorServiceProvider());
-$app->register(new DoctrinePaginationServiceProvider());
+$app->register(new DoctrinePaginatorServiceProvider());
 
 // json request parser
 $app->before(function ($request) {
@@ -118,6 +120,11 @@ $app->before(function ($request) {
         $data = json_decode($request->getContent(), true);
         $request->request->replace(is_array($data) ? $data : []);
     }
+});
+
+$app->finish(function(Request $request, Response $response) use ($app) {
+    $app['logger.debug']->addInfo("Request", ["Content" => $request->getContent()]);
+    $app['logger.debug']->addInfo("Response",["Content" => $response->getContent()]);
 });
 
 // run
