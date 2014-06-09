@@ -3,8 +3,6 @@
  * Silex Application Bootstrap
  */
 
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Whoops\Provider\Silex\WhoopsServiceProvider;
 
 
@@ -93,10 +91,13 @@ $app->register(new \Cloud\Silex\Loader(), [
 
 $app['load']('helper');
 
+/*
 if ( $app['debug'] ) {
     $app->register(new WhoopsServiceProvider);
 }
+ */
 
+/*
 if ($app['debug']) {
     $logger = new \Doctrine\DBAL\Logging\DebugStack();
     $app['db.config']->setSQLLogger($logger);
@@ -110,9 +111,5 @@ if ($app['debug']) {
         }
     });
 }
-
-$app->finish(function(Request $request, Response $response) use ($app) {
-    $app['logger']->addInfo($request);
-    $app['logger']->addInfo($response);
-});
+ */
 

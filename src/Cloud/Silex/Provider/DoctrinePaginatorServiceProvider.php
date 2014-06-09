@@ -19,7 +19,7 @@ use Pagerfanta\Pagerfanta;
 use Silex\Application;
 use Silex\ServiceProviderInterface;
 
-class DoctrinePaginationServiceProvider implements ServiceProviderInterface
+class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 {
     /**
      * {@inheritDoc}
