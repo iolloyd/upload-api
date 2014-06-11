@@ -28,6 +28,13 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
     {
         $app['paginator'] = $app->protect(function ($model) use ($app) {
             $list = $app['em']->getRepository($model)->matching(new Criteria());
+            if (1 > $list->count()) {
+                $app['logger.doctrine']->addError(sprintf(
+                    "No results found when requesting paginator using %s", 
+                    $model
+                ));
+            }
+
             $adapter = new DoctrineCollectionAdapter($list);
             $pager = new Pagerfanta($adapter);
 
@@ -65,7 +72,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $response = $app->json($jsonContent);
             if ($headerLink) {
                 $link = $app['request']->getSchemeAndHttpHost() .
-                        $app['request']->getPathInfo();
+                    $app['request']->getPathInfo();
 
                 $response->headers->add(['Location' => $link]);
             }
@@ -110,9 +117,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $pager->hasPreviousPage() ? $link('prev', $pager->getPreviousPage()) : "",
             $pager->hasNextPage()     ? $link('next', $pager->getNextPage())     : "",
         ];
-
         $rangelink = $this->getRangeLinks($currentPage, $pageSize, $lastPage, $totalItemCount);
-
         $navlink = str_replace(', ,', ', ', implode(', ', $navlink));
 
         return ['link' => $navlink, 'range' => $rangelink,];
@@ -137,7 +142,9 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
     {
         $currentItem = ($currentPage * $pageSize) - $pageSize;
         $lastItemOfPage = min($currentItem + $pageSize - 1, $totalItemCount);
-        $links = "X-Pagination-Range: items $currentItem-$lastItemOfPage/$totalItemCount; page $currentPage/$lastPage";
+        $links = "X-Pagination-Range: items " 
+               . "$currentItem-$lastItemOfPage/$totalItemCount; " 
+               . "page $currentPage/$lastPage";
 
         return $links;
     }
