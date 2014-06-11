@@ -21,8 +21,8 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
     $groups = ['list', 'details.videos',];
     return $app['single.response.json']($video, $groups);
 })
-->assert('video', '\d+')
-->convert('video', 'converter.video:convert');
+    ->assert('video', '\d+')
+    ->convert('video', 'converter.video:convert');
 
 /**
  * Get list of videos
@@ -53,9 +53,8 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
     $groups = ['details', 'details.videos'];
     return $app['single.response.json']($video, $groups);
 })
-->assert('video', '\d+')
-->convert('video', 'converter.video:convert')
-;
+    ->assert('video', '\d+')
+    ->convert('video', 'converter.video:convert');
 
 /**
  * Update a video
@@ -63,6 +62,11 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
 $app->post('/videos/{video}', function(Video $video, Request $request) use ($app)
 {
     if (!$video->isDraft()) {
+        $app['logger.api']->addError(sprintf(
+            "Tried updating a non-draft status video with id {%s}", 
+            $video->getId()
+        ));
+
         return $app->json([
             'error' => 'invalid_status',
             'error_details' => 'Video must be in draft status',
@@ -78,16 +82,24 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
 
     return $app['single.response.json']($video, ['details', 'details.videos']);
 })
-->assert('video', '\d+')
-->convert('video', 'converter.video:convert')
-;
+    ->assert('video', '\d+')
+    ->convert('video', 'converter.video:convert');
 
 /**
  * Publish a draft video when it's ready
  */
 $app->post('/videos/{video}/publish', function(Video $video) use ($app)
 {
+    $app['logger.api']->addError(sprintf(
+        "Tried publishing a non-draft status video with id {%s}", 
+        $video->getId()
+    ));
     if (!$video->isDraft()) {
+        $app['logger.api']->addError(sprintf(
+            "Tried publishing a non-draft status video with id {%s}", 
+            $video->getId()
+        ));
+
         return $app->json([
             'error' => 'invalid_status',
             'error_details' => 'Video must be in draft status',
@@ -112,17 +124,10 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
         }
     });
 
-    //Resque::enqueue(
-        //'default',
-        //'CloudOutbound\YouPorn\Job\DemoCombined',
-        //['videooutbound' => $outbound->getId()]
-    //);
-
     return $app['single.response.json'](
         $video,
         ['details', 'details.videos', 'details.outbounds']
     );
 })
-->assert('video', '\d+')
-->convert('video', 'converter.video:convert')
-;
+    ->assert('video', '\d+')
+    ->convert('video', 'converter.video:convert');

@@ -44,6 +44,7 @@ $app['user'] = $app->share(function () use ($app) {
 $app['security.users'] = $app->share(function () use ($app) {
     return $app['em']->getRepository('cx:user');
 });
+
 $app->register(new SecurityServiceProvider(), [
     'security.firewalls' => [
         'default' => [
@@ -80,16 +81,16 @@ $app->register(new SecurityServiceProvider(), [
         return new ChannelListener(
             $app['security.access_map'],
             new ForbiddenErrorAuthenticationEntryPoint(),
-            $app['logger']
+            $app['logger.security']
         );
     }),
     'security.entry_point.default.form' => $app->share(function () use ($app) {
         return new UnauthorizedErrorAuthenticationEntryPoint();
     }),
     'security.encoder_factory' => $app->share(function ($app) {
-        return new EncoderFactory(array(
+        return new EncoderFactory([
             'Cloud\Model\User' => new BCryptPasswordEncoder(10),
-        ));
+            ]);
     }),
 ]);
 
@@ -123,8 +124,12 @@ $app->before(function ($request) {
 });
 
 $app->finish(function(Request $request, Response $response) use ($app) {
-    $app['logger.debug']->addInfo("Request", ["Content" => $request->getContent()]);
-    $app['logger.debug']->addInfo("Response",["Content" => $response->getContent()]);
+    /*
+    $app['logger.api']->addInfo("Response",[
+        "url"     => $request->getRequestUri(), 
+        "Content" => $response->getContent(),
+    ]);
+     */
 });
 
 // run
