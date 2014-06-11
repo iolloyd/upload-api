@@ -1,17 +1,17 @@
 <?php
 /**
-* cloudxxx-api (http://www.cloud.xxx)
-*
-* Copyright (C) 2014 Really Useful Limited.
-* Proprietary code. Usage restrictions apply.
-*
-* @copyright  Copyright (C) 2014 Really Useful Limited
-* @license    Proprietary
-*/
+ * cloudxxx-api (http://www.cloud.xxx)
+ *
+ * Copyright (C) 2014 Really Useful Limited.
+ * Proprietary code. Usage restrictions apply.
+ *
+ * @copyright  Copyright (C) 2014 Really Useful Limited
+ * @license    Proprietary
+ */
 
 /**
-* Logger Handlers
-*/
+ * Logger Handlers
+ */
 
 namespace Cloud\Monolog\Provider;
 
@@ -33,41 +33,50 @@ class LogServiceProvider implements ServiceProviderInterface
     {
         $app->register(new MonologServiceProvider());
 
-		$formatter = new LineFormatter();
+        $app['monolog'] = $app->share($app->extend('monolog', function($monolog, $app) {
+            $app['monolog.name'] = 'cloud';
+            return $monolog;
+        }));
 
-		// Setup handler for logging to logEntries.com
+        $formatter = new LineFormatter();
+
+        // Setup handler for logging to logEntries.com
         $app['monolog.handler'] = function() use ($app, $formatter) {
-			$token = $app['config']['logentries']['token'];
-			$handler = new LogEntriesHandler($token, Logger::DEBUG);
-			$handler->setFormatter($formatter);
+            $token = $app['config']['logentries']['token'];
+            $handler = new LogEntriesHandler($token, Logger::DEBUG);
+            $handler->setFormatter($formatter);
 
             return $handler;
         };
 
-		// Setup handler for logging to the cli 
+        // Setup handler for logging to the cli 
         $app['monolog.handler.debug'] = function() use ($app, $formatter) {
-			$handler = new StreamHandler(fopen('php://stderr', 'w'), Logger::DEBUG);
-			$handler->setFormatter($formatter);
+            $handler = new StreamHandler(fopen('php://stderr', 'w'), Logger::DEBUG);
+            $handler->setFormatter($formatter);
 
             return $handler;
         };
 
-		// Define a factory to allow components
-		// to setup their own namespaced loggers
-		$app['monolog.factory'] = $app->protect(function($name) use ($app) {
-			$logger = new Logger($name);
-			$logger->pushHandler($app['monolog.handler']);
-			$logger->pushHandler($app['monolog.handler.debug']);
-			$logger->pushProcessor(function($record) {
-				$record['extra']['user'] = 123;//$app['user'];
+        // Define a factory to allow components
+        // to setup their own namespaced loggers
+        $app['monolog.factory'] = $app->protect(function($name) use ($app) {
+            $logger = new Logger($name);
+            $logger->pushHandler($app['monolog.handler']);
+            $logger->pushHandler($app['monolog.handler.debug']);
+            $logger->pushProcessor(function($record) use ($app) {
+                $record['extra']['user'] = $app['user']->getId();
+                $record['extra']['company'] = $app['user']->getCompany()->getId();
+                $record['extra']['host'] = gethostname();
 
-				return $record;
-			});
+                return $record;
+            });
 
-			return $logger;
-		});
+            return $logger;
+        });
 
-		$app['logger.debug'] = $app['monolog.factory']('deebug');
+        $app['logger.api']      = $app['monolog.factory']('api');
+        $app['logger.doctrine'] = $app['monolog.factory']('doctrine');
+        $app['logger.security'] = $app['monolog.factory']('security');
     }
 
     public function boot(Application $app)

@@ -7,7 +7,7 @@ use Monolog\Formatter\NormalizerFormatter;
 
 class LineFormatter extends NormalizerFormatter
 {
-    const SIMPLE_FORMAT = "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n";
+    const SIMPLE_FORMAT = "[%datetime%] [%channel%] %level_name%: %message% \n%context% %extra%\n";
 
     protected $format;
     protected $allowInlineLineBreaks;
@@ -18,7 +18,7 @@ class LineFormatter extends NormalizerFormatter
      * @param string $dateFormat  The timestamp format
      * @param bool   $lineBreaks  Whether to allow inline line breaks in log entries
      */
-    public function __construct($format = null, $dateFormat = null, $lineBreaks = false)
+    public function __construct($format = null, $dateFormat = null, $lineBreaks = true)
     {
         $this->format = $format ?: static::SIMPLE_FORMAT;
         $this->allowInlineLineBreaks = $lineBreaks;
@@ -31,19 +31,20 @@ class LineFormatter extends NormalizerFormatter
     public function format(array $record)
     {
         $vars = parent::format($record);
-
         $output = $this->format;
+
         foreach ($vars['extra'] as $var => $val) {
             if (false !== strpos($output, '%extra.'.$var.'%')) {
-                $string = $thsi->convertToString($val);
-                $cleanString = $this->replaceNewLines($string);
+                $cleanString = $this->getCleanString($val);
                 $output = str_replace('%extra.'.$var.'%', $cleanString, $output);
                 unset($vars['extra'][$var]);
             }
         }
+
         foreach ($vars as $var => $val) {
             if (false !== strpos($output, '%'.$var.'%')) {
-                $output = str_replace('%'.$var.'%', $this->replaceNewlines($this->convertToString($val)), $output);
+                $cleanString = $this->getCleanString($val);
+                $output = str_replace('%'.$var.'%', $cleanString, $output);
             }
         }
 
@@ -58,6 +59,13 @@ class LineFormatter extends NormalizerFormatter
         }
 
         return $message;
+    }
+
+    protected function getCleanString($string)
+    {
+        $string = $this->convertToString($string);
+        $cleanString = $this->replaceNewLines($string);
+        return $cleanString;
     }
 
     protected function normalizeException(Exception $e)
@@ -101,6 +109,7 @@ class LineFormatter extends NormalizerFormatter
         }
 
         return str_replace('\\/', '/', json_encode($data));
+        return $data;
     }
 
     protected function replaceNewlines($str)

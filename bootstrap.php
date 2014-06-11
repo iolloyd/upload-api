@@ -77,10 +77,7 @@ $app->register(new Aws\Silex\AwsServiceProvider(), [
     'aws.config' => $app['config']['aws'],
 ]);
 
-$app->register(new \Cloud\Monolog\Provider\LogServiceProvider(), [
-]);
-
-$app['logger.name'] = 'cloudxxx';
+$app->register(new \Cloud\Monolog\Provider\LogServiceProvider());
 
 $app->register(new \Cloud\Silex\Loader(), [
     'loader.path' => 'app/',
@@ -90,26 +87,4 @@ $app->register(new \Cloud\Silex\Loader(), [
 ]);
 
 $app['load']('helper');
-
-/*
-if ( $app['debug'] ) {
-    $app->register(new WhoopsServiceProvider);
-}
- */
-
-/*
-if ($app['debug']) {
-    $logger = new \Doctrine\DBAL\Logging\DebugStack();
-    $app['db.config']->setSQLLogger($logger);
-
-    $app->after(function(Request $request, Response $response) use ($app, $logger) {
-        foreach ( $logger->queries as $query ) {
-            $app['monolog']->debug($query['sql'], [
-                'params' => $query['params'],
-                'types' => $query['types']
-            ]);
-        }
-    });
-}
- */
 

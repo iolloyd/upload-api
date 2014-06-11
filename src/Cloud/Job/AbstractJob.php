@@ -11,6 +11,7 @@
 
 namespace Cloud\Job;
 
+use Cloud\Helper\WorkerLogger;
 use Resque;
 use Resque_Job_Status;
 use ResqueScheduler\Job\Status;
