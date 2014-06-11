@@ -18,5 +18,4 @@ use Silex\Application\MonologTrait;
 class Application extends BaseApplication
 {
     use SecurityTrait;
-    use MonologTrait;
 }
