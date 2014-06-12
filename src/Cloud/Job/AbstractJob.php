@@ -43,6 +43,11 @@ abstract class AbstractJob extends Command
     public $queue;
 
     /**
+     * @var Logger;
+     */
+    protected $logger;
+
+    /**
      * Enqueue a job for immediate execution
      *
      * @param  array   $args   Arguments that should be passed when the job is executed.
@@ -87,13 +92,6 @@ abstract class AbstractJob extends Command
     {
         $id = \ResqueScheduler\ResqueScheduler::enqueueAt($time, $queue, get_called_class(), $args, true);
         return new \ResqueScheduler\Job\Status($id);
-    }
-
-    /**
-     * resque: Set up environment for this job
-     */
-    public function setUp()
-    {
     }
 
     /**
