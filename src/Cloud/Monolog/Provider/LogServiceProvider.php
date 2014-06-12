@@ -64,9 +64,9 @@ class LogServiceProvider implements ServiceProviderInterface
             $logger->pushHandler($app['monolog.handler']);
             $logger->pushHandler($app['monolog.handler.debug']);
             $logger->pushProcessor(function($record) use ($app) {
-                $record['extra']['user'] = $app['user']->getId();
-                $record['extra']['company'] = $app['user']->getCompany()->getId();
-                $record['extra']['host'] = gethostname();
+                $record['extra']['user']    = empty($app['user']) ? 0 : $app['user']->getId();
+                $record['extra']['company'] = empty($app['user']) ? 0 : $app['user']->getCompany()->getId();
+                $record['extra']['host']    = gethostname();
 
                 return $record;
             });
