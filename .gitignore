@@ -1,0 +1,16 @@
+._*
+.Spotlight-V100
+.Trashes
+.DS_Store
+
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+
+build/
+bin/
+node_modules/
+vendor/
