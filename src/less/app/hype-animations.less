@@ -1,0 +1,17 @@
+/*
+ * HYPE Animations
+ */
+
+#logo_hype_container {
+  margin-top: 100px;
+  .center-block();
+
+  .HYPE_element {
+    .transition-transform(0.2s ease-out);
+    .scale(0, 0);
+  }
+
+  &.in .HYPE_element {
+    .scale(1, 1);
+  }
+}

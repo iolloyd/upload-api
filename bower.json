@@ -1,0 +1,21 @@
+{
+  "name": "cloudxxx-www",
+  "version": "0.1.0",
+  "description": "cloud.xxx - Marketing Website",
+  "homepage": "http://www.cloud.xxx",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.1.1",
+    "lodash": "https://github.com/lodash/lodash.git#master",
+    "ionicons": "~1.4.1"
+  },
+  "devDependencies": {
+  }
+}
