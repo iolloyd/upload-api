@@ -1,0 +1,166 @@
+/*
+ * Landingpage Styles
+ */
+
+html, body {
+  height: 100%;
+}
+
+body {
+  text-align: center;
+  font-size: 16px;
+}
+
+#content {
+  height: 500px;
+  position: relative;
+  top: 40%;
+  margin-top: -250px;
+}
+
+// Text
+
+h2 {
+  margin-bottom: 80px;
+
+  font-size: 60px;
+  font-family: 'Quicksand', 'Gill Sans', 'Arial', sans-serif;
+  font-weight: 300;
+  text-transform: uppercase;
+  color: #000;
+
+  .animation(1.3s animate-fade-in);
+}
+
+@keyframes animate-fade-in {
+  0% {
+    transform: scale(0.0);
+  }
+  100% {
+    transform: scale(1.0);
+  }
+}
+
+@-webkit-keyframes animate-fade-in {
+  0% {
+    opacity: 0;
+    -webkit-transform: translateY(-10px);
+  }
+  100% {
+    opacity: 100;
+    -webkit-transform: translateY(0);
+  }
+}
+
+// Mailchimp
+
+p {
+  .animation(1.3s animate-fade-in);
+}
+
+#mc_embed_signup {
+  width: 500px;
+  position: relative;
+  left: 50%;
+  margin-left: -150px;
+
+  .animation(1.3s animate-fade-in);
+
+  .btn {
+    position: relative;
+    left: 5px;
+  }
+
+  .form-control {
+    width: 200px;
+    .box-shadow(none);
+  }
+}
+
+div.mce_inline_error {
+  .pull-right();
+}
+
+.response {
+  width: 500px;
+  .center-block();
+  font-size: 13px;
+  margin-top: 20px;
+}
+
+// Animated Cloud
+
+#logo_hype_container,
+.HYPE_scene {
+  overflow: visible !important;
+}
+
+#logo_hype_container {
+  .center-block();
+  .scale(0.75, 0.75);
+
+  #dot {
+    .animation(0.8s animate-pop-in);
+    .animation-delay(0.1s);
+  }
+
+  #x1, #x2, #x3 {
+    .animation(0.8s animate-pop-in);
+  }
+
+  #x1  { .animation-delay(.05s); }
+  #x2  { .animation-delay(.10s); }
+  #x3  { .animation-delay(.15s); }
+
+  #cloud {
+    .animation(0.2s animate-pop-in);
+  }
+
+  #cloud .HYPE_element {
+    .animation-name(animate-pop-in);
+    .animation-duration(0.7s);
+    .animation-timing-function(ease-in-out);
+  }
+
+  #n  { .animation-delay(.05s); }
+  #ne { .animation-delay(.03s); }
+  #nw { .animation-delay(.03s); }
+
+  #e  { .animation-delay(.00s); }
+  #w  { .animation-delay(.00s); }
+
+  #s  { .animation-delay(.06s); }
+  #se { .animation-delay(.03s); }
+  #sw { .animation-delay(.02s); }
+}
+
+@keyframes animate-pop-in {
+  0% {
+    transform: scale(0.0);
+  }
+  100% {
+    transform: scale(1.0);
+  }
+}
+
+@-webkit-keyframes animate-pop-in {
+  0% {
+    -webkit-transform: scale(0.0);
+  }
+  30% {
+    -webkit-transform: scale(1.1);
+  }
+  50% {
+    -webkit-transform: scale(0.9);
+  }
+  70% {
+    -webkit-transform: scale(1.03);
+  }
+  80% {
+    -webkit-transform: scale(0.99);
+  }
+  100% {
+    -webkit-transform: scale(1.0);
+  }
+}
+
