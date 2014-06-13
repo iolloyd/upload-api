@@ -12,6 +12,7 @@ module.exports = function ( grunt ) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-less');
+  grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-conventional-changelog');
   grunt.loadNpmTasks('grunt-banner');
   grunt.loadNpmTasks('grunt-bump');
@@ -95,7 +96,8 @@ module.exports = function ( grunt ) {
      */
     clean: [
       '<%= build_dir %>',
-      '<%= compile_dir %>'
+      '<%= compile_dir %>',
+      'archive',
     ],
 
     /**
@@ -382,6 +384,28 @@ module.exports = function ( grunt ) {
     },
 
     /**
+     * Generate a dist zip file
+     */
+    compress: {
+      dist_current: {
+        options: {
+          archive: 'archive/current.zip'
+        },
+        expand: true,
+        cwd: 'dist/',
+        src: [ '**/*' ],
+      },
+      dist_versioned: {
+        options: {
+          archive: 'archive/abc.zip'
+        },
+        expand: true,
+        cwd: 'dist/',
+        src: [ '**/*' ],
+      }
+    },
+
+    /**
      * The Karma configurations.
      */
     karma: {
@@ -591,7 +615,7 @@ module.exports = function ( grunt ) {
   /**
    * The default task is to build and compile.
    */
-  grunt.registerTask( 'default', [ 'build', 'compile' ] );
+  grunt.registerTask( 'default', [ 'build', 'compile', 'archive' ] );
 
   /**
    * The `build` task gets your app ready to run for development and testing.
@@ -610,6 +634,14 @@ module.exports = function ( grunt ) {
   grunt.registerTask( 'compile', [
     'copy:compile_assets', 'usebanner:build_less', 'less:compile', 'ngmin',
     'concat:compile_js', 'uglify', 'index:compile'
+  ]);
+
+  /**
+   * The `compile` task gets your app ready for deployment by concatenating and
+   * minifying your code.
+   */
+  grunt.registerTask( 'archive', [
+    'compress:dist_versioned', 'compress:dist_current'
   ]);
 
   /**
