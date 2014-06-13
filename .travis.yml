@@ -18,7 +18,7 @@ deploy:
     skip_cleanup: true
 
 env:
-  - NOKOGIRI_USE_SYSTEM_LIBRARIES: true
+  - NOKOGIRI_USE_SYSTEM_LIBRARIES=true
 
 cache:
   bundler: true
