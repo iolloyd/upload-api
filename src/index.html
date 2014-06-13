@@ -7,6 +7,8 @@
 
   <title>cloud.xxx: Coming Soon</title>
 
+  <link href='http://fonts.googleapis.com/css?family=Quicksand:300,400' rel='stylesheet' type='text/css'>
+
   <% styles.forEach(function (file) { %><link rel="stylesheet" type="text/css" href="<%= file %>?<%= version %>">
   <% }); %>
 
@@ -17,16 +19,35 @@
 
   <% scripts.forEach(function (file) { %><script type="text/javascript" src="<%= file %>?<%= version %>"></script>
   <% }); %>
-
-  <script>
-    setTimeout(function() {
-      $('#logo_hype_container').addClass('in');
-    }, 500);
-  </script>
 </head>
 <body>
-  <div id="logo_hype_container" style="position: relative; overflow:hidden; width: 383px; height: 244px;">
-    <script src="assets/logo.hyperesources/logo_hype_generated_script.js?<%= version %>"></script>
+  <div id="content">
+    <div id="logo_hype_container" style="position: relative; overflow:hidden; width: 383px; height: 244px;">
+      <script src="assets/logo.hyperesources/logo_hype_generated_script.js?<%= version %>"></script>
+    </div>
+
+    <h2>coming soon</h2>
+
+    <p>Stay tuned! Subscribe to receive the latest updates about cloud.xxx</p>
+
+    <!-- Begin MailChimp Signup Form -->
+    <div id="mc_embed_signup">
+      <form action="http://xxx.us8.list-manage2.com/subscribe/post?u=f63416f23ca0d312ccb575aaf&amp;id=85f3c593eb" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate form-inline" role="form" target="_blank" novalidate>
+        <div class="mc-field-group clearfix">
+          <input type="email" value="" name="EMAIL" class="required email form-control pull-left" id="mce-EMAIL" placeholder="Enter your email">
+          <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button btn btn-success pull-left">
+        </div>
+        <div style="position: absolute; left: -5000px;"><input type="text" name="b_f63416f23ca0d312ccb575aaf_85f3c593eb" tabindex="-1" value=""></div>
+      </form>
+    </div>
+
+    <div id="mce-responses" class="clear">
+      <p class="response" id="mce-error-response text-danger" style="display:none"></div>
+      <p class="response" id="mce-success-response" style="display:none"></div>
+    </div>
+
+    <script src="assets/mailchimp.js"></script>
+    <!--End mc_embed_signup-->
   </div>
 
   <script>
