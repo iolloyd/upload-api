@@ -1,8 +1,16 @@
 language: node_js
 node_js:
   - 0.10
+
 before_script:
   - npm install -g grunt-cli
   - npm install -g bower
   - bower install
   - grunt
+
+deploy:
+  provider: opsworks
+  access-key-id: AKIAITO7NERWDHUB7PFA
+  secret-access-key: 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
+  app-id: 3b308ab6-c407-4df9-850c-46f6c4eb04eb
+  skip_cleanup: true
