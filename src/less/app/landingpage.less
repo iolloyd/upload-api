@@ -34,10 +34,12 @@ h2 {
 
 @keyframes animate-fade-in {
   0% {
-    transform: scale(0.0);
+    opacity: 0;
+    transform: translateY(-10px);
   }
   100% {
-    transform: scale(1.0);
+    opacity: 100;
+    transform: translateY(0);
   }
 }
 
@@ -137,6 +139,18 @@ div.mce_inline_error {
 @keyframes animate-pop-in {
   0% {
     transform: scale(0.0);
+  }
+  30% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(0.9);
+  }
+  70% {
+    transform: scale(1.03);
+  }
+  80% {
+    transform: scale(0.99);
   }
   100% {
     transform: scale(1.0);
