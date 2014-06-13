@@ -1,0 +1,40 @@
+/*
+ * Typography
+ */
+
+@import "variables.less";
+@import "app/variables.less";
+@import "app/mixins.less";
+
+body {
+  font-weight: @font-weight-normal;
+}
+
+h2 {
+  font-size: 22px;
+  font-weight: @font-weight-light;
+  -webkit-font-smoothing: antialiased;
+}
+.main h2 {
+  padding: 0 10px 15px 10px;
+  border-bottom: 1px solid @cloud-gray-lighter;
+  color: @brand-primary;
+}
+
+h3 {
+  font-size: 16px;
+  font-weight: @font-weight-light;
+  -webkit-font-smoothing: antialiased;
+}
+
+strong, .text-strong, .text-bold {
+  .text-bold();
+}
+.text-muted {
+  color: @cloud-gray !important;
+}
+
+a:hover, a:focus {
+  text-decoration: none;
+  color: inherit;
+}
