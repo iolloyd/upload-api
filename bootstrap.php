@@ -3,9 +3,6 @@
  * Silex Application Bootstrap
  */
 
-use Whoops\Provider\Silex\WhoopsServiceProvider;
-
-
 $app = new Cloud\Silex\Application();
 $app['route_class'] = 'Cloud\Silex\Route';
 
