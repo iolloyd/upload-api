@@ -47,6 +47,7 @@ class LineFormatter extends NormalizerFormatter
                 $output = str_replace('%'.$var.'%', $cleanString, $output);
             }
         }
+        $output = $this->interpolate($output, $vars);
 
         return $output;
     }
@@ -120,4 +121,14 @@ class LineFormatter extends NormalizerFormatter
 
         return preg_replace('{[\r\n]+}', ' ', $str);
     }
+
+    protected function interpolate($message, array $context = [])
+    {
+        foreach ($context as $key => $val) {
+            $message = str_replace("{".$key."}", $val, $message);
+        }
+
+        return $message;
+    }
+
 }

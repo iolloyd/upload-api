@@ -29,10 +29,10 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
         $app['paginator'] = $app->protect(function ($model) use ($app) {
             $list = $app['em']->getRepository($model)->matching(new Criteria());
             if (1 > $list->count()) {
-                $app['logger.doctrine']->addError(sprintf(
-                    "No results found when requesting paginator using %s", 
-                    $model
-                ));
+                $app['logger.doctrine']->error(
+                    "No results found when requesting paginator using {model}", 
+                    ['model' => $model]
+                );
             }
 
             $adapter = new DoctrineCollectionAdapter($list);
