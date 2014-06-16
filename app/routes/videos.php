@@ -46,17 +46,6 @@ $app->post('/videos', function(Request $request) use ($app)
 });
 
 /**
- * Get a video
- */
-$app->get('/videos/{video}', function(Video $video) use ($app)
-{
-    $groups = ['details', 'details.videos'];
-    return $app['single.response.json']($video, $groups);
-})
-    ->assert('video', '\d+')
-    ->convert('video', 'converter.video:convert');
-
-/**
  * Update a video
  */
 $app->post('/videos/{video}', function(Video $video, Request $request) use ($app)
