@@ -67,6 +67,9 @@ class LogServiceProvider implements ServiceProviderInterface
                 $record['extra']['user']    = empty($app['user']) ? 0 : $app['user']->getId();
                 $record['extra']['company'] = empty($app['user']) ? 0 : $app['user']->getCompany()->getId();
                 $record['extra']['host']    = gethostname();
+                foreach ($record['context'] as $k => $v) {
+                    $record['extra'][$k] = $v;
+                }
 
                 return $record;
             });
