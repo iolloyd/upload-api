@@ -123,15 +123,6 @@ $app->before(function ($request) {
     }
 });
 
-$app->finish(function(Request $request, Response $response) use ($app) {
-    /*
-    $app['logger.api']->addInfo("Response",[
-        "url"     => $request->getRequestUri(), 
-        "Content" => $response->getContent(),
-    ]);
-     */
-});
-
 // run
 $app->boot();
 $app['load']('routes');
