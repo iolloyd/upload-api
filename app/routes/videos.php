@@ -90,10 +90,6 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
  */
 $app->post('/videos/{video}/publish', function(Video $video) use ($app)
 {
-    $app['logger.api']->addError(sprintf(
-        "Tried publishing a non-draft status video with id {%s}", 
-        $video->getId()
-    ));
     if (!$video->isDraft()) {
         $app['logger.api']->addError(sprintf(
             "Tried publishing a non-draft status video with id {%s}", 
