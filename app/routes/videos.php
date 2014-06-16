@@ -51,10 +51,10 @@ $app->post('/videos', function(Request $request) use ($app)
 $app->post('/videos/{video}', function(Video $video, Request $request) use ($app)
 {
     if (!$video->isDraft()) {
-        $app['logger.api']->addError(sprintf(
-            "Tried updating a non-draft status video with id {%s}", 
-            $video->getId()
-        ));
+        $app['logger.api']->error(
+            "Tried updating a non-draft status video with id {id}", 
+            ['id' => $video->getId()]
+        );
 
         return $app->json([
             'error' => 'invalid_status',
@@ -80,10 +80,10 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
 $app->post('/videos/{video}/publish', function(Video $video) use ($app)
 {
     if (!$video->isDraft()) {
-        $app['logger.api']->addError(sprintf(
-            "Tried publishing a non-draft status video with id {%s}", 
-            $video->getId()
-        ));
+        $app['logger.api']->error(
+            "Tried publishing a non-draft status video with id {id}", 
+            ['id' => $video->getId()]
+        );
 
         return $app->json([
             'error' => 'invalid_status',
