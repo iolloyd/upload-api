@@ -1,4 +1,13 @@
 <?php
+/**
+ * cloudxxx-api (http://www.cloud.xxx)
+ *
+ * Copyright (C) 2014 Really Useful Limited.
+ * Proprietary code. Usage restrictions apply.
+ *
+ * @copyright  Copyright (C) 2014 Really Useful Limited
+ * @license    Proprietary
+ */
 
 namespace Cloud\Monolog\Formatter;
 
@@ -36,15 +45,15 @@ class LineFormatter extends NormalizerFormatter
         foreach ($vars['extra'] as $var => $val) {
             if (false !== strpos($output, '%extra.'.$var.'%')) {
                 $cleanString = $this->getCleanString($val);
-                $output = str_replace('%extra.'.$var.'%', $cleanString, $output);
+                $output = str_replace('%extra.' . $var . '%', $cleanString, $output);
                 unset($vars['extra'][$var]);
             }
         }
 
         foreach ($vars as $var => $val) {
-            if (false !== strpos($output, '%'.$var.'%')) {
+            if (false !== strpos($output, '%' . $var . '%')) {
                 $cleanString = $this->getCleanString($val);
-                $output = str_replace('%'.$var.'%', $cleanString, $output);
+                $output = str_replace('%' . $var . '%', $cleanString, $output);
             }
         }
         $output = $this->interpolate($output, $vars);
@@ -80,15 +89,15 @@ class LineFormatter extends NormalizerFormatter
             } while ($previous = $previous->getPrevious());
         }
 
-        return '[object] ('.get_class($e).': '
+        return '[object] (' . get_class($e) . ': '
             . $this->messageFileLine($e)
-            . $previousText    . ')';
+            . $previousText . ')';
     }
 
     protected function messageFileLine(Exception $e)
     {
         return $e->getMessage() . ' at '
-            . $e->getFile()  . ':'
+            . $e->getFile() . ':'
             . $e->getLine();
     }
 
@@ -103,14 +112,9 @@ class LineFormatter extends NormalizerFormatter
         ) {
             return '';
         }
-
         $data = $this->normalize($data);
-        if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
-            return $this->toJson($data);
-        }
 
-        return str_replace('\\/', '/', json_encode($data));
-        return $data;
+        return $this->toJson($data);
     }
 
     protected function replaceNewlines($str)
@@ -125,7 +129,7 @@ class LineFormatter extends NormalizerFormatter
     protected function interpolate($message, array $context = [])
     {
         foreach ($context as $key => $val) {
-            $message = str_replace("{".$key."}", $val, $message);
+            $message = str_replace("{" . $key . "}", $val, $message);
         }
 
         return $message;
