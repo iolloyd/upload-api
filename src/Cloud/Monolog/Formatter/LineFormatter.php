@@ -16,7 +16,7 @@ use Monolog\Formatter\NormalizerFormatter;
 
 class LineFormatter extends NormalizerFormatter
 {
-    const SIMPLE_FORMAT = "[%datetime%] [%channel%] %level_name%: %message% \n%context% %extra%\n";
+    const SIMPLE_FORMAT = "[%datetime%] %level_name% [%channel%] %message% \n%extra%\n";
 
     protected $format;
     protected $allowInlineLineBreaks;
@@ -41,12 +41,12 @@ class LineFormatter extends NormalizerFormatter
     {
         $vars = parent::format($record);
         $output = $this->format;
+        $vars['message'] = $this->interpolate($vars['message'], $vars['context']);
 
         foreach ($vars['extra'] as $var => $val) {
-            if (false !== strpos($output, '%extra.'.$var.'%')) {
+            if (false !== strpos($output, '%extra.' . $var . '%')) {
                 $cleanString = $this->getCleanString($val);
                 $output = str_replace('%extra.' . $var . '%', $cleanString, $output);
-                unset($vars['extra'][$var]);
             }
         }
 
@@ -56,7 +56,6 @@ class LineFormatter extends NormalizerFormatter
                 $output = str_replace('%' . $var . '%', $cleanString, $output);
             }
         }
-        $output = $this->interpolate($output, $vars);
 
         return $output;
     }
