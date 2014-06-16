@@ -149,14 +149,6 @@ class User extends AbstractModel implements AdvancedUserInterface, EquatableInte
         return $this->email;
     }
 
-	/**
-	 * Get the ID
-	 */
-	public function getId()
-	{
-		return $this->id;
-	}
-
     /**
      * Set the password
      *
