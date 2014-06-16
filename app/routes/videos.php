@@ -109,6 +109,13 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
         }
     });
 
+    //TODO add redis enqueueing 
+    //Resque::enqueue(
+        //'default',
+        //'CloudOutbound\YouPorn\Job\DemoCombined',
+        //['videooutbound' => $outbound->getId()]
+    //);
+
     return $app['single.response.json'](
         $video,
         ['details', 'details.videos', 'details.outbounds']
