@@ -8,8 +8,8 @@ install:
 
 script:
   - mkdir archive
-  - zip -r archive/abc.zip . -x archive/
-  - zip -r archive/current.zip . -x archive/
+  - zip -r archive/abc.zip . -x archive/ .git/ >/dev/null
+  - zip -r archive/current.zip . -x archive/ .git/ >/dev/null
 
 deploy:
   - provider: s3
