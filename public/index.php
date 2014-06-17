@@ -94,7 +94,7 @@ $app->register(new Silex\Provider\SessionServiceProvider(), [
 $app->register(new Cloud\Silex\Provider\CorsHeadersServiceProvider(), [
     'cors.options' => [
         'allow_credentials' => true,
-        'allow_origin'      => $app['debug'] ? null : 'https://app.cloud.xxx',
+        'allow_origin'      => $app['debug'] ? null : 'https://ng.staging.cldsys.net',
         'max_age'           => 604800,
     ],
 ]);
