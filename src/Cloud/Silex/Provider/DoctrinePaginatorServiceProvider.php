@@ -28,13 +28,18 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
      */
     public function register(Application $app)
     {
-        $app['paginator'] = $app->protect(function ($model) use ($app) {
+        $app['paginator'] = $app->protect(function ($model, $groups, $options) use ($app) {
 
-            $allowed = ['status'];
             $criteria = Criteria::create();
-            foreach ($app['request']->query->all() as $field => $value) {
-                if (in_array($field, $allowed)) {
-                    $criteria = $criteria->where(Criteria::expr()->eq($field, $value));
+            $filterFields = isset($options['filterFields']) 
+                ? $options['filterFields'] 
+                : [];
+
+            if (count($filterFields)) {
+                foreach ($app['request']->query->all() as $field => $value) {
+                    if (in_array($field, $filterFields)) {
+                        $criteria = $criteria->where(Criteria::expr()->eq($field, $value));
+                    }
                 }
             }
 
@@ -52,7 +57,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return $pager;
         });
 
-        $app['serializer'] = $app->protect(function($results, $groups = null) use ($app) {
+        $app['serializer'] = $app->protect(function($results, $groups) use ($app) {
             $serializer = SerializerBuilder::create()
                 ->setDebug($app['debug'])
                 ->build();
@@ -85,11 +90,11 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return $response;
         });
 
-        $app['paginator.response.json'] = $app->protect(function ($model, $groups) use ($app) {
+        $app['paginator.response.json'] = $app->protect(function ($model, $groups, $options) use ($app) {
 
             $hostUrl = $app['request']->getSchemeAndHttpHost() . $app['request']->getPathInfo();
             $params  = $app['request']->query->all();
-            $pager   = $app['paginator']($model);
+            $pager   = $app['paginator']($model, $groups, $options);
             $navlinks = $this->getLinks($hostUrl, $params, $pager);
             $jsonContent = $app['serializer']($pager->getCurrentPageResults(), $groups);
 
