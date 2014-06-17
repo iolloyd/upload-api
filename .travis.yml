@@ -2,10 +2,11 @@ language: php
 php:
   - 5.5
 
-script:
+install:
+  - composer self-update
   - composer install --prefer-dist
 
-after_script:
+script:
   - mkdir archive
   - zip -r archive/abc.zip . -x archive/
   - zip -r archive/current.zip . -x archive/
@@ -24,6 +25,9 @@ deploy:
     secret-access-key: hUy8Mh82BQ5EYUK6zbUuvqPOraMmrmawwDIg89Em
     app-id: 8f233699-7c36-4bcc-b94e-d8256b738fec
     wait-until-deployed: true
+
+env:
+  - NOKOGIRI_USE_SYSTEM_LIBRARIES=true
 
 cache:
   directories:
