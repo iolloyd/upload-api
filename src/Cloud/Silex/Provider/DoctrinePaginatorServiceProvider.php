@@ -29,11 +29,17 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
     public function register(Application $app)
     {
         $app['paginator'] = $app->protect(function ($model) use ($app) {
-            $list = $app['em']->getRepository($model)->matching(new Criteria());
+
+            $criteria = Criteria::create();
+            foreach ($app['request']->query->all() as $field => $value) {
+                $criteria = $criteria->where(Criteria::expr()->eq($field, $value));
+            }
+
+            $list = $app['em']->getRepository($model)->matching($criteria);
             $adapter = new DoctrineCollectionAdapter($list);
             $pager = new Pagerfanta($adapter);
 
-            $page = $app['request']->get('page') ?: 1;
+            $page    = $app['request']->get('page')     ?: 1;
             $perPage = $app['request']->get('per_page') ?: 10;
 
             $pager
