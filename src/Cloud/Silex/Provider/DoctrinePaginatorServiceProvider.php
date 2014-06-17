@@ -30,9 +30,12 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
     {
         $app['paginator'] = $app->protect(function ($model) use ($app) {
 
+            $allowed = ['status'];
             $criteria = Criteria::create();
             foreach ($app['request']->query->all() as $field => $value) {
-                $criteria = $criteria->where(Criteria::expr()->eq($field, $value));
+                if (in_array($field, $allowed)) {
+                    $criteria = $criteria->where(Criteria::expr()->eq($field, $value));
+                }
             }
 
             $list = $app['em']->getRepository($model)->matching($criteria);
