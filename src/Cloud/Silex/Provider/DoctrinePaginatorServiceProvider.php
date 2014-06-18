@@ -28,10 +28,10 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
      */
     public function register(Application $app)
     {
-        $app['paginator'] = $app->protect(function ($model, $groups, $options) use ($app) {
+        $app['paginator'] = $app->protect(function ($model, $groups, $options=[]) use ($app) {
 
             $criteria = Criteria::create();
-            $filterFields = isset($options['filterFields']) 
+            $filterFields = count($options) && isset($options['filterFields']) 
                 ? $options['filterFields'] 
                 : [];
 
