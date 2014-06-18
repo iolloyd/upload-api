@@ -63,6 +63,7 @@ $app->register(new Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider
 $app->extend('orm.ems.config', function ($configs, $app) {
     foreach ($app['orm.ems.options'] as $name => $options) {
         $configs[$name]->setNamingStrategy(new Doctrine\ORM\Mapping\UnderscoreNamingStrategy());
+        $configs[$name]->setClassMetadataFactoryName('Cloud\Doctrine\ORM\Mapping\ClassMetadataFactory');
     }
     return $configs;
 });
