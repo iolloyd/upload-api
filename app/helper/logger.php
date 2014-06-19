@@ -14,14 +14,15 @@
  */
 
 use Silex\Application;
+use Silex\Provider\MonologServiceProvider;
 use Monolog\Handler\StreamHandler;
 
-$logFolder = dirname(dirname(__DIR__)) . '/data/logs';
+$logDir = ($app['env'] == 'development') ? 'data/logs/' : 'log/';
 
-$app->register(new \Silex\Provider\MonologServiceProvider(), [
-    'monolog.logfile' => $logFolder . '/development.log',
+$app->register(new MonologServiceProvider(), [
+    'monolog.logfile' => $logDir . 'development.log',
     'monolog.streamHandler' => function() use ($app) {
-        return new \Monolog\Handler\StreamHandler($app['monolog.logfile']);
+        return new StreamHandler($app['monolog.logfile']);
     },
 ]);
 
@@ -43,5 +44,4 @@ $app['monolog.app'] = $app->share(function() use ($app) {
 $app['monolog']->pushHandler($app['monolog.streamHandler']);
 $app['monolog.dev']->pushHandler($app['monolog.streamHandler']);
 $app['monolog.app']->pushHandler($app['monolog.streamHandler']);
-
 
