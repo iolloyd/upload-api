@@ -76,9 +76,8 @@ class DemoCombined extends AbstractJob
         $this
             ->setDefinition([
                 new InputArgument('videooutbound', InputArgument::REQUIRED),
-                ])
-                ->setName('job:demo:xhamster')
-                ;
+            ])
+                ->setName('job:demo:xhamster');
     }
 
     /**
@@ -96,11 +95,10 @@ class DemoCombined extends AbstractJob
             ],
             'defaults' => [
                 'debug' => $output->isVerbose(),
-                ],
-            ]);
+            ],
+        ]);
 
         $this->em = $this->getHelper('em')->getEntityManager();
-        $app = $this->getHelper('silex')->getApplication();
         $this->logger = $app['monolog.factory'](get_called_class());
     }
 
@@ -239,7 +237,7 @@ class DemoCombined extends AbstractJob
     {
         // calculate "security hash"; lifted from their javascript
 
-        $this->logger->addInfo(sprintf('Login as %s', $tubeuser->getUsername()));
+        $this->logger->info(sprintf('Login as %s', $tubeuser->getUsername()));
         $hash = function ($time) {
             $res1 = base_convert(bcsub($time, 24563844), 10, 16);
             $res2 = substr(base_convert($time, 10, 16), 3);
@@ -283,7 +281,6 @@ class DemoCombined extends AbstractJob
 
         $body = (string) $response->getBody();
 
-        //$logger->addInfo('Response', ['user' => 123]);
         // success
 
         if (strpos($body, 'window.location=') !== false) {
@@ -301,7 +298,7 @@ class DemoCombined extends AbstractJob
 
         if (!$count) {
             $msg = 'Login failed: unknown error; could not extract error from response body';
-            $this->logger->addError($msg, ['tubeuser' => $tubeuser->getUsername()]);
+            $this->logger->error($msg, ['tubeuser' => $tubeuser->getUsername()]);
             throw new UnexpectedResponseException($msg . ':' . $body);
         }
 
@@ -546,14 +543,14 @@ class DemoCombined extends AbstractJob
             [
                 'headers' => [
                     'Referer' => (string) $baseUrl->combine('/producer.php'),
-                        'Connection' => 'keep-alive',
-                    ],
-                    'query' => [
-                        'upload_id' => $uploadId,
-                    ],
-                    'body' => $this->getUploadData($outbound),
-                ]
-            );
+                    'Connection' => 'keep-alive',
+                ],
+                'query' => [
+                    'upload_id' => $uploadId,
+                ],
+                'body' => $this->getUploadData($outbound),
+            ]
+        );
 
         $request->getBody()
             ->replaceFields($this->getUploadData($outbound))
@@ -597,11 +594,11 @@ class DemoCombined extends AbstractJob
         $response = $this->httpSession->get($baseUrl->combine('/producer.php'), [
             'headers' => [
                 'Referer' => (string) $baseUrl->combine('/producer.php'),
-                ],
-                'query' => [
-                    'upload_id' => $outbound->getParam('upload_id'),
-                    ],
-                ]);
+            ],
+            'query' => [
+                'upload_id' => $outbound->getParam('upload_id'),
+            ],
+        ]);
 
         $body = (string) $response->getBody();
 
@@ -725,8 +722,6 @@ class DemoCombined extends AbstractJob
 
         // success
 
-        //var_dump($match); exit;
-
         $this->em->transactional(function ($em) use ($outbound, $match) {
             $params = array_intersect_key($match, array_flip([
                 'status',
@@ -735,26 +730,26 @@ class DemoCombined extends AbstractJob
             $outbound->addParams($params);
 
             switch($match['status']) {
-            case self::STATUS_NOT_CONVERTED:
-                $outbound->setStatus(VideoOutbound::STATUS_WORKING);
-                break;
+                case self::STATUS_NOT_CONVERTED:
+                    $outbound->setStatus(VideoOutbound::STATUS_WORKING);
+                    break;
 
-            case self::STATUS_PUBLICATION:
-            case self::STATUS_ACTIVE:
-                $outbound->setStatus(VideoOutbound::STATUS_COMPLETE);
-                break;
+                case self::STATUS_PUBLICATION:
+                case self::STATUS_ACTIVE:
+                    $outbound->setStatus(VideoOutbound::STATUS_COMPLETE);
+                    break;
 
-            case self::STATUS_REPOST:
-            case self::STATUS_DELETED:
-                $outbound->setStatus(VideoOutbound::STATUS_ERROR);
-                break;
+                case self::STATUS_REPOST:
+                case self::STATUS_DELETED:
+                    $outbound->setStatus(VideoOutbound::STATUS_ERROR);
+                    break;
 
-            default:
-                throw new UnexpectedValueException(sprintf(
-                    'Unexpected status `%s` for outbound `%d`',
-                    $match['status'], $outbound->getId()
-                ));
-                break;
+                default:
+                    throw new UnexpectedValueException(sprintf(
+                        'Unexpected status `%s` for outbound `%d`',
+                        $match['status'], $outbound->getId()
+                    ));
+                    break;
             }
         });
     }
@@ -764,8 +759,6 @@ class DemoCombined extends AbstractJob
         $response = $this->httpSession->get(
             ['/my_vids/all/{page}.html', ['page' => $page]]
         );
-
-        //var_dump($response); print((string) $response->getBody());
 
         $dom = new DomCrawler();
         $dom->addHtmlContent((string) $response->getBody());
@@ -815,8 +808,6 @@ class DemoCombined extends AbstractJob
 
         $videos = array_column($videos, null, 'id');
 
-        //var_dump($videos); exit;
-
         return $videos;
     }
 
@@ -835,7 +826,6 @@ class DemoCombined extends AbstractJob
                     'slot1_site' => $tubeuser->getParam('site')['id'],
 
                     // TODO: pull from video tags
-                    //'slot1_chanell' => '',
                     'slot1_chanell' => '.15',
                     'slot1_channels15' => '',
 
