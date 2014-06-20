@@ -15,7 +15,7 @@ deploy:
   - provider: s3
     access_key_id: AKIAITO7NERWDHUB7PFA
     secret-access-key:
-      secure: FuBZzrE+9RS1Gj85EsH80FBh5xHQJK39v7vbFnEHgtVb2uS0+Rs0ZOQDWS2mr1s3KjOxs2V+ru1zn37zXOxGNQ54pfltfTiskWYDfK+tWYIzIE15Z1rFNWHO1syH9oCgUqK3QiBPcH+99BePWFEzFCK/ylM1SRqmSy9/GHam+mg=
+      secure: CyNd2eulxoaLZtC2wnJ+QaRJsoDQY3ol8++AnLIBFjISjSpe9AfsKgnbouaolGziT4KjyffyTwFxpkLWG3YykaawA1JD9+3GuielZ2oJW3P7dsw4NtnShVijHq+1/mQ0ORra2S1lHbBBuZ3eBLp2wLGwiW0WVLef8Ie4SbCozS4=
     skip_cleanup: true
     bucket: cldsys-travis
     local-dir: archive
@@ -24,7 +24,7 @@ deploy:
   - provider: opsworks
     access-key-id: AKIAITO7NERWDHUB7PFA
     secret-access-key:
-      secure: FuBZzrE+9RS1Gj85EsH80FBh5xHQJK39v7vbFnEHgtVb2uS0+Rs0ZOQDWS2mr1s3KjOxs2V+ru1zn37zXOxGNQ54pfltfTiskWYDfK+tWYIzIE15Z1rFNWHO1syH9oCgUqK3QiBPcH+99BePWFEzFCK/ylM1SRqmSy9/GHam+mg=
+      secure: CyNd2eulxoaLZtC2wnJ+QaRJsoDQY3ol8++AnLIBFjISjSpe9AfsKgnbouaolGziT4KjyffyTwFxpkLWG3YykaawA1JD9+3GuielZ2oJW3P7dsw4NtnShVijHq+1/mQ0ORra2S1lHbBBuZ3eBLp2wLGwiW0WVLef8Ie4SbCozS4=
     app-id: 8f233699-7c36-4bcc-b94e-d8256b738fec
     wait-until-deployed: true
 
