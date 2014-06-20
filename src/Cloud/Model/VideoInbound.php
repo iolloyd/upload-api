@@ -12,11 +12,12 @@
 
 namespace Cloud\Model;
 
-use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
 
 
 /**
@@ -99,6 +100,8 @@ class VideoInbound extends AbstractModel
      */
     public function __construct(Video $video, User $user)
     {
+        $this->videoInbounds = new ArrayCollection();
+        $this->videoOutbounds = new ArrayCollection();
         $generator = new UriSafeTokenGenerator();
         $this->setToken($generator->generateToken());
         $this->setVideo($video);
