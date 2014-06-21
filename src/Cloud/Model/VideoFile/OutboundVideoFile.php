@@ -10,9 +10,10 @@
  * @license    Proprietary
  */
 
-namespace Cloud\Model;
+namespace Cloud\Model\VideoFile;
 
 use DateTime;
+use Cloud\Model\VideoFile\AbstractVideoFile;
 use Doctrine\Common\Collections\ArrayCollection;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -21,12 +22,6 @@ use JMS\Serializer\Annotation as JMS;
 /**
  * @ORM\Entity
  */
-class VideoFileOutbound extends VideoFile 
+class OutboundVideoFile extends AbstractVideoFile 
 {
-    /**
-     * @ORM\JoinColumn(nullable=false)
-     * @ORM\ManyToOne(targetEntity="VideoOutbound", inversedBy="videooutbounds")
-     * @JMS\Groups({"details.videofileoutbound"})
-     */
-    protected $videoOutbound;
 }
