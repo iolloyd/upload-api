@@ -30,13 +30,12 @@ class VideoInboundFixture extends AbstractFixture implements DependentFixtureInt
     public function load(ObjectManager $em)
     {
         $inbound = new VideoInbound(
-            $this->getReference('video'),
+            $this->getReference('video-1'),
             $this->getReference('user')
         );
 
         $inbound->setStatus('complete');
         $inbound->setToken('token12345');
-        $inbound->setFilename('video inbound filename');
         $inbound->setCreatedBy(
             $this->getReference('user')
         );
@@ -44,13 +43,14 @@ class VideoInboundFixture extends AbstractFixture implements DependentFixtureInt
         $em->persist($inbound);
         $em->flush();
 
-        $this->addReference('video-inbound', $inbound);
+        $this->addReference('videoInbound', $inbound);
     }
 
     public function getDependencies()
     {
         return [
             __NAMESPACE__ . '\VideoFixture',
+            __NAMESPACE__ . '\UserFixture',
         ];
     }
 

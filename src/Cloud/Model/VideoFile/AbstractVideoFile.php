@@ -10,9 +10,10 @@
  * @license    Proprietary
  */
 
-namespace Cloud\Model;
+namespace Cloud\Model\VideoFile;
 
 use DateTime;
+use Cloud\Model\AbstractModel;
 use Doctrine\Common\Collections\ArrayCollection;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -22,24 +23,27 @@ use JMS\Serializer\Annotation as JMS;
 /**
  * @ORM\Entity
  * @ORM\InheritanceType("SINGLE_TABLE")
- * @ORM\DiscriminatorColumn(name="video_type", type="string")
- * @ORM\DiscriminatorMap({"video" = "Video","inbound" = "VideoFileInbound","template" = "VideoFileTemplate","outbound" = "VideoFileOutbound"})
+ * @ORM\DiscriminatorColumn(name="type", type="string")
+ * @ORM\DiscriminatorMap({
+ *     "inbound"  = "Cloud\Model\VideoFile\InboundVideoFile",
+ *     "template" = "Cloud\Model\VideoFile\TemplateVideoFile",
+ *     "outbound" = "Cloud\Model\VideoFile\OutboundVideoFile"
+ * })
  */
-class VideoFile extends AbstractModel
+abstract class AbstractVideoFile extends AbstractModel
 {
-    use Traits\IdTrait;
-    use Traits\CreatedAtTrait;
-    use Traits\UpdatedAtTrait;
-
-    const TYPE_INBOUND = 'inbound';
-    const TYPE_OUTBOUND = 'outbound';
-    const TYPE_TEMPLATE = 'template';
+    use \Cloud\Model\Traits\IdTrait;
+    use \Cloud\Model\Traits\CreatedAtTrait;
+    use \Cloud\Model\Traits\UpdatedAtTrait;
 
     const STATUS_COMPLETE = 'complete'; 
     const STATUS_ERROR    = 'error';
     const STATUS_PENDING  = 'pending';
     const STATUS_WORKING  = 'working'; 
 
+    /**
+     * @ORM\ManyToOne(targetEntity="Cloud\Model\Video")
+     */
     protected $video;
 
 
@@ -145,12 +149,16 @@ class VideoFile extends AbstractModel
      */
     protected $md5sum;
 
+
     /**
-     * @param video
+     * @param string 
+     *
+     * @return VideoFile
      */
     public function setVideo($video)
     {
         $this->video = $video;
+        return $this;
     }
 
     /**
@@ -162,11 +170,12 @@ class VideoFile extends AbstractModel
     }
 
     /**
-     * @return string
+     * @return VideoFile
      */
     public function setFilename($filename)
     {
         $this->filename = $filename;
+        return $this;
     }
 
     /**
@@ -179,10 +188,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string 
+     *
+     * @return VideoFile
      */
     public function setFilesize($filesize)
     {
         $this->filesize = $filesize;
+        return $this;
     }
 
     /**
@@ -196,15 +208,17 @@ class VideoFile extends AbstractModel
 
     /**
      * @return string
+     *
+     * @return VideoFile
      */
     public function setFiletype($filetype)
     {
         $this->filetype = $filetype;
+        return $this;
     }
 
     /**
      * @return string
-     *
      */
     public function getFiletype()
     {
@@ -213,10 +227,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setDuration($duration)
     {
         $this->duration = $duration;
+        return $this;
     }
 
     /**
@@ -229,10 +246,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setContainerFormat($containerFormat)
     {
         $this->containerFormat = $containerFormat;
+        return $this;
     }
 
     /**
@@ -245,10 +265,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setVideoCodec($videoCodec)
     {
         $this->videoCodec = $videoCodec;
+        return $this;
     }
 
     /**
@@ -261,10 +284,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setVideoBitRate($videoBitRate)
     {
         $this->videoBitRate = $videoBitRate;
+        return $this;
     }
 
     /**
@@ -277,10 +303,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setAudioCodec($audioCodec)
     {
         $this->audioCodec = $audioCodec;
+        return $this;
     }
 
     /**
@@ -293,10 +322,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setAudioBitRate($audioBitRate)
     {
         $this->audioBitRate = $audioBitRate;
+        return $this;
     }
 
     /**
@@ -309,10 +341,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setAudioSampleRate($audioSampleRate)
     {
         $this->audioSampleRate = $audioSampleRate;
+        return $this;
     }
 
     /**
@@ -325,10 +360,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setAudioChannels($audioChannels)
     {
         $this->audioChannels = $audioChannels;
+        return $this;
     }
 
     /**
@@ -341,10 +379,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setHeight($height)
     {
         $this->height = $height;
+        return $this;
     }
 
     /**
@@ -357,10 +398,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setWidth($width)
     {
         $this->width = $width;
+        return $this;
     }
 
     /**
@@ -373,10 +417,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setResolution($resolution)
     {
         $this->resolution = $resolution;
+        return $this;
     }
 
     /**
@@ -389,10 +436,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setFrameRate($frameRate)
     {
         $this->frameRate = $frameRate;
+        return $this;
     }
 
     /**
@@ -405,10 +455,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setAspectRatio($aspectRatio)
     {
         $this->aspectRatio = $aspectRatio;
+        return $this;
     }
 
     /**
@@ -421,10 +474,13 @@ class VideoFile extends AbstractModel
 
     /**
      * @param string
+     *
+     * @return VideoFile
      */
     public function setMd5sum($md5sum)
     {
         $this->md5sum = $md5sum;
+        return $this;
     }
 
     /**
@@ -434,4 +490,24 @@ class VideoFile extends AbstractModel
     {
         return $this->md5sum;
     }
+
+    /**
+     * @param string
+     *
+     * @return VideoFile
+     */
+    public function setVideoType($videoType)
+    {
+        $this->videoType = $videoType;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVideoType()
+    {
+        return $this->videoType;
+    }
+
 }
