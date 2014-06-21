@@ -52,6 +52,13 @@ class VideoInbound extends AbstractModel
     protected $video;
 
     /**
+     * @ORM\JoinColumn(nullable=true)
+     * @ORM\ManyToOne(targetEntity="Cloud\Model\VideoFile\InboundVideoFile", inversedBy="inbounds")
+     * @JMS\Groups({"details.inbounds"})
+     */
+    protected $videoFile;
+
+    /**
      * #JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="User")
      * @JMS\Groups({"details.inbounds"})
@@ -67,24 +74,6 @@ class VideoInbound extends AbstractModel
      * @ORM\Column(type="string", length=16)
      */
     protected $status = self::STATUS_PENDING;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"details.inbounds"})
-     */
-    protected $filename;
-
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     * @JMS\Groups({"details.inbounds"})
-     */
-    protected $filesize;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"details.inbounds"})
-     */
-    protected $filetype;
 
     /**
      * #Column(type="datetime", nullable=true)
@@ -140,7 +129,6 @@ class VideoInbound extends AbstractModel
     {
         $this->setCompany($video->getCompany());
         $this->video = $video;
-
         return $this;
     }
 
@@ -163,7 +151,6 @@ class VideoInbound extends AbstractModel
     public function setCompany(Company $company)
     {
         $this->company = $company;
-
         return $this;
     }
 
@@ -195,7 +182,6 @@ class VideoInbound extends AbstractModel
         }
 
         $this->status = $status;
-
         return $this;
     }
 
@@ -209,74 +195,6 @@ class VideoInbound extends AbstractModel
         return $this->status;
     }
 
-    /**
-     * Set the filename
-     *
-     * @param  string $filename
-     * @return VideoInbound
-     */
-    public function setFilename($filename)
-    {
-        $this->filename = $filename;
-
-        return $this;
-    }
-
-    /**
-     * Get the filename
-     *
-     * @return string
-     */
-    public function getFilename()
-    {
-        return $this->filename;
-    }
-
-    /**
-     * Set the filesize in bytes
-     *
-     * @param  int $filesize
-     * @return VideoInbound
-     */
-    public function setFilesize($filesize)
-    {
-        $this->filesize = $filesize;
-
-        return $this;
-    }
-
-    /**
-     * Get the filesize in bytes
-     *
-     * @return int
-     */
-    public function getFilesize()
-    {
-        return $this->filesize;
-    }
-
-    /**
-     * Set the file mimetype
-     *
-     * @param  string $filetype
-     * @return VideoOutbound
-     */
-    public function setFiletype($filetype)
-    {
-        $this->filetype = $filetype;
-
-        return $this;
-    }
-
-    /**
-     * Get the file mimetype
-     *
-     * @return string
-     */
-    public function getFiletype()
-    {
-        return $this->filetype;
-    }
 
     /**
      * Get the AWS S3 storage prefix or directory name
@@ -313,4 +231,3 @@ class VideoInbound extends AbstractModel
     }
 
 }
-
