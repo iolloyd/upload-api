@@ -37,10 +37,6 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
 
             $video->setTitle('Eye iz vidayo' . $x);
             $video->setDescription('Me iz dizcreyeber' . $x);
-            $video->setFilename('I iz filename' . $x);
-            $video->setFiletype(1);
-            $video->setFilesize(111223);
-            $video->setDuration(rand(10*60, 30*60));
             $video->setCreatedBy(
                 $this->getReference('user')
             );
@@ -63,17 +59,15 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
             $video->setTitle('Test Video ' . $x);
             $video->setDescription('Description description description');
 
-            $video->setFilename('video_filename.mp4');
-            $video->setFilesize(1024*1024*1);
-            $video->setFiletype('video/mp4');
 
             $em->persist($video);
             $em->persist($stat);
+
+            $this->addReference(sprintf("video-%s", $x), $video);
         }
 
         $em->flush();
 
-        $this->addReference('video', $video);
     }
 
     public function getDependencies()

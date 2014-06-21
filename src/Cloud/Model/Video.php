@@ -60,40 +60,6 @@ class Video extends AbstractModel
      */
     protected $description;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $filename;
-
-    /**
-     * The overall processing status for this video by the worker system. To
-     * query success or failure data, look at each individual inbound and
-     * outbound and query their status.
-     *
-     * @see STATUS_DRAFT
-     * @see STATUS_PENDING
-     * @see STATUS_WORKING
-     * @see STATUS_COMPLETE
-     *
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $filesize;
-
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $filetype;
-
-    /**
-     * Duration in seconds
-     *
-     * @ORM\Column(type="float", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $duration;
 
     /**
      * Inbound files: user upload from browser
@@ -190,6 +156,16 @@ class Video extends AbstractModel
      */
     protected $version = 1;
 
+    /**
+     * @ORM\OneToMany(targetEntity="Cloud\Model\VideoFile\InboundVideoFile", mappedBy="Video")
+     */
+    protected $inboundVideoFiles;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Cloud\Model\VideoFile\OutboundVideoFile", mappedBy="Video")
+     */
+    protected $outboundVideoFiles;
+
     //////////////////////////////////////////////////////////////////////////
 
     /**
@@ -200,6 +176,8 @@ class Video extends AbstractModel
         $this->tags = new ArrayCollection();
         $this->inbounds = new ArrayCollection();
         $this->outbounds = new ArrayCollection();
+        $this->inboundVideoFiles = new ArrayCollection();
+        $this->outboundVideoFiles = new ArrayCollection();
     }
 
     /**
@@ -365,72 +343,6 @@ class Video extends AbstractModel
     }
 
     /**
-     * Set the filename
-     *
-     * @param  string $filename
-     * @return Video
-     */
-    public function setFilename($filename)
-    {
-        $this->filename = $filename;
-        return $this;
-    }
-
-    /**
-     * Get the filename
-     *
-     * @return string
-     */
-    public function getFilename()
-    {
-        return $this->filename;
-    }
-
-    /**
-     * Set the filesize in bytes
-     *
-     * @param  int $filesize
-     * @return Video
-     */
-    public function setFilesize($filesize)
-    {
-        $this->filesize = $filesize;
-        return $this;
-    }
-
-    /**
-     * Get the filesize in bytes
-     *
-     * @return int
-     */
-    public function getFilesize()
-    {
-        return $this->filesize;
-    }
-
-    /**
-     * Set the file mimetype
-     *
-     * @param  string $filetype
-     * @return VideoOutbound
-     */
-    public function setFiletype($filetype)
-    {
-        $this->filetype = $filetype;
-        return $this;
-    }
-
-    /**
-     * Get the file mimetype
-     *
-     * @return string
-     */
-    public function getFiletype()
-    {
-        return $this->filetype;
-    }
-
-    /**
      * Returns the associated inbounds
      *
      * @return array
@@ -532,16 +444,6 @@ class Video extends AbstractModel
       }
 
       return $this;
-    }
-
-    public function setDuration($duration)
-    {
-        $this->duration = $duration;
-    }
-
-    public function getDuration()
-    {
-        return $this->duration;
     }
 
     //////////////////////////////////////////////////////////////////////////
