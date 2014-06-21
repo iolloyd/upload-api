@@ -30,7 +30,8 @@
         "jms/serializer": "0.16.0",
         "monolog/monolog": "dev-master",
         "cobaia/monologdoctrine": "v1.0.1",
-        "ddtraceweb/monolog-parser": "1.2"
+        "ddtraceweb/monolog-parser": "1.2",
+        "zencoder/zencoder-php": "dev-master"
     },
 
     "require-dev": {
