@@ -81,8 +81,8 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
 {
     if (!$video->isDraft()) {
         $app['logger.api']->error(
-            "Tried publishing a non-draft status video with id {id}", 
-            ['id' => $video->getId()]
+            "Tried publishing a non-draft status video with id {video}", 
+            ['video' => $video->getId()]
         );
 
         return $app->json([
