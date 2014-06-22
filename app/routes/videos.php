@@ -21,8 +21,8 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
     $groups = ['list', 'details.videos',];
     return $app['single.response.json']($video, $groups);
 })
-    ->assert('video', '\d+')
-    ->convert('video', 'converter.video:convert');
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert');
 
 /**
  * Get list of videos
@@ -52,8 +52,8 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
 {
     if (!$video->isDraft()) {
         $app['logger.api']->error(
-            "Tried updating a non-draft status video with id {id}", 
-            ['id' => $video->getId()]
+            "Tried updating a non-draft status video with id {video}", 
+            ['video' => $video->getId()]
         );
 
         return $app->json([
@@ -71,8 +71,8 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
 
     return $app['single.response.json']($video, ['details', 'details.videos']);
 })
-    ->assert('video', '\d+')
-    ->convert('video', 'converter.video:convert');
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert');
 
 /**
  * Publish a draft video when it's ready
@@ -121,5 +121,5 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
         ['details', 'details.videos', 'details.outbounds']
     );
 })
-    ->assert('video', '\d+')
-    ->convert('video', 'converter.video:convert');
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert');
