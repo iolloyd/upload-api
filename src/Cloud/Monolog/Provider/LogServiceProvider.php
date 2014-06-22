@@ -77,9 +77,6 @@ class LogServiceProvider implements ServiceProviderInterface
             return $logger;
         });
 
-        $app['logger.api']      = $app['monolog.factory']('api');
-        $app['logger.doctrine'] = $app['monolog.factory']('doctrine');
-        $app['logger.security'] = $app['monolog.factory']('security');
     }
 
     public function boot(Application $app)
