@@ -28,12 +28,26 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
      */
     public function register(Application $app)
     {
-        $app['paginator'] = $app->protect(function ($model) use ($app) {
-            $list = $app['em']->getRepository($model)->matching(new Criteria());
+        $app['paginator'] = $app->protect(function ($model, $groups, $options = []) use ($app) {
+
+            $criteria = Criteria::create();
+            $filterFields = count($options) && isset($options['filterFields']) 
+                ? $options['filterFields'] 
+                : [];
+
+            if (count($filterFields)) {
+                foreach ($app['request']->query->all() as $field => $value) {
+                    if (in_array($field, $filterFields)) {
+                        $criteria = $criteria->where(Criteria::expr()->eq($field, $value));
+                    }
+                }
+            }
+
+            $list = $app['em']->getRepository($model)->matching($criteria);
             $adapter = new DoctrineCollectionAdapter($list);
             $pager = new Pagerfanta($adapter);
 
-            $page = $app['request']->get('page') ?: 1;
+            $page    = $app['request']->get('page')     ?: 1;
             $perPage = $app['request']->get('per_page') ?: 10;
 
             $pager
@@ -43,7 +57,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return $pager;
         });
 
-        $app['serializer'] = $app->protect(function($results, $groups = null) use ($app) {
+        $app['serializer'] = $app->protect(function($results, $groups) use ($app) {
             $serializer = SerializerBuilder::create()
                 ->setDebug($app['debug'])
                 ->build();
@@ -60,7 +74,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return json_decode($jsonContent);
         });
 
-        $app['single.response.json'] = $app->protect(function ($model, $groups, $headerLink=true) use ($app) {
+        $app['single.response.json'] = $app->protect(function ($model, $groups, $headerLink = true) use ($app) {
 
             $params  = $app['request']->query->all();
             $jsonContent = $app['serializer']($model, $groups);
@@ -76,11 +90,11 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return $response;
         });
 
-        $app['paginator.response.json'] = $app->protect(function ($model, $groups) use ($app) {
+        $app['paginator.response.json'] = $app->protect(function ($model, $groups, $options = []) use ($app) {
 
             $hostUrl = $app['request']->getSchemeAndHttpHost() . $app['request']->getPathInfo();
             $params  = $app['request']->query->all();
-            $pager   = $app['paginator']($model);
+            $pager   = $app['paginator']($model, $groups, $options);
             $navlinks = $this->getLinks($hostUrl, $params, $pager);
             $jsonContent = $app['serializer']($pager->getCurrentPageResults(), $groups);
 
