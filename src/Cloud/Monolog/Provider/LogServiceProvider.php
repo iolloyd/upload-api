@@ -41,7 +41,7 @@ class LogServiceProvider implements ServiceProviderInterface
         $formatter = new LineFormatter();
 
         // Setup handler for logging to logEntries.com
-        $app['monolog.handler'] = function() use ($app, $formatter) {
+        $app['monolog.handler.logentries'] = function() use ($app, $formatter) {
             $token = $app['config']['logentries']['token'];
             $handler = new LogEntriesHandler($token, Logger::DEBUG);
             $handler->setFormatter($formatter);
@@ -61,7 +61,7 @@ class LogServiceProvider implements ServiceProviderInterface
         // to setup their own namespaced loggers
         $app['monolog.factory'] = $app->protect(function($name) use ($app) {
             $logger = new Logger($name);
-            $logger->pushHandler($app['monolog.handler']);
+            $logger->pushHandler($app['monolog.handler.logentries']);
             $logger->pushHandler($app['monolog.handler.debug']);
             $logger->pushProcessor(function($record) use ($app) {
                 $record['extra']['user']    = empty($app['user']) ? 0 : $app['user']->getId();
