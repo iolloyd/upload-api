@@ -237,7 +237,7 @@ class DemoCombined extends AbstractJob
     {
         // calculate "security hash"; lifted from their javascript
 
-        $this->logger->info('Login as {user}', ['user' => $tubeuser->getUsername()]);
+        $this->logger->info('Login as {tubeuser}', ['tubeuser' => $tubeuser->getUsername()]);
         $hash = function ($time) {
             $res1 = base_convert(bcsub($time, 24563844), 10, 16);
             $res2 = substr(base_convert($time, 10, 16), 3);
