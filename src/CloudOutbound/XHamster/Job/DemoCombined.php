@@ -111,7 +111,7 @@ class DemoCombined extends AbstractJob
         $outboundId = $input->getArgument('videooutbound');
         if (!$outbound) {
             $msg = sprintf("No videoOutbound for Id: {%s}", $outboundId);
-            $this->logger->addError($msg);
+            $this->logger->error($msg);
             throw new \InvalidArgumentException($msg);
         }
 
@@ -126,7 +126,7 @@ class DemoCombined extends AbstractJob
 
             if (!$this->isLoggedIn($tubeuser)) {
                 $msg = sprintf("Login succeeded but still no access. OutboundId: %s", $outboundId);
-                $this->logger->addError($msg);
+                $this->logger->error($msg);
                 throw new InternalInconsistencyException($msg);
             }
         }
@@ -375,11 +375,9 @@ class DemoCombined extends AbstractJob
 
         $sites = $dom->filter('.boxC.sites .item')->each(function ($node) {
             $site = [
-                'title' =>
-                $node->filter('table tr.head td:nth-child(1)')->text(),
-                    'description' =>
-                    $node->filter('table tr.head td:nth-child(2)')->text(),
-                    ];
+                'title'       => $node->filter('table tr.head td:nth-child(1)')->text(),
+                'description' => $node->filter('table tr.head td:nth-child(2)')->text(),
+            ];
 
             $href = $node
                 ->filter('table tr:nth-child(3) td a:first-child')
@@ -664,7 +662,7 @@ class DemoCombined extends AbstractJob
                 . 'detect external id: video outbound id: %s',
                 $outbound->getExternalId());
 
-            $this->logger->addError($msg);
+            $this->logger->error($msg);
             throw new InternalInconsistencyException($msg);
         }
 
