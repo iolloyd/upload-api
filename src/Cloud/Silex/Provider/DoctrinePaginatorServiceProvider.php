@@ -28,7 +28,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
      */
     public function register(Application $app)
     {
-        $app['paginator'] = $app->protect(function ($model, $groups, $options=[]) use ($app) {
+        $app['paginator'] = $app->protect(function ($model, $groups, $options = []) use ($app) {
 
             $criteria = Criteria::create();
             $filterFields = count($options) && isset($options['filterFields']) 
@@ -74,7 +74,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return json_decode($jsonContent);
         });
 
-        $app['single.response.json'] = $app->protect(function ($model, $groups, $headerLink=true) use ($app) {
+        $app['single.response.json'] = $app->protect(function ($model, $groups, $headerLink = true) use ($app) {
 
             $params  = $app['request']->query->all();
             $jsonContent = $app['serializer']($model, $groups);
@@ -90,7 +90,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return $response;
         });
 
-        $app['paginator.response.json'] = $app->protect(function ($model, $groups, $options) use ($app) {
+        $app['paginator.response.json'] = $app->protect(function ($model, $groups, $options = []) use ($app) {
 
             $hostUrl = $app['request']->getSchemeAndHttpHost() . $app['request']->getPathInfo();
             $params  = $app['request']->query->all();
