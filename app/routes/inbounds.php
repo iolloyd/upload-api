@@ -80,7 +80,7 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete',
         }
 
         if ($inbound->getStatus() != 'pending') {
-            return $app->jsonError(400, 'invalid_status', 'Inbound must have status `pending` to finalize');
+            return $app->json(400, 'invalid_status', 'Inbound must have status `pending` to finalize');
         }
 
         // init
@@ -110,13 +110,35 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete',
         }
 
         // combine
-        $app['em']->transactional(function ($em) use ($video, $inbound, $upload) {
+        $app['em']->transactional(function ($em) use ($video, $inbound, $upload, $app) {
             $mimetypes = Mimetypes::getInstance();
             $meta      = $upload->getMetadata();
 
-            $video->setFilename($meta['flowfilename']);
-            $video->setFilesize($meta['flowtotalsize']);
-            $video->setFiletype($mimetypes->fromFilename($meta['flowfilename']));
+            $videoFile = new InboundVideoFile();
+            $videoFile->setFilename($meta['flowfilename']);
+            $videoFile->setFilesize($meta['flowtotalsize']);
+            $videoFile->setFiletype($mimetypes->fromFilename($meta['flowfilename']));
+
+            // Trigger encoding job
+            $encoder = new Cloud\Zencoder\Encoder($videoFile, $app['encoder']);
+            /*
+            $inputLocation  = sprintf("%s/%s", $app['config']['aws']['bucket'], $inbound->getId());
+            $outputLocation = sprintf("%s/encoded/%s", $app['config']['aws']['bucket'], $inbound->getId());
+             */
+            $bucket = "s3://cldsys-dev";
+            $filename = "encoded.mov";
+            $input = "http://s3.amazonaws.com/zencodertesting/test.mov";
+            $outputs = [
+                [
+                    "label" => "test encoding",
+                    "output" => $outputLocation,
+                    "base_url" => $bucket,
+                    "filename" => $filename,
+                    "format" => "mov",
+                ]
+            ];
+
+            $encoder->createEncodingJobs($input, $outputs);
 
             /*
              * video.formats
