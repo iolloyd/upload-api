@@ -7,7 +7,7 @@ $app = new Cloud\Silex\Application();
 $app['route_class'] = 'Cloud\Silex\Route';
 
 // env
-$app['env'] = 'development';
+$app['env'] = getenv('CLOUD_ENV') ?: 'development';
 $app['debug'] = ($app['env'] == 'development');
 
 // config
@@ -28,6 +28,12 @@ $app['config'] = array_reduce($configs, function (array $data, $file) use ($app)
     catch (Exception $e) { return $data; }
 }, []);
 
+// opsworks
+if ($app['env'] != 'development') {
+    $app->register(new \Cloud\Silex\Provider\OpsWorksServiceProvider());
+    $app['config'] = array_replace_recursive($app['config'], $app['opsworks.config']);
+}
+
 // db
 $app->register(new Silex\Provider\DoctrineServiceProvider(), [
     'db.options' => $app['config']['db'],
@@ -35,7 +41,6 @@ $app->register(new Silex\Provider\DoctrineServiceProvider(), [
 \Doctrine\Common\Annotations\AnnotationRegistry::registerAutoloadNamespace(
     'Cloud\Doctrine\Annotation', 'src/'
 );
-
 \Doctrine\Common\Annotations\AnnotationRegistry::registerAutoloadNamespace(
     'JMS\Serializer\Annotation', 'vendor/jms/serializer/src'
 );
@@ -64,6 +69,7 @@ $app->register(new Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider
 $app->extend('orm.ems.config', function ($configs, $app) {
     foreach ($app['orm.ems.options'] as $name => $options) {
         $configs[$name]->setNamingStrategy(new Doctrine\ORM\Mapping\UnderscoreNamingStrategy());
+        $configs[$name]->setClassMetadataFactoryName('Cloud\Doctrine\ORM\Mapping\ClassMetadataFactory');
     }
     return $configs;
 });
