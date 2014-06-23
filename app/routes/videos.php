@@ -19,7 +19,9 @@ use JMS\Serializer\SerializerBuilder;
  */
 $app->get('/videos', function(Request $request) use ($app)
 {
-    return $app['paginator.response.json']('cx:video', ['list', 'list.videos']);
+    $groups = ['list', 'list.videos'];
+    $options = ['filterFields' => ['status']]; 
+    return $app['paginator.response.json']('cx:video', $groups, $options);
 });
 
 /**
@@ -27,12 +29,13 @@ $app->get('/videos', function(Request $request) use ($app)
  */
 $app->post('/videos', function(Request $request) use ($app)
 {
+    $groups = ['details', 'details.videos'];
     $video = new Video($app['user']);
 
     $app['em']->persist($video);
     $app['em']->flush();
 
-    return $app['single.response.json']($video, ['details', 'details.videos']);
+    return $app['single.response.json']($video, $groups); 
 });
 
 /**
@@ -43,8 +46,8 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
     $groups = ['details', 'details.videos'];
     return $app['single.response.json']($video, $groups);
 })
-->assert('video', '\d+')
-->convert('video', 'converter.video:convert')
+    ->assert('video', '\d+')
+    ->convert('video', 'converter.video:convert')
 ;
 
 /**
@@ -68,9 +71,8 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
 
     return $app['single.response.json']($video, ['details', 'details.videos']);
 })
-->assert('video', '\d+')
-->convert('video', 'converter.video:convert')
-;
+    ->assert('video', '\d+')
+    ->convert('video', 'converter.video:convert');
 
 /**
  * Publish a draft video when it's ready
@@ -110,6 +112,6 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
 
     return $app['single.response.json']($video, ['details', 'details.videos', 'details.outbounds']);
 })
-->assert('video', '\d+')
-->convert('video', 'converter.video:convert')
+    ->assert('video', '\d+')
+    ->convert('video', 'converter.video:convert')
 ;
