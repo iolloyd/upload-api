@@ -230,4 +230,15 @@ class VideoInbound extends AbstractModel
         $this->created_by = $user;
     }
 
+    /**
+     * Creates an encoding job
+     *
+     * @return array $metadata 
+     */
+    function getEncodingJob($encoder, $input)
+    {
+        $metadata = $encoder->createEncodingJob($input);
+
+        return $metadata;
+    }
 }
