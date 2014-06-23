@@ -14,7 +14,8 @@ script:
 deploy:
   - provider: s3
     access_key_id: AKIAITO7NERWDHUB7PFA
-    secret_access_key: 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
+    secret-access-key:
+      secure: CyNd2eulxoaLZtC2wnJ+QaRJsoDQY3ol8++AnLIBFjISjSpe9AfsKgnbouaolGziT4KjyffyTwFxpkLWG3YykaawA1JD9+3GuielZ2oJW3P7dsw4NtnShVijHq+1/mQ0ORra2S1lHbBBuZ3eBLp2wLGwiW0WVLef8Ie4SbCozS4=
     skip_cleanup: true
     bucket: cldsys-travis
     local-dir: archive
@@ -22,7 +23,8 @@ deploy:
 
   - provider: opsworks
     access-key-id: AKIAITO7NERWDHUB7PFA
-    secret-access-key: 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
+    secret-access-key:
+      secure: CyNd2eulxoaLZtC2wnJ+QaRJsoDQY3ol8++AnLIBFjISjSpe9AfsKgnbouaolGziT4KjyffyTwFxpkLWG3YykaawA1JD9+3GuielZ2oJW3P7dsw4NtnShVijHq+1/mQ0ORra2S1lHbBBuZ3eBLp2wLGwiW0WVLef8Ie4SbCozS4=
     app-id: 8f233699-7c36-4bcc-b94e-d8256b738fec
     wait-until-deployed: true
 
