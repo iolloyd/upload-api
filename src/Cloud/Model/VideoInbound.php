@@ -9,20 +9,17 @@
  * @license    Proprietary
  */
 
-
 namespace Cloud\Model;
 
-
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
+
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
 use JMS\Serializer\Annotation as JMS;
-use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
-
 
 /**
  * @ORM\Entity
- * @ORM\HasLifecycleCallbacks
  */
 class VideoInbound extends AbstractModel
 {
@@ -39,12 +36,6 @@ class VideoInbound extends AbstractModel
     use Traits\CompanyTrait;
 
     /**
-     * @ORM\Column(type="string", length=48)
-     * @JMS\Groups({"details.inbounds"})
-     */
-    protected $token;
-
-    /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Video", inversedBy="inbounds")
      * @JMS\Groups({"details.inbounds"})
@@ -52,18 +43,13 @@ class VideoInbound extends AbstractModel
     protected $video;
 
     /**
-     * @ORM\JoinColumn(nullable=true)
-     * @ORM\ManyToOne(targetEntity="Cloud\Model\VideoFile\InboundVideoFile", inversedBy="inbounds")
+     * @ORM\OneToOne(
+     *   targetEntity="Cloud\Model\VideoFile\InboundVideoFile",
+     *   inversedBy="inbound"
+     * )
      * @JMS\Groups({"details.inbounds"})
      */
     protected $videoFile;
-
-    /**
-     * #JoinColumn(nullable=false)
-     * @ORM\ManyToOne(targetEntity="User")
-     * @JMS\Groups({"details.inbounds"})
-     */
-    protected $created_by;
 
     /**
      * @see STATUS_PENDING
@@ -74,6 +60,12 @@ class VideoInbound extends AbstractModel
      * @ORM\Column(type="string", length=16)
      */
     protected $status = self::STATUS_PENDING;
+
+    /**
+     * @ORM\Column(type="string", length=48)
+     * @JMS\Groups({"details.inbounds"})
+     */
+    protected $token;
 
     /**
      * #Column(type="datetime", nullable=true)
@@ -89,10 +81,9 @@ class VideoInbound extends AbstractModel
      */
     public function __construct(Video $video, User $user)
     {
-        $this->videoInbounds = new ArrayCollection();
-        $this->videoOutbounds = new ArrayCollection();
         $generator = new UriSafeTokenGenerator();
         $this->setToken($generator->generateToken());
+
         $this->setVideo($video);
         $this->setCreatedBy($user);
     }
