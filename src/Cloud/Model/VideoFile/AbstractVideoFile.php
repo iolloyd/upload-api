@@ -13,6 +13,7 @@ namespace Cloud\Model\VideoFile;
 
 use Cloud\Model\AbstractModel;
 use Cloud\Model\Traits;
+use Cloud\Model\Video;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
@@ -34,6 +35,7 @@ abstract class AbstractVideoFile extends AbstractModel
     use Traits\IdTrait;
     use Traits\CreatedAtTrait;
     use Traits\UpdatedAtTrait;
+    use Traits\CompanyTrait;
 
     const STATUS_PENDING  = 'pending';
     const STATUS_WORKING  = 'working';
@@ -163,7 +165,6 @@ abstract class AbstractVideoFile extends AbstractModel
      * @JMS\Groups({"list", "details"})
      */
     protected $md5sum;
-
 
     /**
      * @return VideoFile
