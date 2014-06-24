@@ -24,12 +24,8 @@ class ZencoderServiceProvider implements ServiceProviderInterface
      */
     public function register(Application $app)
     {
-        $app['zencoder'] = $app->share(function (Application $app) {
-            $token = isset($app['zencoder.token']) 
-                ? $app['zencoder.token'] 
-                : $app['config']['zencoder']['token'];
-
-            return new Services_Zencoder($token);
+        $app['zencoder'] = $app->share(function () use ($app) {
+            return new Services_Zencoder($app['config']['zencoder']['api_key']);
         });
     }
 

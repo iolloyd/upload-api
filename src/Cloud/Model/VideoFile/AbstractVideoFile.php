@@ -37,10 +37,11 @@ abstract class AbstractVideoFile extends AbstractModel
     use Traits\UpdatedAtTrait;
     use Traits\CompanyTrait;
 
+    const STATUS_DRAFT    = 'draft';
     const STATUS_PENDING  = 'pending';
     const STATUS_WORKING  = 'working';
-    const STATUS_COMPLETE = 'complete';
     const STATUS_ERROR    = 'error';
+    const STATUS_COMPLETE = 'complete';
 
     /**
      * @ORM\JoinColumn(nullable=false)
@@ -52,7 +53,7 @@ abstract class AbstractVideoFile extends AbstractModel
      * @ORM\Column(type="string")
      * @JMS\Groups({"list", "details"})
      */
-    protected $status = self::STATUS_PENDING;
+    protected $status = self::STATUS_DRAFT;
 
     // File
 
@@ -101,22 +102,10 @@ abstract class AbstractVideoFile extends AbstractModel
     protected $width;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $resolution;
-
-    /**
      * @ORM\Column(type="float", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $frameRate;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $aspectRatio;
 
     // Video Codec
 
@@ -167,21 +156,71 @@ abstract class AbstractVideoFile extends AbstractModel
     protected $md5sum;
 
     /**
-     * @return VideoFile
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Groups({"list", "details"})
      */
-    public function setVideo($video)
+    protected $zencoderJobId;
+
+    //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Set the parent video
+     *
+     * @param  Video $video
+     * @return AbstractVideoFile
+     */
+    public function setVideo(Video $video)
     {
         $this->video = $video;
+        $this->setCompany($video->getCompany());
         return $this;
     }
 
     /**
+     * Get the parent video
+     *
      * @return Video
      */
     public function getVideo()
     {
         return $this->video;
     }
+
+    /**
+     * Set the processing status
+     *
+     * @param  string $status
+     * @throws \InvalidArgumentException
+     * @return AbstractVideoFile
+     */
+    public function setStatus($status)
+    {
+        if (!in_array($status, [
+            self::STATUS_DRAFT,
+            self::STATUS_PENDING,
+            self::STATUS_WORKING,
+            self::STATUS_ERROR,
+            self::STATUS_COMPLETE
+        ])) {
+            throw new \InvalidArgumentException("Invalid status");
+        }
+
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * Get the processing status
+     *
+     * @return string
+     */
+    public function getStatus()
+    {
+        return $this->status;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 
     /**
      * @return VideoFile
@@ -506,22 +545,43 @@ abstract class AbstractVideoFile extends AbstractModel
     }
 
     /**
-     * @param string
+     * Set the external ID of the Zencoder encoding job for this videofile
      *
-     * @return VideoFile
+     * @param  int $zencoderJobId
+     * @return AbstractVideoFile
      */
-    public function setVideoType($videoType)
+    public function setZencoderJobId($zencoderJobId)
     {
-        $this->videoType = $videoType;
+        $this->zencoderJobId = $zencoderJobId;
         return $this;
     }
 
     /**
-     * @return string
+     * Get the external ID of the Zencoder encoding job for this videofile
+     *
+     * @return int
      */
-    public function getVideoType()
+    public function getZencoderJobId()
     {
-        return $this->videoType;
+        return $this->zencoderJobId;
     }
 
+    //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Get the storage path for this video file
+     *
+     * The path is in the format `videofiles/{video}/{videofile}/{filename}`
+     *
+     * @return string
+     */
+    public function getStoragePath()
+    {
+        return sprintf(
+            'videofiles/%d/%d/%s',
+            $this->getVideo()->getId(),
+            $this->getId(),
+            $this->getFilename()
+        );
+    }
 }
