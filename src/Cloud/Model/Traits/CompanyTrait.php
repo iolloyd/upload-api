@@ -17,7 +17,7 @@ trait CompanyTrait
 {
     /**
      * @ORM\JoinColumn(nullable=false)
-     * @ORM\ManyToOne(targetEntity="Company")
+     * @ORM\ManyToOne(targetEntity="Cloud\Model\Company")
      * @JMS\Groups({"list", "details"})
      * @CX\Company
      */
