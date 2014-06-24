@@ -81,9 +81,7 @@ $app->register(new Aws\Silex\AwsServiceProvider(), array(
 ));
 
 // zencoder
-$app->register(new Cloud\Silex\Provider\ZencoderServiceProvider(), [
-    'zencoder.token' => $app['config']['zencoder']['token'],
-]);
+$app->register(new Cloud\Silex\Provider\ZencoderServiceProvider());
 
 // loader
 $app->register(new Cloud\Silex\Loader(), [

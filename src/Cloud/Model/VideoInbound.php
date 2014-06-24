@@ -11,6 +11,7 @@
 
 namespace Cloud\Model;
 
+use Cloud\Model\VideoFile\InboundVideoFile;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
 
@@ -45,7 +46,7 @@ class VideoInbound extends AbstractModel
     /**
      * @ORM\OneToOne(
      *   targetEntity="Cloud\Model\VideoFile\InboundVideoFile",
-     *   inversedBy="inbound"
+     *   mappedBy="inbound"
      * )
      * @JMS\Groups({"details.inbounds"})
      */
@@ -134,6 +135,28 @@ class VideoInbound extends AbstractModel
     }
 
     /**
+     * Set the videofile for this inbound
+     *
+     * @param  InboundVideoFile $videoFile
+     * @return VideoInbound
+     */
+    public function setVideoFile(InboundVideoFile $videoFile)
+    {
+        $this->videoFile = $videoFile;
+        return $this;
+    }
+
+    /**
+     * Get the videofile for this inbound
+     *
+     * @return InboundVideoFile
+     */
+    public function getVideoFile()
+    {
+        return $this->videoFile;
+    }
+
+    /**
      * Set the parent company
      *
      * @param  Company $company
@@ -192,44 +215,12 @@ class VideoInbound extends AbstractModel
      *
      * @return string
      */
-    public function getStorageChunkPath()
+    public function getTempStoragePath()
     {
         return sprintf('inbounds/%d/%d/%s',
             $this->getVideo()->getId(),
             $this->getId(),
             $this->getToken()
         );
-    }
-
-    /**
-     * @return string
-     */
-    public function getStorageFilePath()
-    {
-        return sprintf('inbounds/%d/%d/%s',
-            $this->getVideo()->getId(),
-            $this->getId(),
-            $this->getFilename()
-        );
-    }
-
-    /**
-     * Set the creator
-     */
-    public function setCreatedBy(User $user)
-    {
-        $this->created_by = $user;
-    }
-
-    /**
-     * Creates an encoding job
-     *
-     * @return array $metadata 
-     */
-    function getEncodingJob($encoder, $input)
-    {
-        $metadata = $encoder->createEncodingJob($input);
-
-        return $metadata;
     }
 }
