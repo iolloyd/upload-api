@@ -1,5 +1,4 @@
 <?php
-
 /**
  * cloudxxx-api (http://www.cloud.xxx)
  *
@@ -12,9 +11,8 @@
 
 namespace Cloud\Model\VideoFile;
 
-use DateTime;
 use Cloud\Model\AbstractModel;
-use Doctrine\Common\Collections\ArrayCollection;
+use Cloud\Model\Traits;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
@@ -22,6 +20,7 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
+ * @ORM\Table(name="video_file")
  * @ORM\InheritanceType("SINGLE_TABLE")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({
@@ -32,127 +31,141 @@ use JMS\Serializer\Annotation as JMS;
  */
 abstract class AbstractVideoFile extends AbstractModel
 {
-    use \Cloud\Model\Traits\IdTrait;
-    use \Cloud\Model\Traits\CreatedAtTrait;
-    use \Cloud\Model\Traits\UpdatedAtTrait;
+    use Traits\IdTrait;
+    use Traits\CreatedAtTrait;
+    use Traits\UpdatedAtTrait;
 
-    const STATUS_COMPLETE = 'complete'; 
-    const STATUS_ERROR    = 'error';
     const STATUS_PENDING  = 'pending';
-    const STATUS_WORKING  = 'working'; 
+    const STATUS_WORKING  = 'working';
+    const STATUS_COMPLETE = 'complete';
+    const STATUS_ERROR    = 'error';
 
     /**
+     * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Cloud\Model\Video")
      */
     protected $video;
 
+    /**
+     * @ORM\Column(type="string")
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $status = self::STATUS_PENDING;
+
+    // File
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $filename;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $filesize;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $filetype;
 
+    // Container
+
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="float", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $duration;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $containerFormat;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $videoCodec;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $videoBitRate;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $audioCodec;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $audioBitRate;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $audioSampleRate;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $audioChannels;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $height;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $width;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $resolution;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="float", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $frameRate;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $aspectRatio;
 
+    // Video Codec
+
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $videoCodec;
+
+    /**
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $videoBitRate;
+
+    // Audio Codec
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $audioCodec;
+
+    /**
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $audioBitRate;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $audioSampleRate;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $audioChannels;
+
+    // Other
+
+    /**
+     * @ORM\Column(type="string", length=32, nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $md5sum;
 
 
     /**
-     * @param string 
-     *
      * @return VideoFile
      */
     public function setVideo($video)
@@ -162,7 +175,7 @@ abstract class AbstractVideoFile extends AbstractModel
     }
 
     /**
-     * @return Video 
+     * @return Video
      */
     public function getVideo()
     {
@@ -179,7 +192,7 @@ abstract class AbstractVideoFile extends AbstractModel
     }
 
     /**
-     * @return string 
+     * @return string
      */
     public function getFilename()
     {
@@ -187,7 +200,7 @@ abstract class AbstractVideoFile extends AbstractModel
     }
 
     /**
-     * @param string 
+     * @param string
      *
      * @return VideoFile
      */
