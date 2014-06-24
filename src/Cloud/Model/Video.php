@@ -24,15 +24,6 @@ use JMS\Serializer\Annotation as JMS;
  */
 class Video extends AbstractModel
 {
-    /*
-     * php-resque status codes:
-     *
-    const STATUS_WAITING = 1;
-    const STATUS_RUNNING = 2;
-    const STATUS_FAILED = 3;
-    const STATUS_COMPLETE = 4;
-     */
-
     const STATUS_DRAFT    = 'draft';
     const STATUS_PENDING  = 'pending';
     const STATUS_WORKING  = 'working';
@@ -49,62 +40,11 @@ class Video extends AbstractModel
     use Traits\CompanyTrait;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
-     * @JMS\Groups({"details.videos"})
-     */
-    protected $completedAt;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $description;
-
-
-    /**
-     * Inbound files: user upload from browser
-     *
-     * @ORM\OneToMany(
-     *   targetEntity="VideoInbound",
-     *   mappedBy="video",
-     *   cascade={"persist", "remove"}
-     * )
+     * @ORM\Column(type="integer")
+     * @ORM\Version
      * @JMS\Groups({"details"})
      */
-    protected $inbounds;
-
-    /**
-     * @ORM\Column(type="boolean")
-     * @JMS\Accessor(getter="isDraft")
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $isDraft = true;
-
-    /**
-     * Orientation of video. Example: Straight, solo, gay.
-     *
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $orientation;
-
-    /**
-     * Outbound files: worker publish to tubesite
-     *
-     * @ORM\OneToMany(
-     *   targetEntity="VideoOutbound",
-     *   mappedBy="video",
-     *   cascade={"persist", "remove"}
-     * )
-     * @JMS\Groups({"details"})
-     */
-    protected $outbounds;
-
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $publishedAt;
+    protected $version = 1;
 
     /**
      * The overall processing status for this video by the worker system. To
@@ -122,10 +62,67 @@ class Video extends AbstractModel
     protected $status = self::STATUS_DRAFT;
 
     /**
+     * @ORM\Column(type="boolean")
+     * @JMS\Accessor(getter="isDraft")
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $isDraft = true;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Groups({"details.videos"})
+     */
+    protected $completedAt;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $publishedAt;
+
+    /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $title;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $description;
+
+    /**
+     * Orientation of video. Example: Straight, solo, gay.
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $orientation;
+
+    /**
+     * Inbounds: user upload from browser
+     *
+     * @ORM\OneToMany(
+     *   targetEntity="VideoInbound",
+     *   mappedBy="video",
+     *   cascade={"persist", "remove"}
+     * )
+     * @JMS\Groups({"details"})
+     */
+    protected $inbounds;
+
+    /**
+     * Outbounds: worker publish to tubesite
+     *
+     * @ORM\OneToMany(
+     *   targetEntity="VideoOutbound",
+     *   mappedBy="video",
+     *   cascade={"persist", "remove"}
+     * )
+     * @JMS\Groups({"details"})
+     */
+    protected $outbounds;
 
     /**
      * @ORM\OneToOne(
@@ -149,23 +146,6 @@ class Video extends AbstractModel
      */
     protected $thumbnail;
 
-    /**
-     * @ORM\Column(type="integer")
-     * @ORM\Version
-     * @JMS\Groups({"details"})
-     */
-    protected $version = 1;
-
-    /**
-     * @ORM\OneToMany(targetEntity="Cloud\Model\VideoFile\InboundVideoFile", mappedBy="Video")
-     */
-    protected $inboundVideoFiles;
-
-    /**
-     * @ORM\OneToMany(targetEntity="Cloud\Model\VideoFile\OutboundVideoFile", mappedBy="Video")
-     */
-    protected $outboundVideoFiles;
-
     //////////////////////////////////////////////////////////////////////////
 
     /**
@@ -176,8 +156,6 @@ class Video extends AbstractModel
         $this->tags = new ArrayCollection();
         $this->inbounds = new ArrayCollection();
         $this->outbounds = new ArrayCollection();
-        $this->inboundVideoFiles = new ArrayCollection();
-        $this->outboundVideoFiles = new ArrayCollection();
     }
 
     /**
