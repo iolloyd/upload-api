@@ -6,6 +6,7 @@ use InvalidArgumentException;
 use UnexpectedValueException;
 use Aws\S3\S3Client;
 use Guzzle\Common\Collection;
+use Guzzle\Http\Mimetypes;
 use Guzzle\Service\Exception\CommandTransferException;
 
 /**
@@ -84,6 +85,11 @@ class FlowUpload extends Collection
         parent::__construct($options);
     }
 
+    /**
+     * Check if the chunked upload is valid
+     *
+     * @return bool
+     */
     public function isValid()
     {
         if ($this->isValid === null) {
@@ -256,6 +262,7 @@ class FlowUpload extends Collection
 
         $options = array_merge($defaults, $options, [
             'Key' => $key,
+            'ContentType' => $this->getFiletype(),
         ]);
 
         $multipartUpload = $client->createMultipartUpload($options);
@@ -346,6 +353,50 @@ class FlowUpload extends Collection
         }
 
         return $this->metadata;
+    }
+
+    /**
+     * Get the original uploaded file name
+     *
+     * @return string
+     */
+    public function getFilename()
+    {
+        if (!$this->isValid()) {
+            return null;
+        }
+
+        return $this->metadata['flowfilename'];
+    }
+
+    /**
+     * Get the original uploaded file size
+     *
+     * @return integer
+     */
+    public function getFilesize()
+    {
+        if (!$this->isValid()) {
+            return null;
+        }
+
+        return (int) $this->metadata['flowtotalsize'];
+    }
+
+    /**
+     * Get the original uploaded file mimetype
+     *
+     * @return string
+     */
+    public function getFiletype()
+    {
+        if (!$this->isValid()) {
+            return null;
+        }
+
+        return Mimetypes::getInstance()->fromFilename(
+            $this->metadata['flowfilename']
+        );
     }
 
     /**
