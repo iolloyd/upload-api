@@ -103,7 +103,7 @@ abstract class AbstractVideoFile extends AbstractModel
 
     /**
      * @ORM\Column(type="float", nullable=true)
-     * @JMS\Groups({"list", "details"})
+     * @JMS\Groups({"details"})
      */
     protected $frameRate;
 
@@ -111,13 +111,13 @@ abstract class AbstractVideoFile extends AbstractModel
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "details"})
+     * @JMS\Groups({"details"})
      */
     protected $videoCodec;
 
     /**
      * @ORM\Column(type="float", nullable=true)
-     * @JMS\Groups({"list", "details"})
+     * @JMS\Groups({"details"})
      */
     protected $videoBitRate;
 
@@ -125,39 +125,32 @@ abstract class AbstractVideoFile extends AbstractModel
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "details"})
+     * @JMS\Groups({"details"})
      */
     protected $audioCodec;
 
     /**
      * @ORM\Column(type="float", nullable=true)
-     * @JMS\Groups({"list", "details"})
+     * @JMS\Groups({"details"})
      */
     protected $audioBitRate;
 
     /**
      * @ORM\Column(type="integer", nullable=true)
-     * @JMS\Groups({"list", "details"})
+     * @JMS\Groups({"details"})
      */
     protected $audioSampleRate;
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "details"})
+     * @JMS\Groups({"details"})
      */
     protected $audioChannels;
 
     // Other
 
     /**
-     * @ORM\Column(type="string", length=32, nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $md5sum;
-
-    /**
      * @ORM\Column(type="integer", nullable=true)
-     * @JMS\Groups({"list", "details"})
      */
     protected $zencoderJobId;
 
@@ -473,25 +466,6 @@ abstract class AbstractVideoFile extends AbstractModel
      *
      * @return VideoFile
      */
-    public function setResolution($resolution)
-    {
-        $this->resolution = $resolution;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getResolution()
-    {
-        return $this->resolution;
-    }
-
-    /**
-     * @param string
-     *
-     * @return VideoFile
-     */
     public function setFrameRate($frameRate)
     {
         $this->frameRate = $frameRate;
@@ -504,44 +478,6 @@ abstract class AbstractVideoFile extends AbstractModel
     public function getFrameRate()
     {
         return $this->frameRate;
-    }
-
-    /**
-     * @param string
-     *
-     * @return VideoFile
-     */
-    public function setAspectRatio($aspectRatio)
-    {
-        $this->aspectRatio = $aspectRatio;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getAspectRatio()
-    {
-        return $this->aspectRatio;
-    }
-
-    /**
-     * @param string
-     *
-     * @return VideoFile
-     */
-    public function setMd5sum($md5sum)
-    {
-        $this->md5sum = $md5sum;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getMd5sum()
-    {
-        return $this->md5sum;
     }
 
     /**
