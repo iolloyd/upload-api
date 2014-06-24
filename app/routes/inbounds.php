@@ -22,9 +22,9 @@ use Cloud\Model\VideoFile\InboundVideoFile;
  */
 $app->post('/videos/{video}/inbounds', function(Video $video) use ($app)
     {
-        $inbound = new VideoInbound($video, $app['security']->getToken()->getUser());
+        $inbound = new VideoInbound($video);
 
-        // TODO set $inbound->filename/size/type/expiresAt
+        // TODO set $inbound->expiresAt
 
         $app['em']->persist($inbound);
         $app['em']->flush();
@@ -154,19 +154,38 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete',
  * Complete chunk upload and combine chunks into single file
  */
 $app->get('/videos/{video}/inbounds/{inbound}/test', function(Video $video, VideoInbound $inbound) use ($app) {
+    $s3 = $app['aws']->get('s3');
     $zencoder = $app['zencoder'];
+
     $videoFile = $inbound->getVideoFile();
 
+    $inputUrl = $s3->getObjectUrl(
+        $app['config']['aws']['bucket'],
+        $videoFile->getStoragePath(),
+        '+1 hour'
+    );
+
     $job = $zencoder->jobs->create([
-        'test' => true,
+        // options
         'region' => 'europe',
+        'test' => $app['debug'],
+
+        // reporting
+        'grouping' => 'company-' . $videoFile->getCompany()->getId(),
+        'pass_through' => json_encode([
+            'type' => $app['em']->getClassMetadata(get_class($videoFile))->discriminatorValue,
+            'company' => $videoFile->getCompany()->getId(),
+            'videofile' => $videoFile->getId(),
+        ]),
+
+        // request
+        'input' => $inputUrl,
         'outputs' => [
             [
                 'type' => 'transfer-only',
                 'skip' => ['max_duration' => 1],
             ],
         ],
-        'input' => 'https://s3.amazonaws.com/cldsys-dev/videofiles/54/4/Cloud Test.mp4',
     ]);
 
     var_dump($job);
@@ -179,6 +198,8 @@ $app->get('/videos/{video}/inbounds/{inbound}/test', function(Video $video, Vide
     $start = time();
 
     while (true) {
+        sleep(5);
+
         $details = $zencoder->jobs->details($job->id);
         $input = $details->input;
 
@@ -212,6 +233,9 @@ $app->get('/videos/{video}/inbounds/{inbound}/test', function(Video $video, Vide
 
         // error
         if ($input->state == 'failed') {
+            $errorCode = $input->error_class;
+            $errorMessage = $input->error_message;
+
             $app['em']->transactional(function ($em) use ($videoFile) {
                 $videoFile->setStatus('error');
             });
@@ -220,7 +244,7 @@ $app->get('/videos/{video}/inbounds/{inbound}/test', function(Video $video, Vide
         }
 
         // timeout
-        if (time() - $start >= 60) {
+        if (time() - $start >= 90) {
             $zencoder->jobs->cancel($job->id);
 
             $app['em']->transactional(function ($em) use ($videoFile) {
@@ -229,14 +253,9 @@ $app->get('/videos/{video}/inbounds/{inbound}/test', function(Video $video, Vide
 
             break;
         }
-
-        sleep(5);
     }
 
     exit;
-
-    var_dump($app['zencoder']);
-    var_dump($inbound->getVideoFile()); exit;
 })
 ->assert('video', '\d+')
 ->convert('video', 'converter.video:convert')
