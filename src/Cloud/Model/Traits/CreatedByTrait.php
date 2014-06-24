@@ -17,7 +17,7 @@ trait CreatedByTrait
 {
     /**
      * #JoinColumn(nullable=false)
-     * @ORM\ManyToOne(targetEntity="User")
+     * @ORM\ManyToOne(targetEntity="Cloud\Model\User")
      * @JMS\Groups({"list", "details"})
      * @CX\CreatedBy
      */
