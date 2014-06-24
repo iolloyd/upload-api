@@ -1,5 +1,4 @@
 <?php
-
 /**
  * cloudxxx-api (http://www.cloud.xxx)
  *
@@ -12,16 +11,13 @@
 
 namespace Cloud\Model\VideoFile;
 
-use DateTime;
-use Cloud\Model\VideoFile\AbstractVideoFile;
-use Doctrine\Common\Collections\ArrayCollection;
-
 use Doctrine\ORM\Mapping as ORM;
+use Cloud\Doctrine\Annotation as CX;
 use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
  */
-class InboundVideoFile extends AbstractVideoFile 
+class InboundVideoFile extends AbstractVideoFile
 {
 }
