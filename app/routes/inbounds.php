@@ -26,44 +26,45 @@ $app->post('/videos/{video}/inbounds', function(Video $video) use ($app)
 
         // TODO set $inbound->expiresAt
 
-    $app['em']->persist($inbound);
-    $app['em']->flush();
+        $app['em']->persist($inbound);
+        $app['em']->flush();
 
-    $form = new PostObject($app['aws']->get('s3'), $app['config']['aws']['bucket'], [
-        'ttd'                             => '+24 hours',
-        'acl'                             => CannedAcl::PRIVATE_ACCESS,
-        'success_action_status'           => 200,
+        $form = new PostObject($app['aws']->get('s3'), $app['config']['aws']['bucket'], [
+            'ttd'                             => '+24 hours',
+            'acl'                             => CannedAcl::PRIVATE_ACCESS,
+            'success_action_status'           => 200,
 
             'key'                             => '^' . $inbound->getTempStoragePath() . '/${filename}',
 
-        'x-amz-meta-cx-video'             => $video->getId(),
-        'x-amz-meta-cx-videoinbound'      => $inbound->getId(),
-        'x-amz-meta-cx-company'           => $video->getCompany()->getId(),
+            'x-amz-meta-cx-video'             => $video->getId(),
+            'x-amz-meta-cx-videoinbound'      => $inbound->getId(),
+            'x-amz-meta-cx-company'           => $video->getCompany()->getId(),
 
-        'x-amz-meta-flowchunknumber'      => '^',
-        'x-amz-meta-flowchunksize'        => '^',
-        'x-amz-meta-flowcurrentchunksize' => '^',
-        'x-amz-meta-flowtotalsize'        => '^',
-        'x-amz-meta-flowidentifier'       => '^',
-        'x-amz-meta-flowfilename'         => '^',
-        'x-amz-meta-flowrelativepath'     => '^',
-        'x-amz-meta-flowtotalchunks'      => '^',
-    ]);
+            'x-amz-meta-flowchunknumber'      => '^',
+            'x-amz-meta-flowchunksize'        => '^',
+            'x-amz-meta-flowcurrentchunksize' => '^',
+            'x-amz-meta-flowtotalsize'        => '^',
+            'x-amz-meta-flowidentifier'       => '^',
+            'x-amz-meta-flowfilename'         => '^',
+            'x-amz-meta-flowrelativepath'     => '^',
+            'x-amz-meta-flowtotalchunks'      => '^',
+        ]);
 
-    $form->prepareData();
+        $form->prepareData();
 
-    $json = [
-        'id'         => $inbound->getId(),
-        'video'      => ['id' => $video->getId()],
-        'form'       => $form->getFormAttributes(),
-        'fields'     => $form->getFormInputs(),
-        'file_field' => 'file',
-    ];
+        $json = [
+            'id'         => $inbound->getId(),
+            'video'      => ['id' => $video->getId()],
+            'form'       => $form->getFormAttributes(),
+            'fields'     => $form->getFormInputs(),
+            'file_field' => 'file',
+        ];
 
-    $json['fields'] = array_filter($json['fields']);
+        $json['fields'] = array_filter($json['fields']);
 
-    return $app->json($json, 201);
-})
+        return $app->json($json, 201);
+    }
+)
 ->assert('video', '\d+')
 ->convert('video', 'converter.video:convert')
 ;
@@ -85,16 +86,11 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete',
             ], 400);
         }
 
-    $app['em']->transactional(function ($em) use ($inbound) {
-        $inbound->setStatus('working');
-    });
+        // init
 
-    $upload = new FlowUpload(
-        $app['aws']->get('s3'), 
-        $app['config']['aws']['bucket'],
-        $inbound->getStorageChunkPath() . '/',
-        []
-    );
+        $app['em']->transactional(function ($em) use ($inbound) {
+            $inbound->setStatus('working');
+        });
 
         $upload = new FlowUpload(
             $app['aws']->get('s3'),
@@ -147,35 +143,7 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete',
         $groups = ['details', 'details.videos', 'details.inbounds'];
         return $app['single.response.json']($video, $groups);
     }
-
-    // combine
-    $app['em']->transactional(function ($em) use ($video, $inbound, $upload) {
-        $mimetypes = Mimetypes::getInstance();
-        $meta      = $upload->getMetadata();
-
-        $video->setFilename($meta['flowfilename']);
-        $video->setFilesize($meta['flowtotalsize']);
-        $video->setFiletype($mimetypes->fromFilename($meta['flowfilename']));
-
-        /**
-         * video.formats
-         *   id, format = [ raw, 720p, mobile, foo, bar ], filename, storage_path,
-         *   audio_codec, video_codec, ...
-         *
-         */
-
-        $upload->copyToObject(sprintf('videos/%d/raw/%s',
-            $video->getId(),
-            $video->getFilename()
-        ));
-
-        $upload->deleteChunks();
-        $inbound->setStatus('complete');
-    });
-
-    $groups = ['details', 'details.videos', 'details.inbounds'];
-    return $app['single.response.json']($video, $groups);
-})
+)
 ->assert('video', '\d+')
 ->convert('video', 'converter.video:convert')
 ->assert('inbound', '\d+')
