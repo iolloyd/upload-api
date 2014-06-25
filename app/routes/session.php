@@ -124,3 +124,12 @@ $app->delete('/session', function (Request $request) use ($app, $sessionData)
 
     return $app->json($json);
 });
+
+/**
+ * Allow OPTIONS request for CORS
+ */
+$app->match('/session', function () use ($app)
+{
+    return '';
+})
+->method('OPTIONS');
