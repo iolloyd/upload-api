@@ -36,9 +36,13 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
                 : [];
 
             if (count($filterFields)) {
-                foreach ($app['request']->query->all() as $field => $value) {
+                foreach ($app['request']->query->all() as $field => $values) {
+                    if (!is_array($values)) {
+                        $values = [$values];
+                    }
+
                     if (in_array($field, $filterFields)) {
-                        $criteria = $criteria->where(Criteria::expr()->eq($field, $value));
+                        $criteria = $criteria->where(Criteria::expr()->in($field, $values));
                     }
                 }
             }
