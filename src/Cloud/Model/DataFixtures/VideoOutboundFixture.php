@@ -30,7 +30,7 @@ class VideoOutboundFixture extends AbstractFixture implements DependentFixtureIn
     public function load(ObjectManager $em)
     {
         $outbound = new VideoOutbound(
-            $this->getReference('video')
+            $this->getReference('video-1')
         );
 
         $outbound->setStatus('complete');
@@ -48,9 +48,6 @@ class VideoOutboundFixture extends AbstractFixture implements DependentFixtureIn
         );
 
         $outbound->setExternalId('12345');
-        $outbound->setFilename('video-filename');
-        $outbound->setFilesize(100);
-        $outbound->setFiletype('video/mpg');
 
         $em->persist($outbound);
         $em->flush();
