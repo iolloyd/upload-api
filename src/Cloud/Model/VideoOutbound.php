@@ -40,6 +40,15 @@ class VideoOutbound extends AbstractModel
     protected $video;
 
     /**
+     * @ORM\OneToOne(
+     *   targetEntity="Cloud\Model\VideoFile\OutboundVideoFile",
+     *   inversedBy="outbound"
+     * )
+     * @JMS\Groups({"details.outbounds"})
+     */
+    protected $videoFile;
+
+    /**
      * @see STATUS_PENDING
      * @see STATUS_WORKING
      * @see STATUS_COMPLETE
@@ -69,24 +78,6 @@ class VideoOutbound extends AbstractModel
      * @JMS\Groups({"details.outbounds"})
      */
     protected $externalId;
-
-    /**
-     * @ORM\Column(type="string")
-     * @JMS\Groups({"details.outbounds"})
-     */
-    protected $filename;
-
-    /**
-     * @ORM\Column(type="integer")
-     * @JMS\Groups({"details.outbounds"})
-     */
-    protected $filesize;
-
-    /**
-     * @ORM\Column(type="string")
-     * @JMS\Groups({"details.outbounds"})
-     */
-    protected $filetype;
 
     /**
      * @ORM\Column(type="json_array")
@@ -355,69 +346,4 @@ class VideoOutbound extends AbstractModel
         return $this;
     }
 
-    /**
-     * Set the filename
-     *
-     * @param  string $filename
-     * @return VideoOutbound
-     */
-    public function setFilename($filename)
-    {
-        $this->filename = $filename;
-        return $this;
-    }
-
-    /**
-     * Get the filename
-     *
-     * @return string
-     */
-    public function getFilename()
-    {
-        return $this->getVideo()->getfilename();
-    }
-
-    /**
-     * Set the filesize in bytes
-     *
-     * @param  int $filesize
-     * @return VideoOutbound
-     */
-    public function setFilesize($filesize)
-    {
-        $this->filesize = $filesize;
-        return $this;
-    }
-
-    /**
-     * Get the filesize in bytes
-     *
-     * @return int
-     */
-    public function getFilesize()
-    {
-        return $this->filesize;
-    }
-
-    /**
-     * Set the file mimetype
-     *
-     * @param  string $filetype
-     * @return VideoOutbound
-     */
-    public function setFiletype($filetype)
-    {
-        $this->filetype = $filetype;
-        return $this;
-    }
-
-    /**
-     * Get the file mimetype
-     *
-     * @return string
-     */
-    public function getFiletype()
-    {
-        return $this->filetype;
-    }
 }

@@ -15,6 +15,7 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Basis for all model classes
+ *
  * @JMS\ReadOnly
  * @JMS\AccessType("public_method")
  */
