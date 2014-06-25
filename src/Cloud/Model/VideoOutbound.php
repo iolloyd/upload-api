@@ -40,8 +40,10 @@ class VideoOutbound extends AbstractModel
     protected $video;
 
     /**
-     * @ORM\JoinColumn(nullable=true)
-     * @ORM\ManyToOne(targetEntity="Cloud\Model\VideoFile\OutboundVideoFile", inversedBy="inbounds")
+     * @ORM\OneToOne(
+     *   targetEntity="Cloud\Model\VideoFile\OutboundVideoFile",
+     *   inversedBy="outbound"
+     * )
      * @JMS\Groups({"details.outbounds"})
      */
     protected $videoFile;
