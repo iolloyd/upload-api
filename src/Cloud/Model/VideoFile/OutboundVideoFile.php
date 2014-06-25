@@ -1,5 +1,4 @@
 <?php
-
 /**
  * cloudxxx-api (http://www.cloud.xxx)
  *
@@ -12,16 +11,55 @@
 
 namespace Cloud\Model\VideoFile;
 
-use DateTime;
-use Cloud\Model\VideoFile\AbstractVideoFile;
-use Doctrine\Common\Collections\ArrayCollection;
+use Cloud\Model\VideoOutbound;
 
 use Doctrine\ORM\Mapping as ORM;
+use Cloud\Doctrine\Annotation as CX;
 use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
  */
-class OutboundVideoFile extends AbstractVideoFile 
+class OutboundVideoFile extends AbstractVideoFile
 {
+    /**
+     * @ORM\OneToOne(
+     *   targetEntity="Cloud\Model\VideoOutbound",
+     *   inversedBy="videoFile"
+     * )
+     */
+    protected $outbound;
+
+    /**
+     * Constructor
+     *
+     * @param VideoOutbound $outbound  parent video outbound
+     */
+    public function __construct(VideoOutbound $outbound)
+    {
+        $this->setOutbound($outbound);
+    }
+
+    /**
+     * Set the parent video outbound entity
+     *
+     * @param  VideoOutbound $outbound
+     * @return OutboundVideoFile
+     */
+    public function setOutbound(VideoOutbound $outbound)
+    {
+        $this->outbound = $outbound;
+        $this->setVideo($outbound->getVideo());
+        return $this;
+    }
+
+    /**
+     * Get the parent video outbound entity
+     *
+     * @return VideoOutbound
+     */
+    public function getOutbound()
+    {
+        return $this->outbound;
+    }
 }
