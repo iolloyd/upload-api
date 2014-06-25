@@ -9,19 +9,18 @@
  * @license    Proprietary
  */
 
-
 namespace Cloud\Model;
 
+use Cloud\Model\VideoFile\InboundVideoFile;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
 use JMS\Serializer\Annotation as JMS;
 
-
 /**
  * @ORM\Entity
- * @ORM\HasLifecycleCallbacks
  */
 class VideoInbound extends AbstractModel
 {
@@ -38,12 +37,6 @@ class VideoInbound extends AbstractModel
     use Traits\CompanyTrait;
 
     /**
-     * @ORM\Column(type="string", length=48)
-     * @JMS\Groups({"details.inbounds"})
-     */
-    protected $token;
-
-    /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Video", inversedBy="inbounds")
      * @JMS\Groups({"details.inbounds"})
@@ -51,11 +44,13 @@ class VideoInbound extends AbstractModel
     protected $video;
 
     /**
-     * #JoinColumn(nullable=false)
-     * @ORM\ManyToOne(targetEntity="User")
+     * @ORM\OneToOne(
+     *   targetEntity="Cloud\Model\VideoFile\InboundVideoFile",
+     *   mappedBy="inbound"
+     * )
      * @JMS\Groups({"details.inbounds"})
      */
-    protected $created_by;
+    protected $videoFile;
 
     /**
      * @see STATUS_PENDING
@@ -68,22 +63,10 @@ class VideoInbound extends AbstractModel
     protected $status = self::STATUS_PENDING;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", length=48)
      * @JMS\Groups({"details.inbounds"})
      */
-    protected $filename;
-
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     * @JMS\Groups({"details.inbounds"})
-     */
-    protected $filesize;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"details.inbounds"})
-     */
-    protected $filetype;
+    protected $token;
 
     /**
      * #Column(type="datetime", nullable=true)
@@ -97,12 +80,12 @@ class VideoInbound extends AbstractModel
      * @param Video $video must be passed to create an inbound
      *
      */
-    public function __construct(Video $video, User $user)
+    public function __construct(Video $video)
     {
         $generator = new UriSafeTokenGenerator();
         $this->setToken($generator->generateToken());
+
         $this->setVideo($video);
-        $this->setCreatedBy($user);
     }
 
     /**
@@ -137,7 +120,6 @@ class VideoInbound extends AbstractModel
     {
         $this->setCompany($video->getCompany());
         $this->video = $video;
-
         return $this;
     }
 
@@ -152,6 +134,28 @@ class VideoInbound extends AbstractModel
     }
 
     /**
+     * Set the videofile for this inbound
+     *
+     * @param  InboundVideoFile $videoFile
+     * @return VideoInbound
+     */
+    public function setVideoFile(InboundVideoFile $videoFile)
+    {
+        $this->videoFile = $videoFile;
+        return $this;
+    }
+
+    /**
+     * Get the videofile for this inbound
+     *
+     * @return InboundVideoFile
+     */
+    public function getVideoFile()
+    {
+        return $this->videoFile;
+    }
+
+    /**
      * Set the parent company
      *
      * @param  Company $company
@@ -160,7 +164,6 @@ class VideoInbound extends AbstractModel
     public function setCompany(Company $company)
     {
         $this->company = $company;
-
         return $this;
     }
 
@@ -192,7 +195,6 @@ class VideoInbound extends AbstractModel
         }
 
         $this->status = $status;
-
         return $this;
     }
 
@@ -206,81 +208,13 @@ class VideoInbound extends AbstractModel
         return $this->status;
     }
 
-    /**
-     * Set the filename
-     *
-     * @param  string $filename
-     * @return VideoInbound
-     */
-    public function setFilename($filename)
-    {
-        $this->filename = $filename;
-
-        return $this;
-    }
-
-    /**
-     * Get the filename
-     *
-     * @return string
-     */
-    public function getFilename()
-    {
-        return $this->filename;
-    }
-
-    /**
-     * Set the filesize in bytes
-     *
-     * @param  int $filesize
-     * @return VideoInbound
-     */
-    public function setFilesize($filesize)
-    {
-        $this->filesize = $filesize;
-
-        return $this;
-    }
-
-    /**
-     * Get the filesize in bytes
-     *
-     * @return int
-     */
-    public function getFilesize()
-    {
-        return $this->filesize;
-    }
-
-    /**
-     * Set the file mimetype
-     *
-     * @param  string $filetype
-     * @return VideoOutbound
-     */
-    public function setFiletype($filetype)
-    {
-        $this->filetype = $filetype;
-
-        return $this;
-    }
-
-    /**
-     * Get the file mimetype
-     *
-     * @return string
-     */
-    public function getFiletype()
-    {
-        return $this->filetype;
-    }
 
     /**
      * Get the AWS S3 storage prefix or directory name
      *
      * @return string
      */
-    public function getStorageChunkPath()
+    public function getTempStoragePath()
     {
         return sprintf('inbounds/%d/%d/%s',
             $this->getVideo()->getId(),
@@ -288,26 +222,4 @@ class VideoInbound extends AbstractModel
             $this->getToken()
         );
     }
-
-    /**
-     * @return string
-     */
-    public function getStorageFilePath()
-    {
-        return sprintf('inbounds/%d/%d/%s',
-            $this->getVideo()->getId(),
-            $this->getId(),
-            $this->getFilename()
-        );
-    }
-
-    /**
-     * Set the creator
-     */
-    public function setCreatedBy(User $user)
-    {
-        $this->created_by = $user;
-    }
-
 }
-
