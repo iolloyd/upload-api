@@ -11,20 +11,20 @@
 
 use Aws\S3\Enum\CannedAcl;
 use Aws\S3\Model\PostObject;
+use Cloud\Aws\S3\Model\FlowUpload;
 use Cloud\Model\Video;
 use Cloud\Model\VideoInbound;
-use Cloud\Aws\S3\Model\FlowUpload;
-use GuzzleHttp\Mimetypes;
+use Cloud\Model\VideoFile\InboundVideoFile;
 
 /**
  * Create a new inbound upload and get
  * parameters for the form to * AWS S3
  */
 $app->post('/videos/{video}/inbounds', function(Video $video) use ($app)
-{
-    $inbound = new VideoInbound($video, $app['security']->getToken()->getUser());
+    {
+        $inbound = new VideoInbound($video);
 
-    // TODO set $inbound->filename/size/type/expiresAt
+        // TODO set $inbound->expiresAt
 
     $app['em']->persist($inbound);
     $app['em']->flush();
@@ -34,7 +34,7 @@ $app->post('/videos/{video}/inbounds', function(Video $video) use ($app)
         'acl'                             => CannedAcl::PRIVATE_ACCESS,
         'success_action_status'           => 200,
 
-        'key'                             => '^' . $inbound->getStorageChunkPath() . '/${filename}',
+            'key'                             => '^' . $inbound->getTempStoragePath() . '/${filename}',
 
         'x-amz-meta-cx-video'             => $video->getId(),
         'x-amz-meta-cx-videoinbound'      => $inbound->getId(),
@@ -71,17 +71,19 @@ $app->post('/videos/{video}/inbounds', function(Video $video) use ($app)
 /**
  * Complete chunk upload and combine chunks into single file
  */
-$app->post('/videos/{video}/inbounds/{inbound}/complete', function(Video $video, VideoInbound $inbound) use ($app)
-{
-    if ($inbound->getVideo() != $video) {
-        return $app->notFound();
-    }
+$app->post('/videos/{video}/inbounds/{inbound}/complete',
+    function(Video $video, VideoInbound $inbound) use ($app)
+    {
+        if ($inbound->getVideo() != $video) {
+            $app->abort(404);
+        }
 
-    if ($inbound->getStatus() != 'pending') {
-        return $app->jsonError(400, 'invalid_status', 'Inbound must have status `pending` to finalize');
-    }
-
-    // init
+        if ($inbound->getStatus() != 'pending') {
+            return $app->json([
+                'error' => 'invalid_status',
+                'error_description' => 'Inbound must have status `pending` to finalize',
+            ], 400);
+        }
 
     $app['em']->transactional(function ($em) use ($inbound) {
         $inbound->setStatus('working');
@@ -94,18 +96,56 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete', function(Video $video,
         []
     );
 
-    // validate
-    try {
-        $upload->validate();
-    } catch (RuntimeException $e) {
-        $app['em']->transactional(function ($em) use ($inbound) {
-            $inbound->setStatus('error');
+        $upload = new FlowUpload(
+            $app['aws']->get('s3'),
+            $app['config']['aws']['bucket'],
+            $inbound->getTempStoragePath() . '/',
+            []
+        );
+
+        // validate chunks and get metadata
+
+        try {
+            $upload->validate();
+        } catch (RuntimeException $e) {
+            $app['em']->transactional(function ($em) use ($inbound) {
+                $inbound->setStatus('error');
+            });
+
+            return $app->json([
+                'error' => 'invalid_upload',
+                'error_details' => $e->getMessage(),
+            ], 400);
+        }
+
+        // insert videofile model
+
+        $videoFile = new InboundVideoFile($inbound);
+
+        $videoFile->setFilename($upload->getFilename());
+        $videoFile->setFilesize($upload->getFilesize());
+        $videoFile->setFiletype($upload->getFiletype());
+
+        $app['em']->transactional(function ($em) use ($videoFile) {
+            $em->persist($videoFile);
         });
 
-        return $app->json([
-            'error' => 'invalid_upload',
-            'error_details' => $e->getMessage(),
-        ], 400);
+        // recombine chunks
+
+        $upload->copyToObject($videoFile->getStoragePath());
+        $upload->deleteChunks();
+
+        $app['em']->transactional(function ($em) use ($inbound, $videoFile) {
+            $inbound->setStatus('complete');
+            $videoFile->setStatus('pending');
+        });
+
+        // validate videofile and get metadata
+
+        // ...
+
+        $groups = ['details', 'details.videos', 'details.inbounds'];
+        return $app['single.response.json']($video, $groups);
     }
 
     // combine
@@ -143,26 +183,111 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete', function(Video $video,
 ;
 
 /**
- * Abort chunk upload and delete chunks
+ * Complete chunk upload and combine chunks into single file
  */
-$app->delete('/videos/{video}/inbounds/{inbound}', function(Video $video, VideoInbound $inbound) use ($app)
-{
-    if ($inbound->getVideo() != $video) {
-        return $app->notFound();
-    }
+$app->get('/videos/{video}/inbounds/{inbound}/test', function(Video $video, VideoInbound $inbound) use ($app) {
+    $s3 = $app['aws']->get('s3');
+    $zencoder = $app['zencoder'];
 
-    if ($inbound->getStatus() != 'pending') {
-        return $app->jsonError(400, 'invalid_status', 'Inbound must have status `pending` to delete');
-    }
+    $videoFile = $inbound->getVideoFile();
 
-    $upload = new FlowUpload(
-        $app['aws']->get('s3'), 
+    $inputUrl = $s3->getObjectUrl(
         $app['config']['aws']['bucket'],
-        $key,
-        []
+        $videoFile->getStoragePath(),
+        '+1 hour'
     );
 
-    $app->json(iterator_to_array($upload->deleteChunks()));
+    $job = $zencoder->jobs->create([
+        // options
+        'region' => 'europe',
+        'test' => $app['debug'],
+
+        // reporting
+        'grouping' => 'company-' . $videoFile->getCompany()->getId(),
+        'pass_through' => json_encode([
+            'type' => $app['em']->getClassMetadata(get_class($videoFile))->discriminatorValue,
+            'company' => $videoFile->getCompany()->getId(),
+            'videofile' => $videoFile->getId(),
+        ]),
+
+        // request
+        'input' => $inputUrl,
+        'outputs' => [
+            [
+                'type' => 'transfer-only',
+                'skip' => ['max_duration' => 1],
+            ],
+        ],
+    ]);
+
+    var_dump($job);
+
+    $app['em']->transactional(function ($em) use ($videoFile, $job) {
+        $videoFile->setStatus('working');
+        $videoFile->setZencoderJobId($job->id);
+    });
+
+    $start = time();
+
+    while (true) {
+        sleep(5);
+
+        $details = $zencoder->jobs->details($job->id);
+        $input = $details->input;
+
+        var_dump($details);
+
+        // success
+        if ($input->state == 'finished') {
+            $app['em']->transactional(function ($em) use ($videoFile, $input) {
+                $videoFile->setStatus('complete');
+
+                // container
+                $videoFile->setDuration($input->duration_in_ms / 1000);
+                $videoFile->setContainerFormat($input->format);
+                $videoFile->setHeight($input->height);
+                $videoFile->setWidth($input->width);
+                $videoFile->setFrameRate($input->frame_rate);
+
+                // video codec
+                $videoFile->setVideoCodec($input->video_codec);
+                $videoFile->setVideoBitRate($input->video_bitrate_in_kbps);
+
+                // audio codec
+                $videoFile->setAudioCodec($input->audio_codec);
+                $videoFile->setAudioBitRate($input->audio_bitrate_in_kbps);
+                $videoFile->setAudioSampleRate($input->audio_sample_rate);
+                $videoFile->setAudioChannels((int) $input->channels);
+            });
+
+            break;
+        }
+
+        // error
+        if ($input->state == 'failed') {
+            $errorCode = $input->error_class;
+            $errorMessage = $input->error_message;
+
+            $app['em']->transactional(function ($em) use ($videoFile) {
+                $videoFile->setStatus('error');
+            });
+
+            break;
+        }
+
+        // timeout
+        if (time() - $start >= 90) {
+            $zencoder->jobs->cancel($job->id);
+
+            $app['em']->transactional(function ($em) use ($videoFile) {
+                $videoFile->setStatus('error');
+            });
+
+            break;
+        }
+    }
+
+    exit;
 })
 ->assert('video', '\d+')
 ->convert('video', 'converter.video:convert')

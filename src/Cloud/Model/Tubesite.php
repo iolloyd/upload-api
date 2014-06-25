@@ -9,7 +9,6 @@
  * @license    Proprietary
  */
 
-
 namespace Cloud\Model;
 
 use Doctrine\ORM\Mapping as ORM;
