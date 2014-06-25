@@ -11,10 +11,10 @@
 
 use Aws\S3\Enum\CannedAcl;
 use Aws\S3\Model\PostObject;
+use Cloud\Aws\S3\Model\FlowUpload;
 use Cloud\Model\Video;
 use Cloud\Model\VideoInbound;
-use Cloud\Aws\S3\Model\FlowUpload;
-use GuzzleHttp\Mimetypes;
+use Cloud\Model\VideoFile\InboundVideoFile;
 
 /**
  * Create a new inbound upload and get
@@ -22,9 +22,9 @@ use GuzzleHttp\Mimetypes;
  */
 $app->post('/videos/{video}/inbounds', function(Video $video) use ($app)
     {
-        $inbound = new VideoInbound($video, $app['security']->getToken()->getUser());
+        $inbound = new VideoInbound($video);
 
-        // TODO set $inbound->filename/size/type/expiresAt
+        // TODO set $inbound->expiresAt
 
         $app['em']->persist($inbound);
         $app['em']->flush();
@@ -34,7 +34,7 @@ $app->post('/videos/{video}/inbounds', function(Video $video) use ($app)
             'acl'                             => CannedAcl::PRIVATE_ACCESS,
             'success_action_status'           => 200,
 
-            'key'                             => '^' . $inbound->getStorageChunkPath() . '/${filename}',
+            'key'                             => '^' . $inbound->getTempStoragePath() . '/${filename}',
 
             'x-amz-meta-cx-video'             => $video->getId(),
             'x-amz-meta-cx-videoinbound'      => $inbound->getId(),
@@ -76,11 +76,14 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete',
     function(Video $video, VideoInbound $inbound) use ($app)
     {
         if ($inbound->getVideo() != $video) {
-            return $app->notFound();
+            $app->abort(404);
         }
 
         if ($inbound->getStatus() != 'pending') {
-            return $app->json(400, 'invalid_status', 'Inbound must have status `pending` to finalize');
+            return $app->json([
+                'error' => 'invalid_status',
+                'error_description' => 'Inbound must have status `pending` to finalize',
+            ], 400);
         }
 
         // init
@@ -90,12 +93,14 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete',
         });
 
         $upload = new FlowUpload(
-            $app['aws']->get('s3'), $app['config']['aws']['bucket'],
-            $inbound->getStorageChunkPath() . '/',
+            $app['aws']->get('s3'),
+            $app['config']['aws']['bucket'],
+            $inbound->getTempStoragePath() . '/',
             []
         );
 
-        // validate
+        // validate chunks and get metadata
+
         try {
             $upload->validate();
         } catch (RuntimeException $e) {
@@ -109,52 +114,31 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete',
             ], 400);
         }
 
-        // combine
-        $app['em']->transactional(function ($em) use ($video, $inbound, $upload, $app) {
-            $mimetypes = Mimetypes::getInstance();
-            $meta      = $upload->getMetadata();
+        // insert videofile model
 
-            $videoFile = new InboundVideoFile();
-            $videoFile->setFilename($meta['flowfilename']);
-            $videoFile->setFilesize($meta['flowtotalsize']);
-            $videoFile->setFiletype($mimetypes->fromFilename($meta['flowfilename']));
+        $videoFile = new InboundVideoFile($inbound);
 
-            // Trigger encoding job
-            $encoder = new Cloud\Zencoder\Encoder($videoFile, $app['encoder']);
-            /*
-            $inputLocation  = sprintf("%s/%s", $app['config']['aws']['bucket'], $inbound->getId());
-            $outputLocation = sprintf("%s/encoded/%s", $app['config']['aws']['bucket'], $inbound->getId());
-             */
-            $bucket = "s3://cldsys-dev";
-            $filename = "encoded.mov";
-            $input = "http://s3.amazonaws.com/zencodertesting/test.mov";
-            $outputs = [
-                [
-                    "label" => "test encoding",
-                    "output" => $outputLocation,
-                    "base_url" => $bucket,
-                    "filename" => $filename,
-                    "format" => "mov",
-                ]
-            ];
+        $videoFile->setFilename($upload->getFilename());
+        $videoFile->setFilesize($upload->getFilesize());
+        $videoFile->setFiletype($upload->getFiletype());
 
-            $encoder->createEncodingJobs($input, $outputs);
-
-            /*
-             * video.formats
-             *   id, format = [ raw, 720p, mobile, foo, bar ], filename, storage_path,
-             *   audio_codec, video_codec, ...
-             *
-             */
-
-            $upload->copyToObject(sprintf('videos/%d/raw/%s',
-                $video->getId(),
-                $video->getFilename()
-            ));
-
-            $upload->deleteChunks();
-            $inbound->setStatus('complete');
+        $app['em']->transactional(function ($em) use ($videoFile) {
+            $em->persist($videoFile);
         });
+
+        // recombine chunks
+
+        $upload->copyToObject($videoFile->getStoragePath());
+        $upload->deleteChunks();
+
+        $app['em']->transactional(function ($em) use ($inbound, $videoFile) {
+            $inbound->setStatus('complete');
+            $videoFile->setStatus('pending');
+        });
+
+        // validate videofile and get metadata
+
+        // ...
 
         $groups = ['details', 'details.videos', 'details.inbounds'];
         return $app['single.response.json']($video, $groups);
@@ -167,29 +151,112 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete',
 ;
 
 /**
- * Abort chunk upload and delete chunks
+ * Complete chunk upload and combine chunks into single file
  */
-$app->delete(
-    '/videos/{video}/inbounds/{inbound}',
-    function(Video $video, VideoInbound $inbound) use ($app)
-    {
-        if ($inbound->getVideo() != $video) {
-            return $app->notFound();
+$app->get('/videos/{video}/inbounds/{inbound}/test', function(Video $video, VideoInbound $inbound) use ($app) {
+    $s3 = $app['aws']->get('s3');
+    $zencoder = $app['zencoder'];
+
+    $videoFile = $inbound->getVideoFile();
+
+    $inputUrl = $s3->getObjectUrl(
+        $app['config']['aws']['bucket'],
+        $videoFile->getStoragePath(),
+        '+1 hour'
+    );
+
+    $job = $zencoder->jobs->create([
+        // options
+        'region' => 'europe',
+        'test' => $app['debug'],
+
+        // reporting
+        'grouping' => 'company-' . $videoFile->getCompany()->getId(),
+        'pass_through' => json_encode([
+            'type' => $app['em']->getClassMetadata(get_class($videoFile))->discriminatorValue,
+            'company' => $videoFile->getCompany()->getId(),
+            'videofile' => $videoFile->getId(),
+        ]),
+
+        // request
+        'input' => $inputUrl,
+        'outputs' => [
+            [
+                'type' => 'transfer-only',
+                'skip' => ['max_duration' => 1],
+            ],
+        ],
+    ]);
+
+    var_dump($job);
+
+    $app['em']->transactional(function ($em) use ($videoFile, $job) {
+        $videoFile->setStatus('working');
+        $videoFile->setZencoderJobId($job->id);
+    });
+
+    $start = time();
+
+    while (true) {
+        sleep(5);
+
+        $details = $zencoder->jobs->details($job->id);
+        $input = $details->input;
+
+        var_dump($details);
+
+        // success
+        if ($input->state == 'finished') {
+            $app['em']->transactional(function ($em) use ($videoFile, $input) {
+                $videoFile->setStatus('complete');
+
+                // container
+                $videoFile->setDuration($input->duration_in_ms / 1000);
+                $videoFile->setContainerFormat($input->format);
+                $videoFile->setHeight($input->height);
+                $videoFile->setWidth($input->width);
+                $videoFile->setFrameRate($input->frame_rate);
+
+                // video codec
+                $videoFile->setVideoCodec($input->video_codec);
+                $videoFile->setVideoBitRate($input->video_bitrate_in_kbps);
+
+                // audio codec
+                $videoFile->setAudioCodec($input->audio_codec);
+                $videoFile->setAudioBitRate($input->audio_bitrate_in_kbps);
+                $videoFile->setAudioSampleRate($input->audio_sample_rate);
+                $videoFile->setAudioChannels((int) $input->channels);
+            });
+
+            break;
         }
 
-        if ($inbound->getStatus() != 'pending') {
-            return $app->jsonError(400, 'invalid_status', 'Inbound must have status `pending` to delete');
+        // error
+        if ($input->state == 'failed') {
+            $errorCode = $input->error_class;
+            $errorMessage = $input->error_message;
+
+            $app['em']->transactional(function ($em) use ($videoFile) {
+                $videoFile->setStatus('error');
+            });
+
+            break;
         }
 
-        $upload = new FlowUpload(
-            $app['aws']->get('s3'), $app['config']['aws']['bucket'],
-            $key,
-            []
-        );
+        // timeout
+        if (time() - $start >= 90) {
+            $zencoder->jobs->cancel($job->id);
 
-        $app->json(iterator_to_array($upload->deleteChunks()));
+            $app['em']->transactional(function ($em) use ($videoFile) {
+                $videoFile->setStatus('error');
+            });
+
+            break;
+        }
     }
-)
+
+    exit;
+})
 ->assert('video', '\d+')
 ->convert('video', 'converter.video:convert')
 ->assert('inbound', '\d+')
