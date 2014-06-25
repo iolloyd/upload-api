@@ -1,5 +1,4 @@
 <?php
-
 /**
  * cloudxxx-api (http://www.cloud.xxx)
  *
@@ -12,9 +11,9 @@
 
 namespace Cloud\Model\VideoFile;
 
-use DateTime;
 use Cloud\Model\AbstractModel;
-use Doctrine\Common\Collections\ArrayCollection;
+use Cloud\Model\Traits;
+use Cloud\Model\Video;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
@@ -22,6 +21,7 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
+ * @ORM\Table(name="video_file")
  * @ORM\InheritanceType("SINGLE_TABLE")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({
@@ -32,142 +32,188 @@ use JMS\Serializer\Annotation as JMS;
  */
 abstract class AbstractVideoFile extends AbstractModel
 {
-    use \Cloud\Model\Traits\IdTrait;
-    use \Cloud\Model\Traits\CreatedAtTrait;
-    use \Cloud\Model\Traits\UpdatedAtTrait;
+    use Traits\IdTrait;
+    use Traits\CreatedAtTrait;
+    use Traits\UpdatedAtTrait;
+    use Traits\CompanyTrait;
 
-    const STATUS_COMPLETE = 'complete'; 
-    const STATUS_ERROR    = 'error';
+    const STATUS_DRAFT    = 'draft';
     const STATUS_PENDING  = 'pending';
-    const STATUS_WORKING  = 'working'; 
+    const STATUS_WORKING  = 'working';
+    const STATUS_ERROR    = 'error';
+    const STATUS_COMPLETE = 'complete';
 
     /**
+     * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Cloud\Model\Video")
      */
     protected $video;
 
+    /**
+     * @ORM\Column(type="string")
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $status = self::STATUS_DRAFT;
+
+    // File
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $filename;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $filesize;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $filetype;
 
+    // Container
+
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="float", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $duration;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $containerFormat;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $videoCodec;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $videoBitRate;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $audioCodec;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $audioBitRate;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $audioSampleRate;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $audioChannels;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $height;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $width;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $resolution;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Groups({"details"})
      */
     protected $frameRate;
 
+    // Video Codec
+
     /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"details"})
      */
-    protected $aspectRatio;
+    protected $videoCodec;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Groups({"details"})
      */
-    protected $md5sum;
+    protected $videoBitRate;
 
+    // Audio Codec
 
     /**
-     * @param string 
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"details"})
+     */
+    protected $audioCodec;
+
+    /**
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Groups({"details"})
+     */
+    protected $audioBitRate;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Groups({"details"})
+     */
+    protected $audioSampleRate;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"details"})
+     */
+    protected $audioChannels;
+
+    // Other
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    protected $zencoderJobId;
+
+    //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Set the parent video
      *
-     * @return VideoFile
+     * @param  Video $video
+     * @return AbstractVideoFile
      */
-    public function setVideo($video)
+    public function setVideo(Video $video)
     {
         $this->video = $video;
+        $this->setCompany($video->getCompany());
         return $this;
     }
 
     /**
-     * @return Video 
+     * Get the parent video
+     *
+     * @return Video
      */
     public function getVideo()
     {
         return $this->video;
     }
+
+    /**
+     * Set the processing status
+     *
+     * @param  string $status
+     * @throws \InvalidArgumentException
+     * @return AbstractVideoFile
+     */
+    public function setStatus($status)
+    {
+        if (!in_array($status, [
+            self::STATUS_DRAFT,
+            self::STATUS_PENDING,
+            self::STATUS_WORKING,
+            self::STATUS_ERROR,
+            self::STATUS_COMPLETE
+        ])) {
+            throw new \InvalidArgumentException("Invalid status");
+        }
+
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * Get the processing status
+     *
+     * @return string
+     */
+    public function getStatus()
+    {
+        return $this->status;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 
     /**
      * @return VideoFile
@@ -179,7 +225,7 @@ abstract class AbstractVideoFile extends AbstractModel
     }
 
     /**
-     * @return string 
+     * @return string
      */
     public function getFilename()
     {
@@ -187,7 +233,7 @@ abstract class AbstractVideoFile extends AbstractModel
     }
 
     /**
-     * @param string 
+     * @param string
      *
      * @return VideoFile
      */
@@ -420,25 +466,6 @@ abstract class AbstractVideoFile extends AbstractModel
      *
      * @return VideoFile
      */
-    public function setResolution($resolution)
-    {
-        $this->resolution = $resolution;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getResolution()
-    {
-        return $this->resolution;
-    }
-
-    /**
-     * @param string
-     *
-     * @return VideoFile
-     */
     public function setFrameRate($frameRate)
     {
         $this->frameRate = $frameRate;
@@ -454,60 +481,43 @@ abstract class AbstractVideoFile extends AbstractModel
     }
 
     /**
-     * @param string
+     * Set the external ID of the Zencoder encoding job for this videofile
      *
-     * @return VideoFile
+     * @param  int $zencoderJobId
+     * @return AbstractVideoFile
      */
-    public function setAspectRatio($aspectRatio)
+    public function setZencoderJobId($zencoderJobId)
     {
-        $this->aspectRatio = $aspectRatio;
+        $this->zencoderJobId = $zencoderJobId;
         return $this;
     }
 
     /**
-     * @return string
-     */
-    public function getAspectRatio()
-    {
-        return $this->aspectRatio;
-    }
-
-    /**
-     * @param string
+     * Get the external ID of the Zencoder encoding job for this videofile
      *
-     * @return VideoFile
+     * @return int
      */
-    public function setMd5sum($md5sum)
+    public function getZencoderJobId()
     {
-        $this->md5sum = $md5sum;
-        return $this;
+        return $this->zencoderJobId;
     }
 
-    /**
-     * @return string
-     */
-    public function getMd5sum()
-    {
-        return $this->md5sum;
-    }
+    //////////////////////////////////////////////////////////////////////////
 
     /**
-     * @param string
+     * Get the storage path for this video file
      *
-     * @return VideoFile
-     */
-    public function setVideoType($videoType)
-    {
-        $this->videoType = $videoType;
-        return $this;
-    }
-
-    /**
+     * The path is in the format `videofiles/{video}/{videofile}/{filename}`
+     *
      * @return string
      */
-    public function getVideoType()
+    public function getStoragePath()
     {
-        return $this->videoType;
+        return sprintf(
+            'videofiles/%d/%d/%s',
+            $this->getVideo()->getId(),
+            $this->getId(),
+            $this->getFilename()
+        );
     }
-
 }
