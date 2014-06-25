@@ -9,20 +9,18 @@
  * @license    Proprietary
  */
 
-
 namespace Cloud\Model;
 
-
+use Cloud\Model\VideoFile\InboundVideoFile;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
+
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
 use JMS\Serializer\Annotation as JMS;
-use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
-
 
 /**
  * @ORM\Entity
- * @ORM\HasLifecycleCallbacks
  */
 class VideoInbound extends AbstractModel
 {
@@ -39,12 +37,6 @@ class VideoInbound extends AbstractModel
     use Traits\CompanyTrait;
 
     /**
-     * @ORM\Column(type="string", length=48)
-     * @JMS\Groups({"details.inbounds"})
-     */
-    protected $token;
-
-    /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Video", inversedBy="inbounds")
      * @JMS\Groups({"details.inbounds"})
@@ -52,18 +44,13 @@ class VideoInbound extends AbstractModel
     protected $video;
 
     /**
-     * @ORM\JoinColumn(nullable=true)
-     * @ORM\ManyToOne(targetEntity="Cloud\Model\VideoFile\InboundVideoFile", inversedBy="inbounds")
+     * @ORM\OneToOne(
+     *   targetEntity="Cloud\Model\VideoFile\InboundVideoFile",
+     *   mappedBy="inbound"
+     * )
      * @JMS\Groups({"details.inbounds"})
      */
     protected $videoFile;
-
-    /**
-     * #JoinColumn(nullable=false)
-     * @ORM\ManyToOne(targetEntity="User")
-     * @JMS\Groups({"details.inbounds"})
-     */
-    protected $created_by;
 
     /**
      * @see STATUS_PENDING
@@ -74,6 +61,12 @@ class VideoInbound extends AbstractModel
      * @ORM\Column(type="string", length=16)
      */
     protected $status = self::STATUS_PENDING;
+
+    /**
+     * @ORM\Column(type="string", length=48)
+     * @JMS\Groups({"details.inbounds"})
+     */
+    protected $token;
 
     /**
      * #Column(type="datetime", nullable=true)
@@ -87,14 +80,12 @@ class VideoInbound extends AbstractModel
      * @param Video $video must be passed to create an inbound
      *
      */
-    public function __construct(Video $video, User $user)
+    public function __construct(Video $video)
     {
-        $this->videoInbounds = new ArrayCollection();
-        $this->videoOutbounds = new ArrayCollection();
         $generator = new UriSafeTokenGenerator();
         $this->setToken($generator->generateToken());
+
         $this->setVideo($video);
-        $this->setCreatedBy($user);
     }
 
     /**
@@ -140,6 +131,28 @@ class VideoInbound extends AbstractModel
     public function getVideo()
     {
         return $this->video;
+    }
+
+    /**
+     * Set the videofile for this inbound
+     *
+     * @param  InboundVideoFile $videoFile
+     * @return VideoInbound
+     */
+    public function setVideoFile(InboundVideoFile $videoFile)
+    {
+        $this->videoFile = $videoFile;
+        return $this;
+    }
+
+    /**
+     * Get the videofile for this inbound
+     *
+     * @return InboundVideoFile
+     */
+    public function getVideoFile()
+    {
+        return $this->videoFile;
     }
 
     /**
@@ -201,44 +214,12 @@ class VideoInbound extends AbstractModel
      *
      * @return string
      */
-    public function getStorageChunkPath()
+    public function getTempStoragePath()
     {
         return sprintf('inbounds/%d/%d/%s',
             $this->getVideo()->getId(),
             $this->getId(),
             $this->getToken()
         );
-    }
-
-    /**
-     * @return string
-     */
-    public function getStorageFilePath()
-    {
-        return sprintf('inbounds/%d/%d/%s',
-            $this->getVideo()->getId(),
-            $this->getId(),
-            $this->getFilename()
-        );
-    }
-
-    /**
-     * Set the creator
-     */
-    public function setCreatedBy(User $user)
-    {
-        $this->created_by = $user;
-    }
-
-    /**
-     * Creates an encoding job
-     *
-     * @return array $metadata 
-     */
-    function getEncodingJob($encoder, $input)
-    {
-        $metadata = $encoder->createEncodingJob($input);
-
-        return $metadata;
     }
 }
