@@ -24,15 +24,6 @@ use JMS\Serializer\Annotation as JMS;
  */
 class Video extends AbstractModel
 {
-    /*
-     * php-resque status codes:
-     *
-    const STATUS_WAITING = 1;
-    const STATUS_RUNNING = 2;
-    const STATUS_FAILED = 3;
-    const STATUS_COMPLETE = 4;
-     */
-
     const STATUS_DRAFT    = 'draft';
     const STATUS_PENDING  = 'pending';
     const STATUS_WORKING  = 'working';
@@ -49,96 +40,11 @@ class Video extends AbstractModel
     use Traits\CompanyTrait;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
-     * @JMS\Groups({"details.videos"})
-     */
-    protected $completedAt;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $description;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $filename;
-
-    /**
-     * The overall processing status for this video by the worker system. To
-     * query success or failure data, look at each individual inbound and
-     * outbound and query their status.
-     *
-     * @see STATUS_DRAFT
-     * @see STATUS_PENDING
-     * @see STATUS_WORKING
-     * @see STATUS_COMPLETE
-     *
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $filesize;
-
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $filetype;
-
-    /**
-     * Duration in seconds
-     *
-     * @ORM\Column(type="float", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $duration;
-
-    /**
-     * Inbound files: user upload from browser
-     *
-     * @ORM\OneToMany(
-     *   targetEntity="VideoInbound",
-     *   mappedBy="video",
-     *   cascade={"persist", "remove"}
-     * )
+     * @ORM\Column(type="integer")
+     * @ORM\Version
      * @JMS\Groups({"details"})
      */
-    protected $inbounds;
-
-    /**
-     * @ORM\Column(type="boolean")
-     * @JMS\Accessor(getter="isDraft")
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $isDraft = true;
-
-    /**
-     * Orientation of video. Example: Straight, solo, gay.
-     *
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $orientation;
-
-    /**
-     * Outbound files: worker publish to tubesite
-     *
-     * @ORM\OneToMany(
-     *   targetEntity="VideoOutbound",
-     *   mappedBy="video",
-     *   cascade={"persist", "remove"}
-     * )
-     * @JMS\Groups({"details"})
-     */
-    protected $outbounds;
-
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     * @JMS\Groups({"list", "details"})
-     */
-    protected $publishedAt;
+    protected $version = 1;
 
     /**
      * The overall processing status for this video by the worker system. To
@@ -156,10 +62,67 @@ class Video extends AbstractModel
     protected $status = self::STATUS_DRAFT;
 
     /**
+     * @ORM\Column(type="boolean")
+     * @JMS\Accessor(getter="isDraft")
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $isDraft = true;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Groups({"details.videos"})
+     */
+    protected $completedAt;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $publishedAt;
+
+    /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
     protected $title;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $description;
+
+    /**
+     * Orientation of video. Example: Straight, solo, gay.
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $orientation;
+
+    /**
+     * Inbounds: user upload from browser
+     *
+     * @ORM\OneToMany(
+     *   targetEntity="VideoInbound",
+     *   mappedBy="video",
+     *   cascade={"persist", "remove"}
+     * )
+     * @JMS\Groups({"details"})
+     */
+    protected $inbounds;
+
+    /**
+     * Outbounds: worker publish to tubesite
+     *
+     * @ORM\OneToMany(
+     *   targetEntity="VideoOutbound",
+     *   mappedBy="video",
+     *   cascade={"persist", "remove"}
+     * )
+     * @JMS\Groups({"details"})
+     */
+    protected $outbounds;
 
     /**
      * @ORM\OneToOne(
@@ -182,13 +145,6 @@ class Video extends AbstractModel
      * @JMS\Groups({"list", "details"})
      */
     protected $thumbnail;
-
-    /**
-     * @ORM\Column(type="integer")
-     * @ORM\Version
-     * @JMS\Groups({"details"})
-     */
-    protected $version = 1;
 
     //////////////////////////////////////////////////////////////////////////
 
@@ -365,72 +321,6 @@ class Video extends AbstractModel
     }
 
     /**
-     * Set the filename
-     *
-     * @param  string $filename
-     * @return Video
-     */
-    public function setFilename($filename)
-    {
-        $this->filename = $filename;
-        return $this;
-    }
-
-    /**
-     * Get the filename
-     *
-     * @return string
-     */
-    public function getFilename()
-    {
-        return $this->filename;
-    }
-
-    /**
-     * Set the filesize in bytes
-     *
-     * @param  int $filesize
-     * @return Video
-     */
-    public function setFilesize($filesize)
-    {
-        $this->filesize = $filesize;
-        return $this;
-    }
-
-    /**
-     * Get the filesize in bytes
-     *
-     * @return int
-     */
-    public function getFilesize()
-    {
-        return $this->filesize;
-    }
-
-    /**
-     * Set the file mimetype
-     *
-     * @param  string $filetype
-     * @return VideoOutbound
-     */
-    public function setFiletype($filetype)
-    {
-        $this->filetype = $filetype;
-        return $this;
-    }
-
-    /**
-     * Get the file mimetype
-     *
-     * @return string
-     */
-    public function getFiletype()
-    {
-        return $this->filetype;
-    }
-
-    /**
      * Returns the associated inbounds
      *
      * @return array
@@ -532,16 +422,6 @@ class Video extends AbstractModel
       }
 
       return $this;
-    }
-
-    public function setDuration($duration)
-    {
-        $this->duration = $duration;
-    }
-
-    public function getDuration()
-    {
-        return $this->duration;
     }
 
     //////////////////////////////////////////////////////////////////////////
