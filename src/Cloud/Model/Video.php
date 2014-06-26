@@ -135,10 +135,17 @@ class Video extends AbstractModel
     protected $stats;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Tag")
+     * @ORM\ManyToOne(targetEntity="Category")
      * @JMS\Groups({"list", "details"})
      */
-    protected $tags;
+    protected $primaryCategory;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="Category")
+     * @ORM\JoinTable(name="video_category")
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $secondaryCategories;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -153,7 +160,7 @@ class Video extends AbstractModel
      */
     public function __construct($user)
     {
-        $this->tags = new ArrayCollection();
+        $this->secondaryCategories = new ArrayCollection();
         $this->inbounds = new ArrayCollection();
         $this->outbounds = new ArrayCollection();
     }
@@ -223,37 +230,47 @@ class Video extends AbstractModel
     }
 
     /**
-     * Add a tag
+     * Add a category
      *
-     * @param  Tag $tag
+     * @param  Category $category
      * @return Video
      */
-    public function addTag(Tag $tag)
+    public function addCategory(Category $category)
     {
-        $this->tags->add($tag);
+        $this->secondaryCategories->add($category);
         return $this;
     }
 
     /**
-     * Remove a tag
+     * Remove a category
      *
-     * @param  Tag $tag
+     * @param  Category $category
      * @return Video
      */
-    public function removeTag(Tag $tag)
+    public function removeCategory(Category $category)
     {
-        $this->tags->removeElement($tag);
+        $this->secondaryCategories->removeElement($category);
         return $this;
     }
 
     /**
-     * Get the tags
+     * Get the secondary categories
      *
      * @return ArrayCollection
      */
-    public function getTags()
+    public function getPrimaryCategory()
     {
-        return $this->tags;
+        return $this->primaryCategory;
+    }
+
+    /**
+     * Get the secondary categories
+     *
+     * @return ArrayCollection
+     */
+    public function getSecondaryCategories()
+    {
+        return $this->secondaryCategories;
     }
 
     /**
@@ -409,16 +426,27 @@ class Video extends AbstractModel
     }
 
     /**
-     * @param string $tags a json encoded array of tags
+     * @param string $categories a json encoded array of categories
      *
      * @return Video
      */
-    public function setTags($tags)
+    public function setPrimaryCategory($category)
     {
-      $this->tags->clear();
+        $this->primaryCategory = $category;
+    }
 
-      foreach ($tags as $tag) {
-          $this->addTag($tag);
+
+    /**
+     * @param string $categories a json encoded array of categories
+     *
+     * @return Video
+     */
+    public function setSecondaryCategories($categories)
+    {
+      $this->categories->clear();
+
+      foreach ($categories as $category) {
+          $this->addCategories($category);
       }
 
       return $this;
