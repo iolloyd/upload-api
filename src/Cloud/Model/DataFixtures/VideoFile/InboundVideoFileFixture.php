@@ -26,11 +26,9 @@ class InboundVideoFileFixture extends AbstractFixture implements DependentFixtur
      */
     public function load(ObjectManager $em)
     {
-        $inboundVideoFile = new InboundVideoFile();
-
-        $inboundVideoFile->setVideo(
-            $this->getReference('video-1')
-        );
+        $video = $this->getReference('video-1');
+        $inboundVideo = new VideoInbound($video); // $this->getReference('video-1');
+        $inboundVideoFile = new InboundVideoFile($inboundVideo);
 
         $inboundVideoFile
             ->setAudioBitRate(343)
@@ -44,12 +42,11 @@ class InboundVideoFileFixture extends AbstractFixture implements DependentFixtur
             ->setFiletype('video/mpg')
             ->setFrameRate(123)
             ->setHeight(1024)
-            ->setMd5sum('alskdjfl')
-            ->setResolution(121)
             ->setVideoBitRate(121)
             ->setVideoCodec('mpg')
             ->setWidth(768);
 
+        $em->persist($inboundVideo);
         $em->persist($inboundVideoFile);
         $em->flush();
 
