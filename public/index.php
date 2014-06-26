@@ -1,5 +1,18 @@
 <?php
 
+use Cloud\Silex\Provider\CorsHeadersServiceProvider;
+use Cloud\Silex\Provider\DoctrinePaginatorServiceProvider;
+use Cloud\Silex\Security\ForbiddenErrorAuthenticationEntryPoint;
+use Cloud\Silex\Security\UnauthorizedErrorAuthenticationEntryPoint;
+use Silex\Provider\SecurityServiceProvider;
+use Silex\Provider\SessionServiceProvider;
+use Silex\Provider\UrlGeneratorServiceProvider;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Encoder\EncoderFactory;
+use Symfony\Component\Security\Http\Firewall\ChannelListener;
+use Symfony\Component\Security\Core\Encoder\BCryptPasswordEncoder;
+
 ini_set('display_errors', true);
 error_reporting(E_ALL);
 set_time_limit(0);
@@ -31,7 +44,8 @@ $app['user'] = $app->share(function () use ($app) {
 $app['security.users'] = $app->share(function () use ($app) {
     return $app['em']->getRepository('cx:user');
 });
-$app->register(new Silex\Provider\SecurityServiceProvider(), [
+
+$app->register(new SecurityServiceProvider(), [
     'security.firewalls' => [
         'default' => [
             'pattern' => '^.*$',
@@ -64,24 +78,24 @@ $app->register(new Silex\Provider\SecurityServiceProvider(), [
     'security.hide_user_not_found' => !$app['debug'],
 
     'security.channel_listener' => $app->share(function ($app) {
-        return new \Symfony\Component\Security\Http\Firewall\ChannelListener(
+        return new ChannelListener(
             $app['security.access_map'],
-            new \Cloud\Silex\Security\ForbiddenErrorAuthenticationEntryPoint(),
-            $app['logger']
+            new ForbiddenErrorAuthenticationEntryPoint(),
+            $app['logger.security']
         );
     }),
     'security.entry_point.default.form' => $app->share(function () use ($app) {
-        return new \Cloud\Silex\Security\UnauthorizedErrorAuthenticationEntryPoint();
+        return new UnauthorizedErrorAuthenticationEntryPoint();
     }),
     'security.encoder_factory' => $app->share(function ($app) {
-        return new \Symfony\Component\Security\Core\Encoder\EncoderFactory(array(
-            'Cloud\Model\User' => new \Symfony\Component\Security\Core\Encoder\BCryptPasswordEncoder(10),
-        ));
+        return new EncoderFactory([
+            'Cloud\Model\User' => new BCryptPasswordEncoder(10),
+            ]);
     }),
 ]);
 
 // providers
-$app->register(new Silex\Provider\SessionServiceProvider(), [
+$app->register(new SessionServiceProvider(), [
     'session.storage.options' => [
         'name'                    => 'CLOUD',
         'hash_function'           => 'sha256',
@@ -91,15 +105,15 @@ $app->register(new Silex\Provider\SessionServiceProvider(), [
         'cookie_httponly'         => true,
     ],
 ]);
-$app->register(new Cloud\Silex\Provider\CorsHeadersServiceProvider(), [
+$app->register(new CorsHeadersServiceProvider(), [
     'cors.options' => [
         'allow_credentials' => true,
         'allow_origin'      => $app['debug'] ? null : 'https://ng.staging.cldsys.net',
         'max_age'           => 604800,
     ],
 ]);
-$app->register(new Silex\Provider\UrlGeneratorServiceProvider());
-$app->register(new Cloud\Silex\Provider\DoctrinePaginatorServiceProvider());
+$app->register(new UrlGeneratorServiceProvider());
+$app->register(new DoctrinePaginatorServiceProvider());
 
 // json request parser
 $app->before(function ($request) {

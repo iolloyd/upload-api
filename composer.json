@@ -33,6 +33,8 @@
         "monolog/monolog": "dev-master",
         "cobaia/monologdoctrine": "v1.0.1",
         "ddtraceweb/monolog-parser": "1.2",
+        "logentries/logentries-monolog-handler": "dev-master"
+        "ddtraceweb/monolog-parser": "1.2",
 
         "zencoder/zencoder-php": "~2.1.2"
     },

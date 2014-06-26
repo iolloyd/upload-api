@@ -12,7 +12,17 @@
 use Cloud\Model\Video;
 use Cloud\Model\VideoOutbound;
 use Symfony\Component\HttpFoundation\Request;
-use JMS\Serializer\SerializerBuilder;
+
+/**
+ * Get a video
+ */
+$app->get('/videos/{video}', function(Video $video) use ($app)
+{
+    $groups = ['list', 'details.videos',];
+    return $app['single.response.json']($video, $groups);
+})
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert');
 
 /**
  * Get list of videos
@@ -29,13 +39,12 @@ $app->get('/videos', function(Request $request) use ($app)
  */
 $app->post('/videos', function(Request $request) use ($app)
 {
-    $groups = ['details', 'details.videos'];
     $video = new Video($app['user']);
 
     $app['em']->persist($video);
     $app['em']->flush();
 
-    return $app['single.response.json']($video, $groups); 
+    return $app['single.response.json']($video, ['details', 'details.videos']);
 });
 
 /**
@@ -56,6 +65,11 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
 $app->post('/videos/{video}', function(Video $video, Request $request) use ($app)
 {
     if (!$video->isDraft()) {
+        $app['logger.api']->error(
+            "Tried updating a non-draft status video with id {video}", 
+            ['video' => $video->getId()]
+        );
+
         return $app->json([
             'error' => 'invalid_status',
             'error_details' => 'Video must be in draft status',
@@ -71,8 +85,8 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
 
     return $app['single.response.json']($video, ['details', 'details.videos']);
 })
-    ->assert('video', '\d+')
-    ->convert('video', 'converter.video:convert');
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert');
 
 /**
  * Publish a draft video when it's ready
@@ -80,6 +94,11 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
 $app->post('/videos/{video}/publish', function(Video $video) use ($app)
 {
     if (!$video->isDraft()) {
+        $app['logger.api']->error(
+            "Tried publishing a non-draft status video with id {video}", 
+            ['video' => $video->getId()]
+        );
+
         return $app->json([
             'error' => 'invalid_status',
             'error_details' => 'Video must be in draft status',
@@ -104,14 +123,17 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
         }
     });
 
+    //TODO add redis enqueueing 
     //Resque::enqueue(
         //'default',
         //'CloudOutbound\YouPorn\Job\DemoCombined',
         //['videooutbound' => $outbound->getId()]
     //);
 
-    return $app['single.response.json']($video, ['details', 'details.videos', 'details.outbounds']);
+    return $app['single.response.json'](
+        $video,
+        ['details', 'details.videos', 'details.outbounds']
+    );
 })
-    ->assert('video', '\d+')
-    ->convert('video', 'converter.video:convert')
-;
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert');
