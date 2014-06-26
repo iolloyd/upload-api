@@ -30,11 +30,8 @@
         "pagerfanta/pagerfanta": "~1.0",
         "jms/serializer": "0.16.0",
 
-        "monolog/monolog": "dev-master",
-        "cobaia/monologdoctrine": "v1.0.1",
-        "ddtraceweb/monolog-parser": "1.2",
-        "logentries/logentries-monolog-handler": "dev-master"
-        "ddtraceweb/monolog-parser": "1.2",
+        "monolog/monolog": "~1.10.0",
+        "logentries/logentries-monolog-handler": "dev-master",
 
         "zencoder/zencoder-php": "~2.1.2"
     },
