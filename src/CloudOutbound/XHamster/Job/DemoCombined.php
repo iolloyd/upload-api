@@ -77,8 +77,7 @@ class DemoCombined extends AbstractJob
             ->setDefinition([
                 new InputArgument('videooutbound', InputArgument::REQUIRED),
             ])
-            ->setName('job:demo:xhamster')
-        ;
+                ->setName('job:demo:xhamster');
     }
 
     /**
@@ -86,6 +85,7 @@ class DemoCombined extends AbstractJob
      */
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
+        $app =$this->getHelper('silex')->getApplication();
         $this->httpSession = new HttpClient([
             'base_url' => 'https://xhamster.com/',
             'cookies' => [
@@ -99,6 +99,7 @@ class DemoCombined extends AbstractJob
         ]);
 
         $this->em = $this->getHelper('em')->getEntityManager();
+        $this->logger = $app['monolog.factory'](get_called_class());
     }
 
     /**
@@ -107,9 +108,11 @@ class DemoCombined extends AbstractJob
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $outbound = $this->em->find('cx:videooutbound', $input->getArgument('videooutbound'));
-
+        $outboundId = $input->getArgument('videooutbound');
         if (!$outbound) {
-            throw new \InvalidArgumentException('No VideoOutbound with this ID');
+            $msg = sprintf("No videoOutbound for Id: {%s}", $outboundId);
+            $this->logger->error($msg);
+            throw new \InvalidArgumentException($msg);
         }
 
         $tubeuser = $outbound->getTubesiteUser();
@@ -122,7 +125,9 @@ class DemoCombined extends AbstractJob
             $this->login($tubeuser);
 
             if (!$this->isLoggedIn($tubeuser)) {
-                throw new InternalInconsistencyException('Login succeeded but still no access');
+                $msg = sprintf("Login succeeded but still no access. OutboundId: %s", $outboundId);
+                $this->logger->error($msg);
+                throw new InternalInconsistencyException($msg);
             }
         }
 
@@ -232,6 +237,7 @@ class DemoCombined extends AbstractJob
     {
         // calculate "security hash"; lifted from their javascript
 
+        $this->logger->info('Login as {tubeuser}', ['tubeuser' => $tubeuser->getUsername()]);
         $hash = function ($time) {
             $res1 = base_convert(bcsub($time, 24563844), 10, 16);
             $res2 = substr(base_convert($time, 10, 16), 3);
@@ -291,7 +297,9 @@ class DemoCombined extends AbstractJob
         );
 
         if (!$count) {
-            throw new UnexpectedResponseException('Login failed: unknown error; could not extract error from response body: ' . $body);
+            $msg = 'Login failed: unknown error; could not extract error from response body';
+            $this->logger->error($msg, ['tubeuser' => $tubeuser->getUsername()]);
+            throw new UnexpectedResponseException($msg . ':' . $body);
         }
 
         $errors = array_combine($matches['field'], $matches['error']);
@@ -317,7 +325,9 @@ class DemoCombined extends AbstractJob
             ));
         }
 
-        throw new UnexpectedResponseException(sprintf('xHamster login failed: unknown error; (%s)', $body));
+        throw new UnexpectedResponseException(
+            sprintf('xHamster login failed: unknown error; (%s)', $body)
+        );
     }
 
     /**
@@ -365,10 +375,8 @@ class DemoCombined extends AbstractJob
 
         $sites = $dom->filter('.boxC.sites .item')->each(function ($node) {
             $site = [
-                'title' =>
-                    $node->filter('table tr.head td:nth-child(1)')->text(),
-                'description' =>
-                    $node->filter('table tr.head td:nth-child(2)')->text(),
+                'title'       => $node->filter('table tr.head td:nth-child(1)')->text(),
+                'description' => $node->filter('table tr.head td:nth-child(2)')->text(),
             ];
 
             $href = $node
@@ -423,10 +431,10 @@ class DemoCombined extends AbstractJob
         $response = $this->httpSession->jsonPost($baseUrl->combine('/photos/ajax.php?ajax=1&act=sponsor&id=2&tpl2'), [
             'headers' => [
                 'Referer' => (string) $baseUrl->combine('/producer.php'),
-                'Origin'  => (string) $baseUrl,
-            ],
-            'body' => $this->getUploadData($outbound),
-        ]);
+                    'Origin'  => (string) $baseUrl,
+                ],
+                'body' => $this->getUploadData($outbound),
+            ]);
 
         $body = (string) $response->getBody();
 
@@ -469,12 +477,12 @@ class DemoCombined extends AbstractJob
         $response = $this->httpSession->jsonGet($baseUrl->combine('/photos/uploader2/sp.prepare.2.php'), [
             'headers' => [
                 'Referer' => (string) $baseUrl->combine('/producer.php'),
-                'Origin'  => (string) $baseUrl,
-            ],
-            'query' => [
-                '_' => bcmul(microtime(true), 1000),
-            ],
-        ]);
+                    'Origin'  => (string) $baseUrl,
+                ],
+                'query' => [
+                    '_' => bcmul(microtime(true), 1000),
+                    ],
+                ]);
 
         $body = (string) $response->getBody();
 
@@ -565,7 +573,7 @@ class DemoCombined extends AbstractJob
         if (strpos($body, $uploadId) === false) {
             throw new UnexpectedResponseException(sprintf(
                 'xHamster upload failed: Response does not include expected '
-                    . 'id `%s`: %s',
+                . 'id `%s`: %s',
                 $uploadId,
                 $body
             ));
@@ -650,10 +658,12 @@ class DemoCombined extends AbstractJob
         // error
 
         if (!$match) {
-            throw new InternalInconsistencyException(
-                'Could not find uploaded file on the status page to '
-                . 'detect external id'
-            );
+            $msg = sprintf('Could not find uploaded file on the status page to '
+                . 'detect external id: video outbound id: %s',
+                $outbound->getExternalId());
+
+            $this->logger->error($msg);
+            throw new InternalInconsistencyException($msg);
         }
 
         // success
@@ -710,8 +720,6 @@ class DemoCombined extends AbstractJob
 
         // success
 
-        //var_dump($match); exit;
-
         $this->em->transactional(function ($em) use ($outbound, $match) {
             $params = array_intersect_key($match, array_flip([
                 'status',
@@ -750,8 +758,6 @@ class DemoCombined extends AbstractJob
             ['/my_vids/all/{page}.html', ['page' => $page]]
         );
 
-        //var_dump($response); print((string) $response->getBody());
-
         $dom = new DomCrawler();
         $dom->addHtmlContent((string) $response->getBody());
 
@@ -773,7 +779,7 @@ class DemoCombined extends AbstractJob
         $videos = $dom->filter('.boxC.myVidList .myVideo')->each(function ($node) {
             $video = [
                 'id' => (int) $node->attr('vid'),
-            ];
+                ];
 
             $info = $node->filter('.info')->html();
             $info = explode('<br>', $info);
@@ -800,8 +806,6 @@ class DemoCombined extends AbstractJob
 
         $videos = array_column($videos, null, 'id');
 
-        //var_dump($videos); exit;
-
         return $videos;
     }
 
@@ -813,26 +817,25 @@ class DemoCombined extends AbstractJob
         return [
             // TODO: refactor
             'slot1_title' =>
-                substr(str_replace($this->forbiddenStrings, ' ', 'TEST - ' . $video->getTitle()), 0, 60),
-            'slot1_descr' =>
+            substr(str_replace($this->forbiddenStrings, ' ', 'TEST - ' . $video->getTitle()), 0, 60),
+                'slot1_descr' =>
                 substr(str_replace($this->forbiddenStrings, ' ', 'TEST PLEASE REJECT - ' . $video->getDescription()), 0, 500),
 
-            'slot1_site' => $tubeuser->getParam('site')['id'],
+                    'slot1_site' => $tubeuser->getParam('site')['id'],
 
-            // TODO: pull from video tags
-            //'slot1_chanell' => '',
-            'slot1_chanell' => '.15',
-            'slot1_channels15' => '',
+                    // TODO: pull from video tags
+                    'slot1_chanell' => '.15',
+                    'slot1_channels15' => '',
 
-            'slot1_fileType'  => '',
-            'slot1_http_url'  => '',
-            'slot1_http_user' => '',
-            'slot1_http_pass' => '',
-            'slot1_ftp_url'   => '',
-            'slot1_ftp_user'  => '',
-            'slot1_ftp_pass'  => '',
-            'slot1_file'      => $outbound->getFilename(),
-        ];
+                    'slot1_fileType'  => '',
+                    'slot1_http_url'  => '',
+                    'slot1_http_user' => '',
+                    'slot1_http_pass' => '',
+                    'slot1_ftp_url'   => '',
+                    'slot1_ftp_user'  => '',
+                    'slot1_ftp_pass'  => '',
+                    'slot1_file'      => $outbound->getFilename(),
+                ];
     }
 
     /**
