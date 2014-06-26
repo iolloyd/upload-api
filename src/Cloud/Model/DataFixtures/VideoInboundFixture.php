@@ -36,9 +36,6 @@ class VideoInboundFixture extends AbstractFixture implements DependentFixtureInt
 
         $inbound->setStatus('complete');
         $inbound->setToken('token12345');
-        $inbound->setCreatedBy(
-            $this->getReference('user')
-        );
 
         $em->persist($inbound);
         $em->flush();
