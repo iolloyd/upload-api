@@ -28,11 +28,11 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
      */
     public function register(Application $app)
     {
-        $app['paginator'] = $app->protect(function ($model, $groups, $options = []) use ($app) {
-
+        $app['paginator'] = $app->protect(function ($model, $groups, $options = []) use ($app)
+        {
             $criteria = Criteria::create();
-            $filterFields = count($options) && isset($options['filterFields']) 
-                ? $options['filterFields'] 
+            $filterFields = count($options) && isset($options['filterFields'])
+                ? $options['filterFields']
                 : [];
 
             if (count($filterFields)) {
@@ -48,6 +48,14 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             }
 
             $list = $app['em']->getRepository($model)->matching($criteria);
+
+            if (!$list->count()) {
+                $app['logger.doctrine']->error(
+                    "No results found when requesting paginator using {model}",
+                    ['model' => $model]
+                );
+            }
+
             $adapter = new DoctrineCollectionAdapter($list);
             $pager = new Pagerfanta($adapter);
 
@@ -61,7 +69,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return $pager;
         });
 
-        $app['serializer'] = $app->protect(function($results, $groups) use ($app) {
+        $app['serializer'] = $app->protect(function($results, $groups = []) use ($app) {
             $serializer = SerializerBuilder::create()
                 ->setDebug($app['debug'])
                 ->build();
@@ -69,7 +77,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $context = SerializationContext::create()
                 ->setSerializeNull(true);
 
-            if ($groups) {
+            if (count($groups)) {
                 $context->setGroups($groups);
             }
 
@@ -80,7 +88,6 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
         $app['single.response.json'] = $app->protect(function ($model, $groups, $headerLink = true) use ($app) {
 
-            $params  = $app['request']->query->all();
             $jsonContent = $app['serializer']($model, $groups);
 
             $response = $app->json($jsonContent);
@@ -113,7 +120,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
     /**
      * {@inheritDoc}
      */
-    public function boot(\Silex\Application $app)
+    public function boot(Application $app)
     {
     }
 
@@ -131,9 +138,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $pager->hasPreviousPage() ? $link('prev', $pager->getPreviousPage()) : "",
             $pager->hasNextPage()     ? $link('next', $pager->getNextPage())     : "",
         ];
-
         $rangelink = $this->getRangeLinks($currentPage, $pageSize, $lastPage, $totalItemCount);
-
         $navlink = str_replace(', ,', ', ', implode(', ', $navlink));
 
         return ['link' => $navlink, 'range' => $rangelink,];
@@ -158,7 +163,9 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
     {
         $currentItem = ($currentPage * $pageSize) - $pageSize;
         $lastItemOfPage = min($currentItem + $pageSize - 1, $totalItemCount);
-        $links = "X-Pagination-Range: items $currentItem-$lastItemOfPage/$totalItemCount; page $currentPage/$lastPage";
+        $links = "X-Pagination-Range: items " 
+               . "$currentItem-$lastItemOfPage/$totalItemCount; " 
+               . "page $currentPage/$lastPage";
 
         return $links;
     }

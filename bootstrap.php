@@ -52,7 +52,6 @@ $app->extend('dbs.event_manager', function ($managers, $app) {
     }
     return $managers;
 });
-
 $app->register(new Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider(), [
     'orm.em.options' => [
         'mappings' => [
@@ -75,12 +74,11 @@ $app->extend('orm.ems.config', function ($configs, $app) {
 });
 $app['em'] = $app['orm.em'];
 
-// aws
-$app->register(new Aws\Silex\AwsServiceProvider(), array(
+// middleware
+$app->register(new Aws\Silex\AwsServiceProvider(), [
     'aws.config' => $app['config']['aws'],
-));
-
-// zencoder
+]);
+$app->register(new Cloud\Monolog\Provider\LogServiceProvider());
 $app->register(new Cloud\Silex\Provider\ZencoderServiceProvider());
 
 // loader
