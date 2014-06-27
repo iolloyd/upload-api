@@ -44,7 +44,7 @@ class VideoOutbound extends AbstractModel
      *   targetEntity="Cloud\Model\VideoFile\OutboundVideoFile",
      *   inversedBy="outbound"
      * )
-     * @JMS\Groups({"details.outbounds"})
+     * @JMS\Groups({"details"})
      */
     protected $videoFile;
 
@@ -55,33 +55,33 @@ class VideoOutbound extends AbstractModel
      * @see STATUS_ERROR
      *
      * @ORM\Column(type="string", length=16)
-     * @JMS\Groups({"details.outbounds"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $status = self::STATUS_PENDING;
 
     /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Tubesite")
-     * @JMS\Groups({"details.outbounds"})
+     * @JMS\Groups({"list", "details"})
      */
     protected $tubesite;
 
     /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="TubesiteUser")
-     * @JMS\Groups({"details.outbounds"})
+     * @JMS\Groups({"details"})
      */
     protected $tubesiteUser;
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"details.outbounds"})
+     * @JMS\Groups({"details"})
      */
     protected $externalId;
 
     /**
      * @ORM\Column(type="json_array")
-     * @JMS\Groups({"details.outbounds"})
+     * @JMS\Groups({"details"})
      */
     protected $params = [];
 
