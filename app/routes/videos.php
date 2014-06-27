@@ -78,13 +78,13 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
         $video->setSecondaryCategories(
             array_map(function ($d) use ($app) {
                 return $app['converter.category']->convert($d['id']);
-            }, $request->get('secondary_categories'))
+            }, (array) $request->get('secondary_categories'))
         );
 
         $video->setTags(
             array_map(function ($d) use ($app) {
                 return $app['converter.tag']->convert($d['id']);
-            }, $request->get('tags'))
+            }, (array) $request->get('tags'))
         );
     });
 
@@ -121,9 +121,6 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
 
             $outbound->setTubesite($tubeuser->getTubesite());
             $outbound->setTubesiteUser($tubeuser);
-            $outbound->setFilename($video->getFilename());
-            $outbound->setFilesize($video->getFilesize());
-            $outbound->setFiletype($video->getFiletype());
 
             $em->persist($outbound);
         }
