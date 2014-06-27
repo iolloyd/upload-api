@@ -33,11 +33,13 @@ class TubesiteUser extends AbstractModel implements JsonSerializable
     /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Tubesite")
+     * @JMS\Groups({"list.tubesiteusers", "details.tubesiteusers"})
      */
     protected $tubesite;
 
     /**
      * @ORM\Column(type="string")
+     * @JMS\Groups({"list", "details"})
      */
     protected $username;
 
@@ -55,6 +57,7 @@ class TubesiteUser extends AbstractModel implements JsonSerializable
 
     /**
      * @ORM\Column(type="string")
+     * @JMS\Groups({"details"})
      */
     protected $externalId;
 
