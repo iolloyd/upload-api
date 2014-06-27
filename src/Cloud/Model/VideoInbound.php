@@ -48,7 +48,7 @@ class VideoInbound extends AbstractModel
      *   targetEntity="Cloud\Model\VideoFile\InboundVideoFile",
      *   mappedBy="inbound"
      * )
-     * @JMS\Groups({"details.inbounds"})
+     * @JMS\Groups({"details.inbounds", "details.videos"})
      */
     protected $videoFile;
 
@@ -59,6 +59,7 @@ class VideoInbound extends AbstractModel
      * @see STATUS_ERROR
      *
      * @ORM\Column(type="string", length=16)
+     * @JMS\Groups({"list", "details.inbounds", "details.videos"})
      */
     protected $status = self::STATUS_PENDING;
 

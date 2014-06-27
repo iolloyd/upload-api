@@ -46,6 +46,7 @@ abstract class AbstractVideoFile extends AbstractModel
     /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Cloud\Model\Video")
+     * @JMS\Groups({"details.videofiles"})
      */
     protected $video;
 
