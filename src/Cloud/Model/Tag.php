@@ -30,7 +30,6 @@ class Tag extends AbstractModel
      */
     protected $title;
 
-
     /**
      * Gets the title
      *
