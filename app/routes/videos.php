@@ -44,8 +44,8 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
     $groups = ['details', 'details.videos'];
     return $app['single.response.json']($video, $groups);
 })
-    ->assert('video', '\d+')
-    ->convert('video', 'converter.video:convert')
+->assert('video', '\d+')
+->convert('video', 'converter.video:convert')
 ;
 
 /**
@@ -55,7 +55,7 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
 {
     if (!$video->isDraft()) {
         $app['logger.api']->error(
-            "Tried updating a non-draft status video with id {video}", 
+            "Tried updating a non-draft status video with id {video}",
             ['video' => $video->getId()]
         );
 
@@ -68,14 +68,19 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
     $app['em']->transactional(function () use ($app, $video, $request) {
         $video->setTitle($request->get('title'));
         $video->setDescription($request->get('description'));
-        $video->setPrimaryCategory(
-            $app['converter.category']->convert($request->get('primary_category')['id'])
-        );
+
+        if ($primaryCategoryId = $request->get('primary_category')['id']) {
+            $video->setPrimaryCategory($app['converter.category']->convert($primaryCategoryId));
+        } else {
+            $video->setPrimaryCategory(null);
+        }
+
         $video->setSecondaryCategories(
             array_map(function ($d) use ($app) {
                 return $app['converter.category']->convert($d['id']);
             }, $request->get('secondary_categories'))
         );
+
         $video->setTags(
             array_map(function ($d) use ($app) {
                 return $app['converter.tag']->convert($d['id']);
@@ -86,7 +91,8 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
     return $app['single.response.json']($video, ['details', 'details.videos']);
 })
 ->assert('video', '\d+')
-->convert('video', 'converter.video:convert');
+->convert('video', 'converter.video:convert')
+;
 
 /**
  * Publish a draft video when it's ready
@@ -95,7 +101,7 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
 {
     if (!$video->isDraft()) {
         $app['logger.api']->error(
-            "Tried publishing a non-draft status video with id {video}", 
+            "Tried publishing a non-draft status video with id {video}",
             ['video' => $video->getId()]
         );
 
@@ -123,7 +129,7 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
         }
     });
 
-    //TODO add redis enqueueing 
+    //TODO add redis enqueueing
     //Resque::enqueue(
         //'default',
         //'CloudOutbound\YouPorn\Job\DemoCombined',
@@ -136,4 +142,5 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
     );
 })
 ->assert('video', '\d+')
-->convert('video', 'converter.video:convert');
+->convert('video', 'converter.video:convert')
+;
