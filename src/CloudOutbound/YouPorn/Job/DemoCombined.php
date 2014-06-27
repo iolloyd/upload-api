@@ -104,6 +104,17 @@ class DemoCombined extends AbstractJob
             throw new \InvalidArgumentException('No VideoOutbound with this ID');
         }
 
+        // --
+
+        if (!$outbound->getVideoFile()) {
+            $output->write('<info>Encoding outbound video file ... </info>');
+            $this->transcodeVideo($outbound);
+            $output->writeln('<comment>' . $outbound->getVideoFile()->getStatus() . '</comment>');
+            $output->writeln('');
+        }
+
+        // --
+
         $tubeuser = $outbound->getTubesiteUser();
 
         if (!$this->isLoggedIn($tubeuser)) {
@@ -140,6 +151,167 @@ class DemoCombined extends AbstractJob
         $output->writeln('<info>Queueing refresh</info> ... in 10 seconds');
         sleep(10);
         \Resque::enqueue('default', get_called_class(), ['videooutbound' => $outbound->getId()]);
+    }
+
+    /**
+     * Transcode and watermark the videofile
+     *
+     * @param VideoOutbound $outbound
+     * @return void
+     */
+    protected function transcodeVideo(VideoOutbound $outbound)
+    {
+        $app = $this->getHelper('silex')->getApplication();
+
+        $inboundVideoFile = $outbound
+            ->getVideo()
+            ->getInbounds()
+            ->last()
+            ->getVideoFile();
+
+        // create outbound videofile
+
+        $videoFile = new \Cloud\Model\VideoFile\OutboundVideoFile($outbound);
+        $videoFile->setFilename($inboundVideoFile->getFilename());
+        $videoFile->setFiletype('video/mp4');
+        $videoFile->setStatus('pending');
+
+        $app['em']->transactional(function ($em) use ($outbound, $videoFile) {
+            $em->persist($videoFile);
+        });
+
+        $outbound->setVideoFile($videoFile);
+
+        // transcode
+
+        $s3 = $app['aws']->get('s3');
+        $zencoder = $app['zencoder'];
+
+        $inputUrl = $s3->getObjectUrl(
+            $app['config']['aws']['bucket'],
+            $inboundVideoFile->getStoragePath(),
+            '+1 hour'
+        );
+
+        //$outputUrl = $s3->createPresignedUrl(
+            //$s3->put($app['config']['aws']['bucket'] . '/' . $videoFile->getStoragePath()),
+            //'+1 hour'
+        //);
+
+        $outputUrl = 's3://' . $app['config']['aws']['bucket'] . '/' . $videoFile->getStoragePath();
+
+        $job = $zencoder->jobs->create([
+            // options
+            'region'  => 'europe',
+            'private' => true,
+            'test'    => $app['debug'],
+
+            // reporting
+            'grouping' => 'company-' . $videoFile->getCompany()->getId(),
+            'pass_through' => json_encode([
+                'type' => $app['em']->getClassMetadata(get_class($videoFile))->discriminatorValue,
+                'company' => $videoFile->getCompany()->getId(),
+                'videofile' => $videoFile->getId(),
+            ]),
+
+            // request
+            'input' => $inputUrl,
+            'outputs' => [
+                [
+                    'url' => $outputUrl,
+                    'credentials' => 's3-cldsys-dev',
+
+                    'format' => 'mp4',
+                    'width' => 1280,
+                    'height' => 720,
+
+                    'audio_codec'   => 'aac',
+                    'audio_quality' => 4,
+                    'video_bitrate' => 4000,
+
+                    'video_codec'   => 'h264',
+                    'h264_profile'  => 'high',
+                    'h264_level'    => 5.1,
+                    'tuning'        => 'film',
+
+                    'watermarks' => [
+                        [
+                            'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-youporn.png',
+                            'x' => 0,
+                            'y' => 0,
+                            'width' => 1280,
+                            'height' => 720,
+                        ]
+                    ],
+                ],
+            ],
+        ]);
+
+        $app['em']->transactional(function ($em) use ($videoFile, $job) {
+            $videoFile->setStatus('working');
+            $videoFile->setZencoderJobId($job->id);
+        });
+
+        $start = time();
+
+        while (true) {
+            sleep(5);
+
+            $details = $zencoder->jobs->details($job->id);
+            $output = $details->outputs[0];
+
+            // success
+            if ($details->state == 'finished') {
+                $app['em']->transactional(function ($em) use ($videoFile, $output) {
+                    $videoFile->setStatus('complete');
+
+                    // file
+                    $videoFile->setFilesize($output->file_size_bytes);
+
+                    // container
+                    $videoFile->setDuration($output->duration_in_ms / 1000);
+                    $videoFile->setContainerFormat($output->format);
+                    $videoFile->setHeight($output->height);
+                    $videoFile->setWidth($output->width);
+                    $videoFile->setFrameRate($output->frame_rate);
+
+                    // video codec
+                    $videoFile->setVideoCodec($output->video_codec);
+                    $videoFile->setVideoBitRate($output->video_bitrate_in_kbps);
+
+                    // audio codec
+                    $videoFile->setAudioCodec($output->audio_codec);
+                    $videoFile->setAudioBitRate($output->audio_bitrate_in_kbps);
+                    $videoFile->setAudioSampleRate($output->audio_sample_rate);
+                    $videoFile->setAudioChannels((int) $output->channels);
+                });
+
+                break;
+            }
+
+            // error
+            if ($details->state == 'failed') {
+                $errorCode = $input->error_class;
+                $errorMessage = $input->error_message;
+
+                $app['em']->transactional(function ($em) use ($videoFile) {
+                    $videoFile->setStatus('error');
+                });
+
+                break;
+            }
+
+            // timeout
+            if (time() - $start >= 120) {
+                $zencoder->jobs->cancel($job->id);
+
+                $app['em']->transactional(function ($em) use ($videoFile) {
+                    $videoFile->setStatus('error');
+                });
+
+                break;
+            }
+        }
     }
 
     /**
@@ -431,7 +603,7 @@ class DemoCombined extends AbstractJob
                         substr(($app['debug'] ? '(TEST ONLY - PLEASE REJECT) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getDescription()), 0, 2000),
 
                     // TODO: pull from video tags
-                    'videoedit[uploader_category_id]' => '19',
+                    'videoedit[uploader_category_id]' => '36',
                     'videoedit[orientation]' => 'straight',
                     'videoedit[tags]' => '',
                     'videoedit[pornstars]' => '',
