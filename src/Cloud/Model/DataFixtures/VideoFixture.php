@@ -76,7 +76,7 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
     {
         return [
             __NAMESPACE__ . '\UserFixture',
-            __NAMESPACE__ . '\SecondaryCategoryFixture',
+            __NAMESPACE__ . '\CategoryFixture',
         ];
     }
 
