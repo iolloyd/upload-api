@@ -34,6 +34,12 @@ $sessionData = function () use ($app)
         $data['user'] = $user;
         $data['company'] = $user->getCompany();
 
+        $categories = $app['em']->getRepository('cx:category')->findAll();
+        $categories = array_map(function($x) use ($app) {
+            return $app['serializer']($x, []);
+        }, $categories);
+        $data['config']['categories'] = $categories;
+
         $tags = $app['em']->getRepository('cx:tag')->findAll();
         $tags = array_map(function($x) use ($app) {
             return $app['serializer']($x, []);
