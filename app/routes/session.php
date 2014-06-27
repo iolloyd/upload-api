@@ -34,20 +34,14 @@ $sessionData = function () use ($app)
         $data['user'] = $user;
         $data['company'] = $user->getCompany();
 
-        $categories = $app['em']->getRepository('cx:category')->findAll();
-        $categories = array_map(function($x) use ($app) {
-            return $app['serializer']($x, []);
-        }, $categories);
-        $data['config']['categories'] = $categories;
+        $data['config']['categories'] =
+            $app['converter.category']->convertAll();
 
-        $tags = $app['em']->getRepository('cx:tag')->findAll();
-        $tags = array_map(function($x) use ($app) {
-            return $app['serializer']($x, []);
-        }, $tags);
-        $data['config']['tags'] = $tags;
+        $data['config']['tags'] =
+            $app['converter.tag']->convertAll();
     }
 
-    return $data;
+    return $app['serializer']($data, ['details', 'details.session']);
 };
 
 /**

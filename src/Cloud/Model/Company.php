@@ -28,7 +28,7 @@ class Company extends AbstractModel
 
     /**
      * @ORM\Column(type="string")
-     * @JMS\Groups({"list.companies", "details.companies"})
+     * @JMS\Groups({"list.companies", "details.companies", "details.session"})
      */
     protected $title;
 
