@@ -11,6 +11,7 @@
 
 namespace CloudOutbound\XHamster\Job;
 
+use InvalidArgumentException;
 use Cloud\Job\AbstractJob;
 use Cloud\Model\TubesiteUser;
 use Cloud\Model\VideoOutbound;
@@ -112,7 +113,7 @@ class DemoCombined extends AbstractJob
         if (!$outbound) {
             $msg = sprintf("No videoOutbound for Id: {%s}", $outboundId);
             $this->logger->error($msg);
-            throw new \InvalidArgumentException($msg);
+            throw new InvalidArgumentException($msg);
         }
 
         $tubeuser = $outbound->getTubesiteUser();
@@ -364,7 +365,7 @@ class DemoCombined extends AbstractJob
 
         try {
             $error = $dom->filter('.main .error')->text();
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
         }
 
         if ($error) {
@@ -522,13 +523,14 @@ class DemoCombined extends AbstractJob
         $s3  = $app['aws']->get('s3');;
 
         $video = $outbound->getVideo();
-        $key   = sprintf('videos/%d/raw/%s', $video->getId(), $video->getFilename());
-
-        $key = 'static/cloud-test-720p.mp4';
+        $videoFile = $video
+            ->getInbounds()
+            ->last()
+            ->getVideoFile();
 
         $object = $s3->getObject([
             'Bucket' => $app['config']['aws']['bucket'],
-            'Key'    => $key,
+            'Key'    => $videoFile->getStoragePath(),
         ]);
 
         $stream = $object['Body']->getStream();
@@ -556,8 +558,8 @@ class DemoCombined extends AbstractJob
             ->addFile(new PostFile(
                 'slot1_file',
                 $stream,
-                $outbound->getFilename(),
-                ['Content-Type' => $outbound->getFiletype()]
+                $videoFile->getFilename(),
+                ['Content-Type' => $videoFile->getFiletype()]
             ));
 
         $response = $this->httpSession->send($request);
@@ -613,7 +615,7 @@ class DemoCombined extends AbstractJob
 
         try {
             $error = $dom->filter('.main .error')->text();
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             $error = 'unknown error; could not extract error from response body';
         }
 
@@ -634,11 +636,13 @@ class DemoCombined extends AbstractJob
      */
     protected function detectExternalId(VideoOutbound $outbound)
     {
+        $app      = $this->getHelper('silex')->getApplication();
+
         $video    = $outbound->getVideo();
         $tubeuser = $outbound->getTubesiteUser();
 
         $expectedSite  = $tubeuser->getParam('site')['title'];
-        $expectedTitle = substr(str_replace($this->forbiddenStrings, ' ', 'TEST - ' . $video->getTitle()), 0, 60); // FIXME: refactor
+        $expectedTitle = substr(str_replace($this->forbiddenStrings, ' ', ($app['debug'] ? 'TEST - ' : '') . $video->getTitle()), 0, 60); // FIXME: refactor
 
         $list = $this->getVideosList(1);
         $match = null;
@@ -650,7 +654,6 @@ class DemoCombined extends AbstractJob
                 && $item['title'] == $expectedTitle
             ) {
                 $match = $item;
-                //var_dump($match);
                 break;
             }
         }
@@ -658,9 +661,11 @@ class DemoCombined extends AbstractJob
         // error
 
         if (!$match) {
-            $msg = sprintf('Could not find uploaded file on the status page to '
-                . 'detect external id: video outbound id: %s',
-                $outbound->getExternalId());
+            $msg = sprintf(
+                'Could not find uploaded file on the status page to '
+                    . 'detect external id: video outbound id: %s',
+                $outbound->getExternalId()
+            );
 
             $this->logger->error($msg);
             throw new InternalInconsistencyException($msg);
@@ -767,7 +772,7 @@ class DemoCombined extends AbstractJob
 
         try {
             $error = $dom->filter('.main .error')->text();
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
         }
 
         if ($error) {
@@ -798,7 +803,7 @@ class DemoCombined extends AbstractJob
             try {
                 $statusImage = $node->filter('.thumb2 img')->attr('src');
                 $video['status_image'] = $statusImage;
-            } catch (\InvalidArgumentException $e) {
+            } catch (InvalidArgumentException $e) {
             }
 
             return $video;
@@ -811,31 +816,38 @@ class DemoCombined extends AbstractJob
 
     protected function getUploadData(VideoOutbound $outbound)
     {
+        $app      = $this->getHelper('silex')->getApplication();
+
         $video    = $outbound->getVideo();
         $tubeuser = $outbound->getTubesiteUser();
+
+        $videoFile = $video
+            ->getInbounds()
+            ->last()
+            ->getVideoFile();
 
         return [
             // TODO: refactor
             'slot1_title' =>
-            substr(str_replace($this->forbiddenStrings, ' ', 'TEST - ' . $video->getTitle()), 0, 60),
-                'slot1_descr' =>
-                substr(str_replace($this->forbiddenStrings, ' ', 'TEST PLEASE REJECT - ' . $video->getDescription()), 0, 500),
+                substr(str_replace($this->forbiddenStrings, ' ', ($app['debug'] ? 'TEST - ' : '') . $video->getTitle()), 0, 60),
+            'slot1_descr' =>
+                substr(str_replace($this->forbiddenStrings, ' ', ($app['debug'] ? 'TEST PLEASE REJECT - ' : '') . $video->getDescription()), 0, 500),
 
-                    'slot1_site' => $tubeuser->getParam('site')['id'],
+            'slot1_site' => $tubeuser->getParam('site')['id'],
 
-                    // TODO: pull from video tags
-                    'slot1_chanell' => '.15',
-                    'slot1_channels15' => '',
+            // TODO: pull from video tags
+            'slot1_chanell' => '.15',
+            'slot1_channels15' => '',
 
-                    'slot1_fileType'  => '',
-                    'slot1_http_url'  => '',
-                    'slot1_http_user' => '',
-                    'slot1_http_pass' => '',
-                    'slot1_ftp_url'   => '',
-                    'slot1_ftp_user'  => '',
-                    'slot1_ftp_pass'  => '',
-                    'slot1_file'      => $outbound->getFilename(),
-                ];
+            'slot1_fileType'  => '',
+            'slot1_http_url'  => '',
+            'slot1_http_user' => '',
+            'slot1_http_pass' => '',
+            'slot1_ftp_url'   => '',
+            'slot1_ftp_user'  => '',
+            'slot1_ftp_pass'  => '',
+            'slot1_file'      => $videoFile->getFilename(),
+        ];
     }
 
     /**

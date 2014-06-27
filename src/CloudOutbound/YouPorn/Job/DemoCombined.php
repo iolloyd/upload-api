@@ -328,9 +328,15 @@ class DemoCombined extends AbstractJob
             $outbound->setStatus(VideoOutbound::STATUS_WORKING);
         });
 
+        $videoFile = $outbound
+            ->getVideo()
+            ->getInbounds()
+            ->last()
+            ->getVideoFile();
+
         $response = $this->httpSession->jsonPost('/upload/create-videos/', [
             'body' => [
-                'file' => $outbound->getFilename(), // just the filename here
+                'file' => $videoFile->getFilename(), // just the filename here
             ],
         ]);
 
@@ -348,17 +354,22 @@ class DemoCombined extends AbstractJob
      */
     protected function uploadVideo(VideoOutbound $outbound)
     {
+        $videoFile = $outbound
+            ->getVideo()
+            ->getInbounds()
+            ->last()
+            ->getVideoFile();
+
         // s3 object  TODO: refactor
 
         $app = $this->getHelper('silex')->getApplication();
         $s3  = $app['aws']->get('s3');
 
         $video = $outbound->getVideo();
-        $key   = sprintf('videos/%d/raw/%s', $video->getId(), $video->getFilename());
 
         $object = $s3->getObject([
             'Bucket' => $app['config']['aws']['bucket'],
-            'Key'    => $key,
+            'Key'    => $videoFile->getStoragePath(),
         ]);
 
         $stream = $object['Body']->getStream();
@@ -373,8 +384,8 @@ class DemoCombined extends AbstractJob
             ->addFile(new PostFile(
                 'files[]',
                 $stream,
-                $outbound->getFilename(),
-                ['Content-Type' => $outbound->getFiletype()]
+                $videoFile->getFilename(),
+                ['Content-Type' => $videoFile->getFiletype()]
             ));
 
         $response = $this->httpSession->send($request);
@@ -383,7 +394,7 @@ class DemoCombined extends AbstractJob
 
         // verify
 
-        if ($data['size'] != $outbound->getFilesize()) {
+        if ($data['size'] != $videoFile->getFilesize()) {
             throw new InternalInconsistencyException('YouPorn `size` does not match our filesize');
         }
     }
@@ -393,6 +404,8 @@ class DemoCombined extends AbstractJob
      */
     protected function submitVideo(VideoOutbound $outbound)
     {
+        $app      = $this->getHelper('silex')->getApplication();
+
         $video    = $outbound->getVideo();
         $tubeuser = $outbound->getTubesiteUser();
 
@@ -412,10 +425,10 @@ class DemoCombined extends AbstractJob
                 'body' => [
                     // TODO: refactor
                     'videoedit[title]' =>
-                        substr('(TEST ONLY) ' . str_replace($this->forbiddenStrings, ' ', $video->getTitle()), 0, 250),
+                        substr(($app['debug'] ? '(TEST) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getTitle()), 0, 250),
 
                     'videoedit[description]' =>
-                        substr('(TEST ONLY - PLEASE REJECT) ' . str_replace($this->forbiddenStrings, ' ', $video->getDescription()), 0, 2000),
+                        substr(($app['debug'] ? '(TEST ONLY - PLEASE REJECT) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getDescription()), 0, 2000),
 
                     // TODO: pull from video tags
                     'videoedit[uploader_category_id]' => '19',
