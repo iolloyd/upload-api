@@ -147,10 +147,10 @@ class DemoCombined extends AbstractJob
         /*
          * TODO: refactor
          */
-        $output->writeln('');
-        $output->writeln('<info>Queueing refresh</info> ... in 10 seconds');
-        sleep(10);
-        \Resque::enqueue('default', get_called_class(), ['videooutbound' => $outbound->getId()]);
+        //$output->writeln('');
+        //$output->writeln('<info>Queueing refresh</info> ... in 10 seconds');
+        //sleep(10);
+        //\Resque::enqueue('default', get_called_class(), ['videooutbound' => $outbound->getId()]);
     }
 
     /**
@@ -563,6 +563,12 @@ class DemoCombined extends AbstractJob
         $response = $this->httpSession->send($request);
 
         $data = $response->json()[0];
+
+        // error
+
+        if (!$data['success']) {
+            throw new UploadException('YouPorn file upload failed: ' . (string) $response->getBody());
+        }
 
         // verify
 
