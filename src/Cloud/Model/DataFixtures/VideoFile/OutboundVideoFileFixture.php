@@ -26,10 +26,8 @@ class OutboundVideoFileFixture extends AbstractFixture implements DependentFixtu
      */
     public function load(ObjectManager $em)
     {
-        $outboundVideoFile = new OutboundVideoFile();
-
-        $outboundVideoFile->setVideo(
-            $this->getReference('video-1')
+        $outboundVideoFile = new OutboundVideoFile(
+            $this->getReference('videoOutbound')
         );
 
         $outboundVideoFile
@@ -44,8 +42,6 @@ class OutboundVideoFileFixture extends AbstractFixture implements DependentFixtu
             ->setFiletype('video/mpg')
             ->setFrameRate(123)
             ->setHeight(1024)
-            ->setMd5sum('alskdjfl')
-            ->setResolution(121)
             ->setVideoBitRate(121)
             ->setVideoCodec('mpg')
             ->setWidth(768);
@@ -60,6 +56,7 @@ class OutboundVideoFileFixture extends AbstractFixture implements DependentFixtu
     {
         return [
             'Cloud\Model\DataFixtures\VideoFixture',
+            'Cloud\Model\DataFixtures\VideoOutboundFixture',
         ];
     }
 }

@@ -19,7 +19,7 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity
  * @ORM\HasLifecycleCallbacks
  */
-class Tag extends AbstractModel
+class Category extends AbstractModel
 {
     use Traits\IdTrait;
     use Traits\SlugTrait;
@@ -49,6 +49,5 @@ class Tag extends AbstractModel
     {
       $this->title = $title;
     }
-
 }
 
