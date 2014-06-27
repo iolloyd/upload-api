@@ -48,13 +48,13 @@ class User extends AbstractModel
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"details.user"})
+     * @JMS\Groups({"details.user", "details.session"})
      */
     protected $name;
 
     /**
      * @ORM\Column(type="string", unique=true)
-     * @JMS\Groups({"details.user"})
+     * @JMS\Groups({"details.user", "details.session"})
      */
     protected $email;
 
