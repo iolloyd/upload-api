@@ -16,6 +16,7 @@
 use Cloud\Silex\Converter\DoctrineOrmConverter;
 
 /* var $app \Silex\Application */
+
 $app['converter'] = $app->protect(function($entityName) use ($app) {
     return new DoctrineOrmConverter($app['em'], $entityName);
 });
@@ -32,9 +33,14 @@ $app['converter.outbound'] = $app['converter'](
     'Cloud\Model\VideoOutbound'
 );
 
+$app['converter.category'] = $app['converter'](
+    'Cloud\Model\Category'
+);
+
 $app['converter.tag'] = $app['converter'](
     'Cloud\Model\Tag'
 );
+
 $app['converter.tubesite'] = $app['converter'](
     'Cloud\Model\Tubesite'
 );
@@ -46,14 +52,3 @@ $app['converter.user'] = $app['converter'](
 $app['converter.video'] = $app['converter'](
     'Cloud\Model\Video'
 );
-
-$app['converter.tags.from.request'] = $app->protect(function($tags) use ($app) {
-    $tags = array_map(function($x) use ($app) {
-        return $app['converter.tag']->convert($x['id']);
-    },
-        $tags
-    );
-
-    return $tags;
-});
-
