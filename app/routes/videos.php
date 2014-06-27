@@ -14,23 +14,12 @@ use Cloud\Model\VideoOutbound;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Get a video
- */
-$app->get('/videos/{video}', function(Video $video) use ($app)
-{
-    $groups = ['list', 'details.videos',];
-    return $app['single.response.json']($video, $groups);
-})
-->assert('video', '\d+')
-->convert('video', 'converter.video:convert');
-
-/**
  * Get list of videos
  */
 $app->get('/videos', function(Request $request) use ($app)
 {
     $groups = ['list', 'list.videos'];
-    $options = ['filterFields' => ['status']]; 
+    $options = ['filterFields' => ['status']];
     return $app['paginator.response.json']('cx:video', $groups, $options);
 });
 
@@ -79,8 +68,19 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
     $app['em']->transactional(function () use ($app, $video, $request) {
         $video->setTitle($request->get('title'));
         $video->setDescription($request->get('description'));
-        $tags = $app['converter.tags.from.request']($request->get('tags'));
-        $video->setTags($tags);
+        $video->setPrimaryCategory(
+            $app['converter.category']->convert($request->get('primary_category')['id'])
+        );
+        $video->setSecondaryCategories(
+            array_map(function ($d) use ($app) {
+                return $app['converter.category']->convert($d['id']);
+            }, $request->get('secondary_categories'))
+        );
+        $video->setTags(
+            array_map(function ($d) use ($app) {
+                return $app['converter.tag']->convert($d['id']);
+            }, $request->get('tags'))
+        );
     });
 
     return $app['single.response.json']($video, ['details', 'details.videos']);

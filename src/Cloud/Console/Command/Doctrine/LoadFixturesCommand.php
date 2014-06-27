@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use ReflectionClass;
 use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
 use Doctrine\Common\DataFixtures\Loader as DataFixturesLoader;
 use Doctrine\Common\DataFixtures\Purger\ORMPurger;
@@ -79,7 +80,11 @@ EOT
         $append = $input->getOption('append');
 
         foreach ($paths as $path) {
-            $loader->loadFromDirectory($path);
+            if (is_file($path)) {
+                $this->loadFromFile($loader, $path);
+            } else {
+                $loader->loadFromDirectory($path);
+            }
         }
 
         $fixtures = $loader->getFixtures();
@@ -123,5 +128,31 @@ EOT
         $executor->execute($fixtures, $append);
 
         $output->writeln('');
+    }
+
+    /**
+     * Add fixtures from the given file into the given loader
+     *
+     * @param  DataFixturesLoader $loader
+     * @param  string             $path
+     * @return void
+     */
+    protected function loadFromFile(DataFixturesLoader $loader, $path)
+    {
+        $sourceFile = realpath($path);
+        require_once $sourceFile;
+
+        $declared = get_declared_classes();
+
+        foreach ($declared as $className) {
+            $reflClass = new ReflectionClass($className);
+
+            if ($reflClass->getFileName() == $sourceFile
+                && !$loader->isTransient($className))
+            {
+                $fixture = new $className;
+                $loader->addFixture($fixture);
+            }
+        }
     }
 }
