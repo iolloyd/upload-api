@@ -245,7 +245,7 @@ class Video extends AbstractModel
      * @param  Category $primaryCategory
      * @return Video
      */
-    public function setPrimaryCategory(Category $primaryCategory)
+    public function setPrimaryCategory(Category $primaryCategory = null)
     {
         $this->primaryCategory = $primaryCategory;
         return $this;
@@ -491,7 +491,7 @@ class Video extends AbstractModel
      *
      * @return Video
      */
-    public function setPublishedAt(DateTime $date)
+    public function setPublishedAt(DateTime $date = null)
     {
       $this->publishedAt = $date;
 
@@ -511,7 +511,7 @@ class Video extends AbstractModel
      *
      * @return Video
      */
-    public function setCompletedAt(DateTime $date)
+    public function setCompletedAt(DateTime $date = null)
     {
       $this->completedAt = $date;
       return $this;
