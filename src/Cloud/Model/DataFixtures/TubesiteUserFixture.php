@@ -32,7 +32,6 @@ class TubesiteUserFixture extends AbstractFixture implements DependentFixtureInt
             $this->getReference('youporn'),
             $this->getReference('cumulus')
         );
-
         $youpornUser->setUsername('DaneJones');
         $youpornUser->setPassword('...'); // update db manually
         $youpornUser->setExternalId(4864148);
@@ -42,7 +41,6 @@ class TubesiteUserFixture extends AbstractFixture implements DependentFixtureInt
             $this->getReference('xhamster'),
             $this->getReference('cumulus')
         );
-
         $xhamsterUser->setUsername('Ruseful2011');
         $xhamsterUser->setPassword('...'); // update db manually
         $xhamsterUser->setExternalId(2021166);
@@ -52,12 +50,24 @@ class TubesiteUserFixture extends AbstractFixture implements DependentFixtureInt
             'description' => 'KissingHD.com',
         ]);
 
+        $xvideosUser = new TubesiteUser(
+            $this->getReference('xvideos'),
+            $this->getReference('cumulus')
+        );
+        $xvideosUser->setUsername('reggie@ruseful.com');
+        $xvideosUser->setPassword('...'); // update db manually
+        $xvideosUser->setExternalId(8302147);
+        $xvideosUser->setParam('site', 'hdpov');
+        $xvideosUser->setParam('channel', 'chan_2724');
+
         $em->persist($youpornUser);
         $em->persist($xhamsterUser);
+        $em->persist($xvideosUser);
         $em->flush();
 
         $this->addReference('youporn-user', $youpornUser);
         $this->addReference('xhamster-user', $xhamsterUser);
+        $this->addReference('xvideos-user', $xvideosUser);
     }
 
     /**

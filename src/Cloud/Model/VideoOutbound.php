@@ -9,8 +9,9 @@
  * @license    Proprietary
  */
 
-
 namespace Cloud\Model;
+
+use Cloud\Model\VideoFile\OutboundVideoFile;
 
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
@@ -42,7 +43,7 @@ class VideoOutbound extends AbstractModel
     /**
      * @ORM\OneToOne(
      *   targetEntity="Cloud\Model\VideoFile\OutboundVideoFile",
-     *   inversedBy="outbound"
+     *   mappedBy="outbound"
      * )
      * @JMS\Groups({"details.outbounds"})
      */
@@ -346,4 +347,25 @@ class VideoOutbound extends AbstractModel
         return $this;
     }
 
+    /**
+     * Set the videofile for this outbound
+     *
+     * @param  OutboundVideoFile $videoFile
+     * @return VideoInbound
+     */
+    public function setVideoFile(OutboundVideoFile $videoFile)
+    {
+        $this->videoFile = $videoFile;
+        return $this;
+    }
+
+    /**
+     * Get the videofile for this outbound
+     *
+     * @return OutboundVideoFile
+     */
+    public function getVideoFile()
+    {
+        return $this->videoFile;
+    }
 }
