@@ -99,15 +99,6 @@ class Tubesite extends AbstractModel
         $this->loginUrl = $loginUrl;
         return $this;
     }
-    public function getOrientation()
-    {
-        return $this->orientation;
-    }
-
-    public function setOrientation($orientation)
-    {
-        $this->orientation = $orientation;
-    }
 
     /**
      * Set the short description based
