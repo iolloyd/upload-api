@@ -27,20 +27,7 @@ class TagFixture extends AbstractFixture
      */
     public function load(ObjectManager $em)
     {
-        // Based on YouPorn:
         $tags = [
-            'Amateur', 'Anal', 'Asian', 'BBW', 'Bear', 'Big Butt',
-            'Big Tits', 'Bisexual', 'Blonde', 'Blowjob', 'Brunette', 'Coed',
-            'Compilation', 'Couples', 'Creampie', 'Cumshots', 'Cunnilingus',
-            'Dildos/Toys', 'DILF', 'DP', 'Ebony', 'European', 'Facial', 'Fantasy',
-            'Fetish', 'Fingering', 'Funny', 'Gay', 'German', 'Gonzo', 'Group Sex',
-            'Hairy', 'Handjob', 'HD', 'Hentai', 'Instructional', 'Interracial',
-            'Interview', 'Kissing', 'Latina', 'Latino', 'Lesbian', 'Massage',
-            'Masturbate', 'Mature', 'MILF', 'Panties', 'Pantyhose', 'POV',
-            'Public', 'Redhead', 'Rimming', 'Romantic', 'Shaved', 'Shemale',
-            'Solo Girl', 'Solo Male', 'Squirting', 'Straight Sex', 'Swallow', 'Teen',
-            'Threesome', 'Twink', 'Underwear', 'Videos', 'Vintage', 'Voyeur',
-            'Webcam', 'Young/Old',
         ];
 
         foreach ($tags as $title) {
