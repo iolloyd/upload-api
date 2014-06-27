@@ -13,6 +13,7 @@
 namespace Cloud\Model;
 
 use DateTime;
+use InvalidArgumentException;
 use Doctrine\Common\Collections\ArrayCollection;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -135,6 +136,19 @@ class Video extends AbstractModel
     protected $stats;
 
     /**
+     * @ORM\ManyToOne(targetEntity="Category")
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $primaryCategory;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="Category")
+     * @ORM\JoinTable(name="video_category")
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $secondaryCategories;
+
+    /**
      * @ORM\ManyToMany(targetEntity="Tag")
      * @JMS\Groups({"list", "details"})
      */
@@ -151,11 +165,12 @@ class Video extends AbstractModel
     /**
      * Constructor
      */
-    public function __construct($user)
+    public function __construct()
     {
-        $this->tags = new ArrayCollection();
         $this->inbounds = new ArrayCollection();
         $this->outbounds = new ArrayCollection();
+        $this->secondaryCategories = new ArrayCollection();
+        $this->tags = new ArrayCollection();
     }
 
     /**
@@ -222,6 +237,98 @@ class Video extends AbstractModel
         return $this->description;
     }
 
+    //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Set the primary category
+     *
+     * @param  Category $primaryCategory
+     * @return Video
+     */
+    public function setPrimaryCategory(Category $primaryCategory)
+    {
+        $this->primaryCategory = $primaryCategory;
+        return $this;
+    }
+
+    /**
+     * Get the primary category
+     *
+     * @return Category
+     */
+    public function getPrimaryCategory()
+    {
+        return $this->primaryCategory;
+    }
+
+    /**
+     * Set the secondary categories
+     *
+     * @param  array|Iteratable $categories
+     * @return Video
+     */
+    public function setSecondaryCategories($categories)
+    {
+        $this->secondaryCategories->clear();
+
+        foreach ($categories as $category) {
+            $this->addSecondaryCategory($category);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add a secondary category
+     *
+     * @param  Tag $tag
+     * @return Video
+     */
+    public function addSecondaryCategory(Category $category)
+    {
+        $this->secondaryCategories->add($category);
+        return $this;
+    }
+
+    /**
+     * Remove a secondary category
+     *
+     * @param  Tag $tag
+     * @return Video
+     */
+    public function removeSecondaryCategory(Category $category)
+    {
+        $this->secondaryCategories->removeElement($category);
+        return $this;
+    }
+
+    /**
+     * Get the secondary categories
+     *
+     * @return ArrayCollection
+     */
+    public function getSecondaryCategories()
+    {
+        return $this->secondaryCategories;
+    }
+
+    /**
+     * Set the tags
+     *
+     * @param  array|Iteratable $tags
+     * @return Video
+     */
+    public function setTags($tags)
+    {
+        $this->tags->clear();
+
+        foreach ($tags as $tag) {
+            $this->addTag($tag);
+        }
+
+        return $this;
+    }
+
     /**
      * Add a tag
      *
@@ -256,6 +363,8 @@ class Video extends AbstractModel
         return $this->tags;
     }
 
+    //////////////////////////////////////////////////////////////////////////
+
     /**
      * Set the processing status
      *
@@ -271,7 +380,7 @@ class Video extends AbstractModel
             self::STATUS_WORKING,
             self::STATUS_COMPLETE
         ])) {
-            throw new \InvalidArgumentException("Invalid status");
+            throw new InvalidArgumentException("Invalid status");
         }
 
         $this->status = $status;
@@ -382,7 +491,7 @@ class Video extends AbstractModel
      *
      * @return Video
      */
-    public function setPublishedAt(\DateTime $date)
+    public function setPublishedAt(DateTime $date)
     {
       $this->publishedAt = $date;
 
@@ -402,25 +511,9 @@ class Video extends AbstractModel
      *
      * @return Video
      */
-    public function setCompletedAt(\DateTime $date)
+    public function setCompletedAt(DateTime $date)
     {
       $this->completedAt = $date;
-      return $this;
-    }
-
-    /**
-     * @param string $tags a json encoded array of tags
-     *
-     * @return Video
-     */
-    public function setTags($tags)
-    {
-      $this->tags->clear();
-
-      foreach ($tags as $tag) {
-          $this->addTag($tag);
-      }
-
       return $this;
     }
 

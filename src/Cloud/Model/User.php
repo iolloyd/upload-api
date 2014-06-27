@@ -46,13 +46,13 @@ class User extends AbstractModel implements AdvancedUserInterface, EquatableInte
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list.companies", "details.companies", "details.videos"})
+     * @JMS\Groups({"details.user", "details.session"})
      */
     protected $name;
 
     /**
      * @ORM\Column(type="string", unique=true)
-     * @JMS\Groups({"details.user"})
+     * @JMS\Groups({"details.user", "details.session"})
      */
     protected $email;
 
