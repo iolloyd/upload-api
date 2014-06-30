@@ -108,7 +108,7 @@ $app->register(new SessionServiceProvider(), [
 $app->register(new CorsHeadersServiceProvider(), [
     'cors.options' => [
         'allow_credentials' => true,
-        'allow_origin'      => $app['debug'] ? null : 'http://app.staging.cldsys.net',
+        'allow_origin'      => $app['debug'] ? null : 'https://app.cldstaging.net',
         'max_age'           => 604800,
     ],
 ]);
