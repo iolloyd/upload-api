@@ -94,13 +94,14 @@ class Application extends BaseApplication
 
         // Doctrine ORM Commands
         $doctrine = [];
-        $doctrine['doctrine:schema:create']   = new \Doctrine\ORM\Tools\Console\Command\SchemaTool\CreateCommand();
-        $doctrine['doctrine:schema:update']   = new \Doctrine\ORM\Tools\Console\Command\SchemaTool\UpdateCommand();
-        $doctrine['doctrine:schema:drop']     = new \Doctrine\ORM\Tools\Console\Command\SchemaTool\DropCommand();
-        $doctrine['doctrine:schema:validate'] = new \Doctrine\ORM\Tools\Console\Command\ValidateSchemaCommand();
-        $doctrine['doctrine:mapping:info']    = new \Doctrine\ORM\Tools\Console\Command\InfoCommand();
-        $doctrine['doctrine:query:dql']       = new \Doctrine\ORM\Tools\Console\Command\RunDqlCommand();
-        $doctrine['doctrine:query:sql']       = new \Doctrine\DBAL\Tools\Console\Command\RunSqlCommand();
+        $doctrine['doctrine:schema:create']    = new \Doctrine\ORM\Tools\Console\Command\SchemaTool\CreateCommand();
+        $doctrine['doctrine:schema:update']    = new \Doctrine\ORM\Tools\Console\Command\SchemaTool\UpdateCommand();
+        $doctrine['doctrine:schema:drop']      = new \Doctrine\ORM\Tools\Console\Command\SchemaTool\DropCommand();
+        $doctrine['doctrine:schema:validate']  = new \Doctrine\ORM\Tools\Console\Command\ValidateSchemaCommand();
+        $doctrine['doctrine:mapping:info']     = new \Doctrine\ORM\Tools\Console\Command\InfoCommand();
+        $doctrine['doctrine:proxies:generate'] = new \Doctrine\ORM\Tools\Console\Command\GenerateProxiesCommand();
+        $doctrine['doctrine:query:dql']        = new \Doctrine\ORM\Tools\Console\Command\RunDqlCommand();
+        $doctrine['doctrine:query:sql']        = new \Doctrine\DBAL\Tools\Console\Command\RunSqlCommand();
 
         foreach ($doctrine as $name => $command) {
             $command->setName($name);
