@@ -20,6 +20,8 @@ deploy:
     bucket: cldsys-travis
     local-dir: archive
     upload-dir: cloudxxx-api
+    on:
+      branch: staging
 
   - provider: opsworks
     access-key-id: AKIAITO7NERWDHUB7PFA
@@ -27,6 +29,8 @@ deploy:
       secure: CyNd2eulxoaLZtC2wnJ+QaRJsoDQY3ol8++AnLIBFjISjSpe9AfsKgnbouaolGziT4KjyffyTwFxpkLWG3YykaawA1JD9+3GuielZ2oJW3P7dsw4NtnShVijHq+1/mQ0ORra2S1lHbBBuZ3eBLp2wLGwiW0WVLef8Ie4SbCozS4=
     app-id: 8f233699-7c36-4bcc-b94e-d8256b738fec
     wait-until-deployed: true
+    on:
+      branch: staging
 
 env:
   - NOKOGIRI_USE_SYSTEM_LIBRARIES=true
@@ -38,3 +42,4 @@ cache:
 branches:
   only:
     - master
+    - staging
