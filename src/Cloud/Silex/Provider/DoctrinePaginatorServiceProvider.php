@@ -5,30 +5,40 @@
  * Copyright (C) 2014 Really Useful Limited.
  * Proprietary code. Usage restrictions apply.
  *
- * @copyright  Copyright (C) 2014 Really Useful Limited
- * @license    Proprietary
+ * @copyright 2014 Really Useful Limited
+ * @license   Proprietary
  */
 
 namespace Cloud\Silex\Provider;
 
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use JMS\Serializer\SerializerBuilder;
 use JMS\Serializer\SerializationContext;
-use Pagerfanta\Adapter\ArrayAdapter;
 use Pagerfanta\Adapter\DoctrineCollectionAdapter;
 use Pagerfanta\Pagerfanta;
 use Silex\Application;
 use Silex\ServiceProviderInterface;
 
+/**
+ * Class DoctrinePaginatorServiceProvider
+ *
+ * @package   Cloud\Silex\Provider
+ * @author    Lloyd Moore <lloyd@cloud.xxx>
+ * @copyright 2014 Really Useful Limited
+ * @license   Proprietary
+ */
 class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 {
     /**
      * {@inheritDoc}
+     *
+     * @param Application $app The application
+     *
+     * @return PagerFanta
      */
     public function register(Application $app)
     {
-        $app['paginator'] = $app->protect(function ($model, $groups, $options = []) use ($app) {
+        $app['paginator'] = $app->protect(function ($model, $options = []) use ($app) {
 
             $criteria = Criteria::create();
             $filterFields = count($options) && isset($options['filterFields']) 
@@ -51,6 +61,8 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $adapter = new DoctrineCollectionAdapter($list);
             $pager = new Pagerfanta($adapter);
 
+            // This causes an empty result in the case of requesting an impossible page
+            $pager->setAllowOutOfRangePages(true);
             $page    = $app['request']->get('page')     ?: 1;
             $perPage = $app['request']->get('per_page') ?: 10;
 
@@ -64,15 +76,24 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
         $app['serializer'] = $app->protect(function($results, $groups) use ($app) {
             $serializer = SerializerBuilder::create()
                 ->setDebug($app['debug'])
-                ->build();
+                ->addDefaultHandlers()
+                ->configureHandlers(
+                    function(\JMS\Serializer\Handler\HandlerRegistry $registry) {
+                        $registry->registerHandler('serialization', 'Cloud\Model\Category', 'json',
+                            function($visitor, \Cloud\Model\Category $obj, array $type) {
+                                return $obj->getId();
+                            }
+                        );
+                    }
+                )
 
-            $context = SerializationContext::create()
-                ->setSerializeNull(true);
+                ->build()
+            ;
+            $context = SerializationContext::create()->setSerializeNull(true);
 
             if ($groups) {
                 $context->setGroups($groups);
             }
-
             $jsonContent = $serializer->serialize($results, 'json', $context);
 
             return json_decode($jsonContent);
@@ -98,7 +119,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
             $hostUrl = $app['request']->getSchemeAndHttpHost() . $app['request']->getPathInfo();
             $params  = $app['request']->query->all();
-            $pager   = $app['paginator']($model, $groups, $options);
+            $pager   = $app['paginator']($model, $options);
             $navlinks = $this->getLinks($hostUrl, $params, $pager);
             $jsonContent = $app['serializer']($pager->getCurrentPageResults(), $groups);
 
@@ -111,37 +132,63 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
+     *
+     * @param Application $app The application
+     *
+     * @return void
      */
-    public function boot(\Silex\Application $app)
+    public function boot(Application $app)
     {
     }
 
+    /**
+     * Returns the http links
+     *
+     * @param string     $hostUrl The host url
+     * @param array      $params  Required parameters
+     * @param Pagerfanta $pager   The pager
+     *
+     * @return array
+     */
     protected function getLinks($hostUrl, $params, $pager)
     {
-        $link = $this->getLink($hostUrl, $params, $pager);
-        $currentPage = $pager->getCurrentPage();
-        $pageSize = $pager->getMaxPerPage();
-        $lastPage = $pager->getNbPages();
+        $link = $this->getLink($hostUrl, $params);
+        $currentPage    = $pager->getCurrentPage();
+        $pageSize       = $pager->getMaxPerPage();
+        $lastPage       = $pager->getNbPages();
         $totalItemCount = $pager->getNbResults();
 
-        $navlink = [
+        $navLink = [
             $link('first', 1),
             $link('last', $lastPage),
-            $pager->hasPreviousPage() ? $link('prev', $pager->getPreviousPage()) : "",
-            $pager->hasNextPage()     ? $link('next', $pager->getNextPage())     : "",
+            $pager->hasPreviousPage()
+                ? $link('prev', $pager->getPreviousPage())
+                : "",
+            $pager->hasNextPage()
+                ? $link('next', $pager->getNextPage())
+                : "",
         ];
 
-        $rangelink = $this->getRangeLinks($currentPage, $pageSize, $lastPage, $totalItemCount);
+        $rangeLink = $this->getRangeLinks(
+            $currentPage, $pageSize, $lastPage, $totalItemCount
+        );
+        $navLink   = str_replace(', ,', ', ', implode(', ', $navLink));
 
-        $navlink = str_replace(', ,', ', ', implode(', ', $navlink));
-
-        return ['link' => $navlink, 'range' => $rangelink,];
+        return ['link' => $navLink, 'range' => $rangeLink,];
     }
 
-    protected function getLink($hostUrl, $params, $pager)
+    /**
+     * Returns a function that returns a link
+     *
+     * @param string $hostUrl The host url
+     * @param array  $params  The required parameters for the link
+     *
+     * @return callable
+     */
+    protected function getLink($hostUrl, $params)
     {
-        return function($rel, $page) use ($hostUrl, $params) {
+        return function ($rel, $page) use ($hostUrl, $params) {
             $params['page'] = $page;
             $params = http_build_query($params);
             $link = sprintf('<%s?%s>; rel="%s"', $hostUrl, $params, $rel);
@@ -152,13 +199,23 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
     }
 
     /**
-     * X-Pagination-Range: items 1-10/250; pages 1/25
+     * Returns http links for ranges
+     *
+     * @param int $currentPage    The number of the current page
+     * @param int $pageSize       The number of items per page
+     * @param int $lastPage       The number of the last page
+     * @param int $totalItemCount The total number of items
+     *
+     * @return string $links The generated http links
      */
-    protected function getRangeLinks($currentPage, $pageSize, $lastPage, $totalItemCount)
-    {
+    protected function getRangeLinks(
+        $currentPage, $pageSize, $lastPage, $totalItemCount
+    ) {
         $currentItem = ($currentPage * $pageSize) - $pageSize;
         $lastItemOfPage = min($currentItem + $pageSize - 1, $totalItemCount);
-        $links = "X-Pagination-Range: items $currentItem-$lastItemOfPage/$totalItemCount; page $currentPage/$lastPage";
+        $links = "X-Pagination-Range: "
+               . "items $currentItem-$lastItemOfPage/$totalItemCount; "
+               . "page $currentPage/$lastPage";
 
         return $links;
     }
