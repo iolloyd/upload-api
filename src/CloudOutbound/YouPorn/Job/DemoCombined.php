@@ -500,11 +500,7 @@ class DemoCombined extends AbstractJob
             $outbound->setStatus(VideoOutbound::STATUS_WORKING);
         });
 
-        $videoFile = $outbound
-            ->getVideo()
-            ->getInbounds()
-            ->last()
-            ->getVideoFile();
+        $videoFile = $outbound->getVideoFile();
 
         $response = $this->httpSession->jsonPost('/upload/create-videos/', [
             'body' => [
@@ -526,11 +522,7 @@ class DemoCombined extends AbstractJob
      */
     protected function uploadVideo(VideoOutbound $outbound)
     {
-        $videoFile = $outbound
-            ->getVideo()
-            ->getInbounds()
-            ->last()
-            ->getVideoFile();
+        $videoFile = $outbound->getVideoFile();
 
         // s3 object  TODO: refactor
 
@@ -539,12 +531,13 @@ class DemoCombined extends AbstractJob
 
         $video = $outbound->getVideo();
 
-        $object = $s3->getObject([
-            'Bucket' => $app['config']['aws']['bucket'],
-            'Key'    => $videoFile->getStoragePath(),
-        ]);
+        $objectUrl = $s3->getObjectUrl(
+            $app['config']['aws']['bucket'],
+            $videoFile->getStoragePath(),
+            '+1 hour'
+        );
 
-        $stream = $object['Body']->getStream();
+        $stream = fopen($objectUrl, 'r', false);
 
         // upload
 
