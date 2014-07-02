@@ -329,7 +329,7 @@ class DemoCombined extends AbstractJob
             }
 
             // timeout
-            if (time() - $start >= 120) {
+            if (time() - $start >= 900) {
                 $zencoder->jobs->cancel($job->id);
 
                 $app['em']->transactional(function ($em) use ($videoFile) {
