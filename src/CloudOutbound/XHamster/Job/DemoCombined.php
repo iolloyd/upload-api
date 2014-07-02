@@ -108,7 +108,7 @@ class DemoCombined extends AbstractJob
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $outbound = $this->em->find('cx:videooutbound', $input->getArgument('videooutbound'));
+        $outbound = $this->em->find('cx:videoOutbound', $input->getArgument('videooutbound'));
         $outboundId = $input->getArgument('videooutbound');
         if (!$outbound) {
             $msg = sprintf("No videoOutbound for Id: {%s}", $outboundId);
