@@ -695,17 +695,15 @@ class DemoCombined extends AbstractJob
         $s3  = $app['aws']->get('s3');;
 
         $video = $outbound->getVideo();
-        $videoFile = $video
-            ->getInbounds()
-            ->last()
-            ->getVideoFile();
+        $videoFile = $outbound->getVideoFile();
 
-        $object = $s3->getObject([
-            'Bucket' => $app['config']['aws']['bucket'],
-            'Key'    => $videoFile->getStoragePath(),
-        ]);
+        $objectUrl = $s3->getObjectUrl(
+            $app['config']['aws']['bucket'],
+            $videoFile->getStoragePath(),
+            '+1 hour'
+        );
 
-        $stream = $object['Body']->getStream();
+        $stream = fopen($objectUrl, 'r', false);
 
         // upload
 
@@ -993,10 +991,7 @@ class DemoCombined extends AbstractJob
         $video    = $outbound->getVideo();
         $tubeuser = $outbound->getTubesiteUser();
 
-        $videoFile = $video
-            ->getInbounds()
-            ->last()
-            ->getVideoFile();
+        $videoFile = $outbound->getVideoFile();
 
         return [
             // TODO: refactor
