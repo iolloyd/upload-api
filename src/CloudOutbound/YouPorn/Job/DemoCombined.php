@@ -541,7 +541,13 @@ class DemoCombined extends AbstractJob
 
         // upload
 
-        $request = $this->httpSession->createJsonRequest('POST', '/upload/');
+        $request = $this->httpSession->createJsonRequest(
+            'POST',
+            '/upload/',
+            [
+                'timeout' => 900,
+            ]
+        );
 
         $request->getBody()
             ->setField('userId', $outbound->getParam('user_uploader_id'))
