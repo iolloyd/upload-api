@@ -711,6 +711,7 @@ class DemoCombined extends AbstractJob
             'POST',
             $baseUrl->combine('/cgi-bin/ubr_upload.6.8.pl'),
             [
+                'timeout' => 900,
                 'headers' => [
                     'Referer' => (string) $baseUrl->combine('/producer.php'),
                     'Connection' => 'keep-alive',
