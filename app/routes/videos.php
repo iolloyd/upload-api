@@ -114,7 +114,7 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
     $app['em']->transactional(function ($em) use ($app, $video) {
         $video->setStatus(Video::STATUS_PENDING);
 
-        $tubeusers = $app['em']->getRepository('cx:tubesiteuser')->findAll();
+        $tubeusers = $app['em']->getRepository('cx:tubesiteUser')->findAll();
 
         foreach ($tubeusers as $tubeuser) {
             $outbound = new VideoOutbound($video);
