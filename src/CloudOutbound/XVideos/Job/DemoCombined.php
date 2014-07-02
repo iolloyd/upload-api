@@ -584,6 +584,7 @@ class DemoCombined extends AbstractJob
             'POST',
             '/account/uploads/submit',
             [
+                'timeout' => 900,
                 'headers' => [
                     'Referer' => 'http://upload.xvideos.com/account/uploads/new',
                     'Origin' => 'http://upload.xvideos.com',
