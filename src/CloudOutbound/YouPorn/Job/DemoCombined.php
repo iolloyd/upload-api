@@ -128,6 +128,7 @@ class DemoCombined extends AbstractJob
 
         } else {
 
+            /*
             $output->writeln('<info>Starting YouPorn outbound upload...</info>');
 
             $output->writeln('<info> + creating draft</info>');
@@ -138,6 +139,18 @@ class DemoCombined extends AbstractJob
 
             $output->writeln('<info> + submitting</info>');
             $this->submitVideo($outbound);
+            */
+
+            // --
+
+            $output->writeln('<info>Starting YouPorn <comment>Legacy Form</comment> outbound upload...</info>');
+
+            $output->writeln('<info> + validating metadata</info>');
+            $this->legacyValidateVideo($outbound);
+
+            $output->writeln('<info> + uploading video and metadata</info>');
+            $this->legacyUploadVideo($outbound);
+
         }
 
         $this->logout($tubeuser);
@@ -634,6 +647,175 @@ class DemoCombined extends AbstractJob
                 json_encode($data)
             ));
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Validate metadata via legacy HTML form
+     */
+    protected function legacyValidateVideo(VideoOutbound $outbound)
+    {
+        $app   = $this->getHelper('silex')->getApplication();
+        $video = $outbound->getVideo();
+
+        $response = $this->httpSession->jsonPost('/upload/word_validation/', [
+            'headers' => [
+                'Referer' => 'http://www.youporn.com/upload-legacy/',
+                'Origin'  => 'http://www.youporn.com',
+            ],
+            'body' => [
+                'title' =>
+                    substr(($app['debug'] ? '(TEST) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getTitle()), 0, 250),
+                'description' =>
+                    substr(($app['debug'] ? '(TEST ONLY - PLEASE REJECT) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getDescription()), 0, 2000),
+                'tags' => 'pov',
+            ],
+        ]);
+
+        $body = (string) $response->getBody();
+
+        // success
+
+        if ($body == 'false') {
+            return;
+        }
+
+        // error
+
+        throw new UploadException(
+            'YouPorn legacy metadata validation failed: '
+            . 'Invalid fields: ' . $body
+        );
+    }
+
+    /**
+     * Upload video and post metadata via legacy HTML form
+     *
+     * This can be used in place of `uploadVideo()` and `submitVideo()`
+     */
+    protected function legacyUploadVideo(VideoOutbound $outbound)
+    {
+        $video     = $outbound->getVideo();
+        $videoFile = $outbound->getVideoFile();
+        $tubeuser  = $outbound->getTubesiteUser();
+
+        // s3 object  TODO: refactor
+
+        $app = $this->getHelper('silex')->getApplication();
+        $s3  = $app['aws']->get('s3');
+
+        $objectUrl = $s3->getObjectUrl(
+            $app['config']['aws']['bucket'],
+            $videoFile->getStoragePath(),
+            '+1 hour'
+        );
+
+        $stream = \GuzzleHttp\Stream\Stream::factory(
+            fopen($objectUrl, 'r', false),
+            $videoFile->getFilesize()
+        );
+
+        // upload
+
+        $request = $this->httpSession->createRequest(
+            'POST',
+            '/upload-legacy/',
+            [
+                'timeout' => 900,
+                'headers' => [
+                    'Referer' => 'http://www.youporn.com/upload-legacy/',
+                    'Origin'  => 'http://www.youporn.com',
+                ],
+                'query' => [
+                    'content_partner_site_id' => $tubeuser->getParam('content_partner_site_id'),
+                ],
+                'body' => [
+                    'upload[title]' =>
+                        substr(($app['debug'] ? '(TEST) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getTitle()), 0, 250),
+
+                    'upload[description]' =>
+                        substr(($app['debug'] ? '(TEST ONLY - PLEASE REJECT) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getDescription()), 0, 2000),
+
+                    'upload[uploader_category_id]' => '36',
+                    'upload[type]' => 'straight',
+                    'upload[tags]' => 'pov',
+                ],
+            ]
+        );
+
+        $request->getBody()
+            ->addFile(new PostFile(
+                'upload[up_file]',
+                $stream,
+                $videoFile->getFilename(),
+                ['Content-Type' => $videoFile->getFiletype()]
+            ));
+
+        $response = $this->httpSession->send($request);
+
+        $body = (string) $response->getBody();
+
+        $dom = new DomCrawler();
+        $dom->addHtmlContent($body);
+
+        // error
+
+        if (strpos($body, '<h1>Upload Complete!</h1>') === false) {
+            try {
+                $error = $dom->filter('.form_row ul.error li')->text();
+            } catch (InvalidArgumentException $e) {
+                $error = 'unknown error; could not extract error from response body';
+            }
+
+            throw new UploadException('YouPorn legacy upload failed: ' . $error);
+        }
+
+        $receiptRows = $dom->filter('.uploadReceipt tr');
+
+        if (!$receiptRows->count()) {
+            throw new UnexpectedResponseException('Could not extract upload receipt from response body');
+        }
+
+        // verify
+
+        $data = $receiptRows->each(function ($node) {
+            try {
+                $key = $node->filter('th')->text();
+                $value = $node->filter('td')->text();
+
+                $key = trim(rtrim(strtolower($key), ':'));
+                $value = trim($value);
+
+                return [$key => $value];
+            } catch (InvalidArgumentException $e) {
+            }
+        });
+
+        $data = array_reduce($data, 'array_replace', []); // flatten
+
+        //var_dump($data);
+
+        if (empty($data['file size'])) {
+            throw new UnexpectedResponseException('Could not extract upload file size from response body');
+        }
+
+        $size = ((float) $data['file size']) * 1000;
+
+        if ($size != $videoFile->getFilesize()) {
+            throw new InternalInconsistencyException('YouPorn legacy uploaded file size does not match our filesize');
+        }
+
+        if (empty($data['video id']) || !is_numeric($data['video id'])) {
+            throw new UnexpectedResponseException('Could not extract video id from response body');
+        }
+
+        // success
+
+        $this->em->transactional(function ($em) use ($outbound, $data) {
+            $outbound->setExternalId((int) $data['video id']);
+            $outbound->setParam('legacy', true);
+        });
     }
 }
 
