@@ -43,6 +43,7 @@ use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 class DemoCombined extends AbstractJob
 {
     const STATUS_NOT_CONVERTED = 'Not converted';
+    const STATUS_IN_CONVERSION = 'In conversion';
     const STATUS_REPOST        = 'Repost';
     const STATUS_PUBLICATION   = 'Publication';
     const STATUS_DELETED       = 'Deleted';
@@ -205,7 +206,7 @@ class DemoCombined extends AbstractJob
         // create outbound videofile
 
         $videoFile = new \Cloud\Model\VideoFile\OutboundVideoFile($outbound);
-        $videoFile->setFilename($inboundVideoFile->getFilename());
+        $videoFile->setFilename(pathinfo($inboundVideoFile->getFilename())['filename'] . '.mp4');
         $videoFile->setFiletype('video/mp4');
         $videoFile->setStatus('pending');
 
@@ -703,7 +704,10 @@ class DemoCombined extends AbstractJob
             '+1 hour'
         );
 
-        $stream = fopen($objectUrl, 'r', false);
+        $stream = \GuzzleHttp\Stream\Stream::factory(
+            fopen($objectUrl, 'r', false),
+            $videoFile->getFilesize()
+        );
 
         // upload
 
@@ -905,6 +909,7 @@ class DemoCombined extends AbstractJob
 
             switch($match['status']) {
                 case self::STATUS_NOT_CONVERTED:
+                case self::STATUS_IN_CONVERSION:
                     $outbound->setStatus(VideoOutbound::STATUS_WORKING);
                     break;
 
