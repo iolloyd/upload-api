@@ -29,6 +29,7 @@ class TubesiteUser extends AbstractModel implements JsonSerializable
     use Traits\CreatedAtTrait;
     use Traits\UpdatedAtTrait;
     use Traits\CompanyTrait;
+    use Traits\SiteTrait;
 
     /**
      * @ORM\JoinColumn(nullable=false)

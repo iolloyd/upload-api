@@ -21,6 +21,10 @@ $app['converter'] = $app->protect(function($entityName) use ($app) {
     return new DoctrineOrmConverter($app['em'], $entityName);
 });
 
+$app['converter.category'] = $app['converter'](
+    'Cloud\Model\Category'
+);
+
 $app['converter.company'] = $app['converter'](
     'Cloud\Model\Company'
 );
@@ -33,8 +37,8 @@ $app['converter.outbound'] = $app['converter'](
     'Cloud\Model\VideoOutbound'
 );
 
-$app['converter.category'] = $app['converter'](
-    'Cloud\Model\Category'
+$app['converter.site'] = $app['converter'](
+    'Cloud\Model\Site'
 );
 
 $app['converter.tag'] = $app['converter'](
