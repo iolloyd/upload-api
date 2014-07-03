@@ -172,7 +172,7 @@ class DemoCombined extends AbstractJob
         // create outbound videofile
 
         $videoFile = new \Cloud\Model\VideoFile\OutboundVideoFile($outbound);
-        $videoFile->setFilename($inboundVideoFile->getFilename());
+        $videoFile->setFilename(pathinfo($inboundVideoFile->getFilename())['filename'] . '.mp4');
         $videoFile->setFiletype('video/mp4');
         $videoFile->setStatus('pending');
 
@@ -537,7 +537,10 @@ class DemoCombined extends AbstractJob
             '+1 hour'
         );
 
-        $stream = fopen($objectUrl, 'r', false);
+        $stream = \GuzzleHttp\Stream\Stream::factory(
+            fopen($objectUrl, 'r', false),
+            $videoFile->getFilesize()
+        );
 
         // upload
 
