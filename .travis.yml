@@ -5,6 +5,7 @@ php:
 install:
   - composer self-update
   - composer install --prefer-dist
+  - ./bin/cloud doctrine:proxies:generate
 
 script:
   - mkdir archive
