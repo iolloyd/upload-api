@@ -12,6 +12,8 @@
 namespace Cloud\Doctrine;
 
 use DateTime;
+use Cloud\Doctrine\Internal\AbstractEventSubscriber;
+use Cloud\Doctrine\Internal\ClassMetadataUtils as Utils;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Persistence\Mapping\ClassMetadata;
 use Doctrine\ORM\Event\LifecycleEventArgs;
@@ -73,8 +75,8 @@ class TimestampEventSubscriber extends AbstractEventSubscriber
     {
         $metadata = $om->getClassMetadata(get_class($object));
 
-        if (!$this->hasMetadataClassFlag($metadata, self::FLAG_UPDATED)
-            && ($isCreated && !$this->hasMetadataClassFlag($metadata, self::FLAG_CREATED))
+        if (!Utils::hasMetadataClassFlag($metadata, self::FLAG_UPDATED)
+            && ($isCreated && !Utils::hasMetadataClassFlag($metadata, self::FLAG_CREATED))
         ) {
             return;
         }
@@ -83,7 +85,7 @@ class TimestampEventSubscriber extends AbstractEventSubscriber
 
         foreach ($metadata->fieldMappings as $fieldName => $mapping) {
             if ($isCreated
-                && $this->hasMetadataFieldFlag($metadata, $fieldName, self::FLAG_CREATED)
+                && Utils::hasMetadataFieldFlag($metadata, $fieldName, self::FLAG_CREATED)
             ) {
                 $value = $metadata->getFieldValue($object, $fieldName);
 
@@ -95,7 +97,7 @@ class TimestampEventSubscriber extends AbstractEventSubscriber
                 $this->setFieldValue($om, $metadata, $object, $fieldName, $now);
             }
 
-            if ($this->hasMetadataFieldFlag($metadata, $fieldName, self::FLAG_UPDATED)) {
+            if (Utils::hasMetadataFieldFlag($metadata, $fieldName, self::FLAG_UPDATED)) {
                 $this->setFieldValue($om, $metadata, $object, $fieldName, $now);
             }
         }
@@ -107,13 +109,13 @@ class TimestampEventSubscriber extends AbstractEventSubscriber
     protected function configureFieldAnnotation(ObjectManager $om, ClassMetadata $metadata, $fieldName, $annotation)
     {
         if ($annotation instanceof Annotation\CreatedAt) {
-            $this->setMetadataClassFlag($metadata, self::FLAG_CREATED);
-            $this->setMetadataFieldFlag($metadata, $fieldName, self::FLAG_CREATED);
+            Utils::setMetadataClassFlag($metadata, self::FLAG_CREATED);
+            Utils::setMetadataFieldFlag($metadata, $fieldName, self::FLAG_CREATED);
         }
 
         if ($annotation instanceof Annotation\UpdatedAt) {
-            $this->setMetadataClassFlag($metadata, self::FLAG_UPDATED);
-            $this->setMetadataFieldFlag($metadata, $fieldName, self::FLAG_UPDATED);
+            Utils::setMetadataClassFlag($metadata, self::FLAG_UPDATED);
+            Utils::setMetadataFieldFlag($metadata, $fieldName, self::FLAG_UPDATED);
         }
     }
 }
