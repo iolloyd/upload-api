@@ -39,6 +39,7 @@ class Video extends AbstractModel
     use Traits\CreatedByTrait;
     use Traits\UpdatedAtTrait;
     use Traits\CompanyTrait;
+    use Traits\SiteTrait;
 
     /**
      * @ORM\Column(type="integer")
