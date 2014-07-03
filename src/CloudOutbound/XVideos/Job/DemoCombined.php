@@ -199,7 +199,7 @@ class DemoCombined extends AbstractJob
         // create outbound videofile
 
         $videoFile = new \Cloud\Model\VideoFile\OutboundVideoFile($outbound);
-        $videoFile->setFilename($inboundVideoFile->getFilename());
+        $videoFile->setFilename(pathinfo($inboundVideoFile->getFilename())['filename'] . '.mp4');
         $videoFile->setFiletype('video/mp4');
         $videoFile->setStatus('pending');
 
@@ -254,12 +254,17 @@ class DemoCombined extends AbstractJob
 
                     'audio_codec'   => 'aac',
                     'audio_quality' => 4,
-                    'video_bitrate' => 4000,
+                    'force_aac_profile' => 'aac-lc',
+
+                    'video_bitrate' => 5000,
+                    'max_frame_rate' => 30,
 
                     'video_codec'   => 'h264',
                     'h264_profile'  => 'high',
                     'h264_level'    => 5.1,
                     'tuning'        => 'film',
+
+                    'speed' => 5,
 
                     'watermarks' => [
                         [
@@ -574,7 +579,10 @@ class DemoCombined extends AbstractJob
             '+1 hour'
         );
 
-        $stream = fopen($objectUrl, 'r', false);
+        $stream = \GuzzleHttp\Stream\Stream::factory(
+            fopen($objectUrl, 'r', false),
+            $videoFile->getFilesize()
+        );
 
         /*
          * Upload
@@ -724,12 +732,12 @@ class DemoCombined extends AbstractJob
 
                     // TODO: refactor
                     'title' =>
-                        substr(str_replace($this->forbiddenStrings, ' ', 'TEST - ' . $video->getTitle()), 0, 60),
+                        substr(str_replace($this->forbiddenStrings, ' ', ($app['debug'] ? 'TEST - ' : '') . $video->getTitle()), 0, 60),
                     'description' =>
-                        substr(str_replace($this->forbiddenStrings, ' ', 'TEST PLEASE REJECT - ' . $video->getDescription()), 0, 500),
+                        substr(str_replace($this->forbiddenStrings, ' ', ($app['debug'] ? 'TEST PLEASE REJECT - ' : '') . $video->getDescription()), 0, 500),
 
                     // TODO:
-                    'keywords' => 'test funny teen',
+                    'keywords' => 'pov',
 
                     'channel' => $tubeuser->getParam('channel'),
                     'update_video_information' => 'Update information',
