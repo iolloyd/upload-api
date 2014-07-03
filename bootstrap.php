@@ -74,10 +74,32 @@ $app->extend('orm.ems.config', function ($configs, $app) {
 });
 $app['em'] = $app['orm.em'];
 
+if (!$app['debug']) {
+
+    // Turn off automatic generation of proxies
+    $app['orm.auto_generate_proxies'] = false;
+
+    /*
+     * This is used by the following:
+     *   metadata_cache
+     *   query_cache
+     *   result_cache
+     *   hydration_cache
+     */
+    $app['orm.default_cache'] = new \Doctrine\Common\Cache\ApcCache;
+
+    /*
+     * In dev, the path is data/cache/doctrine/proxies
+     * By default, the command stores in cache/doctrine/proxies
+     */
+    $app['orm.proxies_dir'] = "cache/doctrine/proxies";
+}
+
 // middleware
 $app->register(new Aws\Silex\AwsServiceProvider(), [
     'aws.config' => $app['config']['aws'],
 ]);
+
 $app->register(new Cloud\Monolog\Provider\LogServiceProvider());
 $app->register(new Cloud\Silex\Provider\ZencoderServiceProvider());
 
