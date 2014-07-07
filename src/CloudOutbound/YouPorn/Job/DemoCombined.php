@@ -98,11 +98,22 @@ class DemoCombined extends AbstractJob
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $outbound = $this->em->find('cx:videooutbound', $input->getArgument('videooutbound'));
+        $outbound = $this->em->find('cx:videoOutbound', $input->getArgument('videooutbound'));
 
         if (!$outbound) {
             throw new \InvalidArgumentException('No VideoOutbound with this ID');
         }
+
+        // --
+
+        if (!$outbound->getVideoFile()) {
+            $output->write('<info>Encoding outbound video file ... </info>');
+            $this->transcodeVideo($outbound);
+            $output->writeln('<comment>' . $outbound->getVideoFile()->getStatus() . '</comment>');
+            $output->writeln('');
+        }
+
+        // --
 
         $tubeuser = $outbound->getTubesiteUser();
 
@@ -117,6 +128,7 @@ class DemoCombined extends AbstractJob
 
         } else {
 
+            /*
             $output->writeln('<info>Starting YouPorn outbound upload...</info>');
 
             $output->writeln('<info> + creating draft</info>');
@@ -127,6 +139,18 @@ class DemoCombined extends AbstractJob
 
             $output->writeln('<info> + submitting</info>');
             $this->submitVideo($outbound);
+            */
+
+            // --
+
+            $output->writeln('<info>Starting YouPorn <comment>Legacy Form</comment> outbound upload...</info>');
+
+            $output->writeln('<info> + validating metadata</info>');
+            $this->legacyValidateVideo($outbound);
+
+            $output->writeln('<info> + uploading video and metadata</info>');
+            $this->legacyUploadVideo($outbound);
+
         }
 
         $this->logout($tubeuser);
@@ -136,10 +160,171 @@ class DemoCombined extends AbstractJob
         /*
          * TODO: refactor
          */
-        $output->writeln('');
-        $output->writeln('<info>Queueing refresh</info> ... in 10 seconds');
-        sleep(10);
-        \Resque::enqueue('default', get_called_class(), ['videooutbound' => $outbound->getId()]);
+        //$output->writeln('');
+        //$output->writeln('<info>Queueing refresh</info> ... in 10 seconds');
+        //sleep(10);
+        //\Resque::enqueue('default', get_called_class(), ['videooutbound' => $outbound->getId()]);
+    }
+
+    /**
+     * Transcode and watermark the videofile
+     *
+     * @param VideoOutbound $outbound
+     * @return void
+     */
+    protected function transcodeVideo(VideoOutbound $outbound)
+    {
+        $app = $this->getHelper('silex')->getApplication();
+
+        $inboundVideoFile = $outbound
+            ->getVideo()
+            ->getInbounds()
+            ->last()
+            ->getVideoFile();
+
+        // create outbound videofile
+
+        $videoFile = new \Cloud\Model\VideoFile\OutboundVideoFile($outbound);
+        $videoFile->setFilename(pathinfo($inboundVideoFile->getFilename())['filename'] . '.mp4');
+        $videoFile->setFiletype('video/mp4');
+        $videoFile->setStatus('pending');
+
+        $app['em']->transactional(function ($em) use ($outbound, $videoFile) {
+            $em->persist($videoFile);
+        });
+
+        $outbound->setVideoFile($videoFile);
+
+        // transcode
+
+        $s3 = $app['aws']->get('s3');
+        $zencoder = $app['zencoder'];
+
+        $inputUrl = $s3->getObjectUrl(
+            $app['config']['aws']['bucket'],
+            $inboundVideoFile->getStoragePath(),
+            '+1 hour'
+        );
+
+        //$outputUrl = $s3->createPresignedUrl(
+            //$s3->put($app['config']['aws']['bucket'] . '/' . $videoFile->getStoragePath()),
+            //'+1 hour'
+        //);
+
+        $outputUrl = 's3://' . $app['config']['aws']['bucket'] . '/' . $videoFile->getStoragePath();
+
+        $job = $zencoder->jobs->create([
+            // options
+            'region'  => 'europe',
+            'private' => true,
+            'test'    => $app['debug'],
+
+            // reporting
+            'grouping' => 'company-' . $videoFile->getCompany()->getId(),
+            'pass_through' => json_encode([
+                'type' => $app['em']->getClassMetadata(get_class($videoFile))->discriminatorValue,
+                'company' => $videoFile->getCompany()->getId(),
+                'videofile' => $videoFile->getId(),
+            ]),
+
+            // request
+            'input' => $inputUrl,
+            'outputs' => [
+                [
+                    'url' => $outputUrl,
+                    'credentials' => 's3-cldsys-dev',
+
+                    'format' => 'mp4',
+                    'width' => 1280,
+                    'height' => 720,
+
+                    'audio_codec'   => 'aac',
+                    'audio_quality' => 4,
+                    'video_bitrate' => 4000,
+
+                    'video_codec'   => 'h264',
+                    'h264_profile'  => 'high',
+                    'h264_level'    => 5.1,
+                    'tuning'        => 'film',
+
+                    'watermarks' => [
+                        [
+                            'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-youporn.png',
+                            'x' => 0,
+                            'y' => 0,
+                            'width' => 1280,
+                            'height' => 720,
+                        ]
+                    ],
+                ],
+            ],
+        ]);
+
+        $app['em']->transactional(function ($em) use ($videoFile, $job) {
+            $videoFile->setStatus('working');
+            $videoFile->setZencoderJobId($job->id);
+        });
+
+        $start = time();
+
+        while (true) {
+            sleep(5);
+
+            $details = $zencoder->jobs->details($job->id);
+            $output = $details->outputs[0];
+
+            // success
+            if ($details->state == 'finished') {
+                $app['em']->transactional(function ($em) use ($videoFile, $output) {
+                    $videoFile->setStatus('complete');
+
+                    // file
+                    $videoFile->setFilesize($output->file_size_bytes);
+
+                    // container
+                    $videoFile->setDuration($output->duration_in_ms / 1000);
+                    $videoFile->setContainerFormat($output->format);
+                    $videoFile->setHeight($output->height);
+                    $videoFile->setWidth($output->width);
+                    $videoFile->setFrameRate($output->frame_rate);
+
+                    // video codec
+                    $videoFile->setVideoCodec($output->video_codec);
+                    $videoFile->setVideoBitRate($output->video_bitrate_in_kbps);
+
+                    // audio codec
+                    $videoFile->setAudioCodec($output->audio_codec);
+                    $videoFile->setAudioBitRate($output->audio_bitrate_in_kbps);
+                    $videoFile->setAudioSampleRate($output->audio_sample_rate);
+                    $videoFile->setAudioChannels((int) $output->channels);
+                });
+
+                break;
+            }
+
+            // error
+            if ($details->state == 'failed') {
+                $errorCode = $input->error_class;
+                $errorMessage = $input->error_message;
+
+                $app['em']->transactional(function ($em) use ($videoFile) {
+                    $videoFile->setStatus('error');
+                });
+
+                break;
+            }
+
+            // timeout
+            if (time() - $start >= 900) {
+                $zencoder->jobs->cancel($job->id);
+
+                $app['em']->transactional(function ($em) use ($videoFile) {
+                    $videoFile->setStatus('error');
+                });
+
+                break;
+            }
+        }
     }
 
     /**
@@ -328,9 +513,11 @@ class DemoCombined extends AbstractJob
             $outbound->setStatus(VideoOutbound::STATUS_WORKING);
         });
 
+        $videoFile = $outbound->getVideoFile();
+
         $response = $this->httpSession->jsonPost('/upload/create-videos/', [
             'body' => [
-                'file' => $outbound->getFilename(), // just the filename here
+                'file' => $videoFile->getFilename(), // just the filename here
             ],
         ]);
 
@@ -348,24 +535,35 @@ class DemoCombined extends AbstractJob
      */
     protected function uploadVideo(VideoOutbound $outbound)
     {
+        $videoFile = $outbound->getVideoFile();
+
         // s3 object  TODO: refactor
 
         $app = $this->getHelper('silex')->getApplication();
         $s3  = $app['aws']->get('s3');
 
         $video = $outbound->getVideo();
-        $key   = sprintf('videos/%d/raw/%s', $video->getId(), $video->getFilename());
 
-        $object = $s3->getObject([
-            'Bucket' => $app['config']['aws']['bucket'],
-            'Key'    => $key,
-        ]);
+        $objectUrl = $s3->getObjectUrl(
+            $app['config']['aws']['bucket'],
+            $videoFile->getStoragePath(),
+            '+1 hour'
+        );
 
-        $stream = $object['Body']->getStream();
+        $stream = \GuzzleHttp\Stream\Stream::factory(
+            fopen($objectUrl, 'r', false),
+            $videoFile->getFilesize()
+        );
 
         // upload
 
-        $request = $this->httpSession->createJsonRequest('POST', '/upload/');
+        $request = $this->httpSession->createJsonRequest(
+            'POST',
+            '/upload/',
+            [
+                'timeout' => 900,
+            ]
+        );
 
         $request->getBody()
             ->setField('userId', $outbound->getParam('user_uploader_id'))
@@ -373,17 +571,23 @@ class DemoCombined extends AbstractJob
             ->addFile(new PostFile(
                 'files[]',
                 $stream,
-                $outbound->getFilename(),
-                ['Content-Type' => $outbound->getFiletype()]
+                $videoFile->getFilename(),
+                ['Content-Type' => $videoFile->getFiletype()]
             ));
 
         $response = $this->httpSession->send($request);
 
         $data = $response->json()[0];
 
+        // error
+
+        if (!$data['success']) {
+            throw new UploadException('YouPorn file upload failed: ' . (string) $response->getBody());
+        }
+
         // verify
 
-        if ($data['size'] != $outbound->getFilesize()) {
+        if ($data['size'] != $videoFile->getFilesize()) {
             throw new InternalInconsistencyException('YouPorn `size` does not match our filesize');
         }
     }
@@ -393,6 +597,8 @@ class DemoCombined extends AbstractJob
      */
     protected function submitVideo(VideoOutbound $outbound)
     {
+        $app      = $this->getHelper('silex')->getApplication();
+
         $video    = $outbound->getVideo();
         $tubeuser = $outbound->getTubesiteUser();
 
@@ -412,13 +618,13 @@ class DemoCombined extends AbstractJob
                 'body' => [
                     // TODO: refactor
                     'videoedit[title]' =>
-                        substr('(TEST ONLY) ' . str_replace($this->forbiddenStrings, ' ', $video->getTitle()), 0, 250),
+                        substr(($app['debug'] ? '(TEST) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getTitle()), 0, 250),
 
                     'videoedit[description]' =>
-                        substr('(TEST ONLY - PLEASE REJECT) ' . str_replace($this->forbiddenStrings, ' ', $video->getDescription()), 0, 2000),
+                        substr(($app['debug'] ? '(TEST ONLY - PLEASE REJECT) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getDescription()), 0, 2000),
 
                     // TODO: pull from video tags
-                    'videoedit[uploader_category_id]' => '19',
+                    'videoedit[uploader_category_id]' => '36',
                     'videoedit[orientation]' => 'straight',
                     'videoedit[tags]' => '',
                     'videoedit[pornstars]' => '',
@@ -441,6 +647,175 @@ class DemoCombined extends AbstractJob
                 json_encode($data)
             ));
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Validate metadata via legacy HTML form
+     */
+    protected function legacyValidateVideo(VideoOutbound $outbound)
+    {
+        $app   = $this->getHelper('silex')->getApplication();
+        $video = $outbound->getVideo();
+
+        $response = $this->httpSession->jsonPost('/upload/word_validation/', [
+            'headers' => [
+                'Referer' => 'http://www.youporn.com/upload-legacy/',
+                'Origin'  => 'http://www.youporn.com',
+            ],
+            'body' => [
+                'title' =>
+                    substr(($app['debug'] ? '(TEST) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getTitle()), 0, 250),
+                'description' =>
+                    substr(($app['debug'] ? '(TEST ONLY - PLEASE REJECT) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getDescription()), 0, 2000),
+                'tags' => 'pov',
+            ],
+        ]);
+
+        $body = (string) $response->getBody();
+
+        // success
+
+        if ($body == 'false') {
+            return;
+        }
+
+        // error
+
+        throw new UploadException(
+            'YouPorn legacy metadata validation failed: '
+            . 'Invalid fields: ' . $body
+        );
+    }
+
+    /**
+     * Upload video and post metadata via legacy HTML form
+     *
+     * This can be used in place of `uploadVideo()` and `submitVideo()`
+     */
+    protected function legacyUploadVideo(VideoOutbound $outbound)
+    {
+        $video     = $outbound->getVideo();
+        $videoFile = $outbound->getVideoFile();
+        $tubeuser  = $outbound->getTubesiteUser();
+
+        // s3 object  TODO: refactor
+
+        $app = $this->getHelper('silex')->getApplication();
+        $s3  = $app['aws']->get('s3');
+
+        $objectUrl = $s3->getObjectUrl(
+            $app['config']['aws']['bucket'],
+            $videoFile->getStoragePath(),
+            '+1 hour'
+        );
+
+        $stream = \GuzzleHttp\Stream\Stream::factory(
+            fopen($objectUrl, 'r', false),
+            $videoFile->getFilesize()
+        );
+
+        // upload
+
+        $request = $this->httpSession->createRequest(
+            'POST',
+            '/upload-legacy/',
+            [
+                'timeout' => 900,
+                'headers' => [
+                    'Referer' => 'http://www.youporn.com/upload-legacy/',
+                    'Origin'  => 'http://www.youporn.com',
+                ],
+                'query' => [
+                    'content_partner_site_id' => $tubeuser->getParam('content_partner_site_id'),
+                ],
+                'body' => [
+                    'upload[title]' =>
+                        substr(($app['debug'] ? '(TEST) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getTitle()), 0, 250),
+
+                    'upload[description]' =>
+                        substr(($app['debug'] ? '(TEST ONLY - PLEASE REJECT) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getDescription()), 0, 2000),
+
+                    'upload[uploader_category_id]' => '36',
+                    'upload[type]' => 'straight',
+                    'upload[tags]' => 'pov',
+                ],
+            ]
+        );
+
+        $request->getBody()
+            ->addFile(new PostFile(
+                'upload[up_file]',
+                $stream,
+                $videoFile->getFilename(),
+                ['Content-Type' => $videoFile->getFiletype()]
+            ));
+
+        $response = $this->httpSession->send($request);
+
+        $body = (string) $response->getBody();
+
+        $dom = new DomCrawler();
+        $dom->addHtmlContent($body);
+
+        // error
+
+        if (strpos($body, '<h1>Upload Complete!</h1>') === false) {
+            try {
+                $error = $dom->filter('.form_row ul.error li')->text();
+            } catch (InvalidArgumentException $e) {
+                $error = 'unknown error; could not extract error from response body';
+            }
+
+            throw new UploadException('YouPorn legacy upload failed: ' . $error);
+        }
+
+        $receiptRows = $dom->filter('.uploadReceipt tr');
+
+        if (!$receiptRows->count()) {
+            throw new UnexpectedResponseException('Could not extract upload receipt from response body');
+        }
+
+        // verify
+
+        $data = $receiptRows->each(function ($node) {
+            try {
+                $key = $node->filter('th')->text();
+                $value = $node->filter('td')->text();
+
+                $key = trim(rtrim(strtolower($key), ':'));
+                $value = trim($value);
+
+                return [$key => $value];
+            } catch (InvalidArgumentException $e) {
+            }
+        });
+
+        $data = array_reduce($data, 'array_replace', []); // flatten
+
+        //var_dump($data);
+
+        if (empty($data['file size'])) {
+            throw new UnexpectedResponseException('Could not extract upload file size from response body');
+        }
+
+        $size = ((float) $data['file size']) * 1000;
+
+        if ($size != $videoFile->getFilesize()) {
+            throw new InternalInconsistencyException('YouPorn legacy uploaded file size does not match our filesize');
+        }
+
+        if (empty($data['video id']) || !is_numeric($data['video id'])) {
+            throw new UnexpectedResponseException('Could not extract video id from response body');
+        }
+
+        // success
+
+        $this->em->transactional(function ($em) use ($outbound, $data) {
+            $outbound->setExternalId((int) $data['video id']);
+            $outbound->setParam('legacy', true);
+        });
     }
 }
 

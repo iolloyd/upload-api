@@ -34,14 +34,14 @@ $sessionData = function () use ($app)
         $data['user'] = $user;
         $data['company'] = $user->getCompany();
 
-        $tags = $app['em']->getRepository('cx:tag')->findAll();
-        $tags = array_map(function($x) use ($app) {
-            return $app['serializer']($x, []);
-        }, $tags);
-        $data['config']['tags'] = $tags;
+        $data['config']['categories'] =
+            $app['converter.category']->convertAll();
+
+        $data['config']['tags'] =
+            $app['converter.tag']->convertAll();
     }
 
-    return $data;
+    return $app['serializer']($data, ['details', 'details.session']);
 };
 
 /**
@@ -124,3 +124,12 @@ $app->delete('/session', function (Request $request) use ($app, $sessionData)
 
     return $app->json($json);
 });
+
+/**
+ * Allow OPTIONS request for CORS
+ */
+$app->match('/session', function () use ($app)
+{
+    return '';
+})
+->method('OPTIONS');

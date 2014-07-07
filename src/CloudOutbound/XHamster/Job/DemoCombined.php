@@ -11,6 +11,7 @@
 
 namespace CloudOutbound\XHamster\Job;
 
+use InvalidArgumentException;
 use Cloud\Job\AbstractJob;
 use Cloud\Model\TubesiteUser;
 use Cloud\Model\VideoOutbound;
@@ -42,6 +43,7 @@ use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 class DemoCombined extends AbstractJob
 {
     const STATUS_NOT_CONVERTED = 'Not converted';
+    const STATUS_IN_CONVERSION = 'In conversion';
     const STATUS_REPOST        = 'Repost';
     const STATUS_PUBLICATION   = 'Publication';
     const STATUS_DELETED       = 'Deleted';
@@ -77,8 +79,7 @@ class DemoCombined extends AbstractJob
             ->setDefinition([
                 new InputArgument('videooutbound', InputArgument::REQUIRED),
             ])
-            ->setName('job:demo:xhamster')
-        ;
+                ->setName('job:demo:xhamster');
     }
 
     /**
@@ -86,6 +87,7 @@ class DemoCombined extends AbstractJob
      */
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
+        $app =$this->getHelper('silex')->getApplication();
         $this->httpSession = new HttpClient([
             'base_url' => 'https://xhamster.com/',
             'cookies' => [
@@ -99,6 +101,7 @@ class DemoCombined extends AbstractJob
         ]);
 
         $this->em = $this->getHelper('em')->getEntityManager();
+        $this->logger = $app['monolog.factory'](get_called_class());
     }
 
     /**
@@ -106,11 +109,24 @@ class DemoCombined extends AbstractJob
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $outbound = $this->em->find('cx:videooutbound', $input->getArgument('videooutbound'));
-
+        $outbound = $this->em->find('cx:videoOutbound', $input->getArgument('videooutbound'));
+        $outboundId = $input->getArgument('videooutbound');
         if (!$outbound) {
-            throw new \InvalidArgumentException('No VideoOutbound with this ID');
+            $msg = sprintf("No videoOutbound for Id: {%s}", $outboundId);
+            $this->logger->error($msg);
+            throw new InvalidArgumentException($msg);
         }
+
+        // --
+
+        if (!$outbound->getVideoFile()) {
+            $output->write('<info>Encoding outbound video file ... </info>');
+            $this->transcodeVideo($outbound);
+            $output->writeln('<comment>' . $outbound->getVideoFile()->getStatus() . '</comment>');
+            $output->writeln('');
+        }
+
+        // --
 
         $tubeuser = $outbound->getTubesiteUser();
 
@@ -122,7 +138,9 @@ class DemoCombined extends AbstractJob
             $this->login($tubeuser);
 
             if (!$this->isLoggedIn($tubeuser)) {
-                throw new InternalInconsistencyException('Login succeeded but still no access');
+                $msg = sprintf("Login succeeded but still no access. OutboundId: %s", $outboundId);
+                $this->logger->error($msg);
+                throw new InternalInconsistencyException($msg);
             }
         }
 
@@ -167,6 +185,167 @@ class DemoCombined extends AbstractJob
         $this->logout($tubeuser);
 
         $output->writeln('<info>done.</info>');
+    }
+
+    /**
+     * Transcode and watermark the videofile
+     *
+     * @param VideoOutbound $outbound
+     * @return void
+     */
+    protected function transcodeVideo(VideoOutbound $outbound)
+    {
+        $app = $this->getHelper('silex')->getApplication();
+
+        $inboundVideoFile = $outbound
+            ->getVideo()
+            ->getInbounds()
+            ->last()
+            ->getVideoFile();
+
+        // create outbound videofile
+
+        $videoFile = new \Cloud\Model\VideoFile\OutboundVideoFile($outbound);
+        $videoFile->setFilename(pathinfo($inboundVideoFile->getFilename())['filename'] . '.mp4');
+        $videoFile->setFiletype('video/mp4');
+        $videoFile->setStatus('pending');
+
+        $app['em']->transactional(function ($em) use ($outbound, $videoFile) {
+            $em->persist($videoFile);
+        });
+
+        $outbound->setVideoFile($videoFile);
+
+        // transcode
+
+        $s3 = $app['aws']->get('s3');
+        $zencoder = $app['zencoder'];
+
+        $inputUrl = $s3->getObjectUrl(
+            $app['config']['aws']['bucket'],
+            $inboundVideoFile->getStoragePath(),
+            '+1 hour'
+        );
+
+        //$outputUrl = $s3->createPresignedUrl(
+            //$s3->put($app['config']['aws']['bucket'] . '/' . $videoFile->getStoragePath()),
+            //'+1 hour'
+        //);
+
+        $outputUrl = 's3://' . $app['config']['aws']['bucket'] . '/' . $videoFile->getStoragePath();
+
+        $job = $zencoder->jobs->create([
+            // options
+            'region'  => 'europe',
+            'private' => true,
+            'test'    => $app['debug'],
+
+            // reporting
+            'grouping' => 'company-' . $videoFile->getCompany()->getId(),
+            'pass_through' => json_encode([
+                'type' => $app['em']->getClassMetadata(get_class($videoFile))->discriminatorValue,
+                'company' => $videoFile->getCompany()->getId(),
+                'videofile' => $videoFile->getId(),
+            ]),
+
+            // request
+            'input' => $inputUrl,
+            'outputs' => [
+                [
+                    'url' => $outputUrl,
+                    'credentials' => 's3-cldsys-dev',
+
+                    'format' => 'mp4',
+                    'width' => 1280,
+                    'height' => 720,
+
+                    'audio_codec'   => 'aac',
+                    'audio_quality' => 4,
+                    'video_bitrate' => 4000,
+
+                    'video_codec'   => 'h264',
+                    'h264_profile'  => 'high',
+                    'h264_level'    => 5.1,
+                    'tuning'        => 'film',
+
+                    'watermarks' => [
+                        [
+                            'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-generic.png',
+                            'x' => 0,
+                            'y' => 0,
+                            'width' => 1280,
+                            'height' => 720,
+                        ]
+                    ],
+                ],
+            ],
+        ]);
+
+        $app['em']->transactional(function ($em) use ($videoFile, $job) {
+            $videoFile->setStatus('working');
+            $videoFile->setZencoderJobId($job->id);
+        });
+
+        $start = time();
+
+        while (true) {
+            sleep(5);
+
+            $details = $zencoder->jobs->details($job->id);
+            $output = $details->outputs[0];
+
+            // success
+            if ($details->state == 'finished') {
+                $app['em']->transactional(function ($em) use ($videoFile, $output) {
+                    $videoFile->setStatus('complete');
+
+                    // file
+                    $videoFile->setFilesize($output->file_size_bytes);
+
+                    // container
+                    $videoFile->setDuration($output->duration_in_ms / 1000);
+                    $videoFile->setContainerFormat($output->format);
+                    $videoFile->setHeight($output->height);
+                    $videoFile->setWidth($output->width);
+                    $videoFile->setFrameRate($output->frame_rate);
+
+                    // video codec
+                    $videoFile->setVideoCodec($output->video_codec);
+                    $videoFile->setVideoBitRate($output->video_bitrate_in_kbps);
+
+                    // audio codec
+                    $videoFile->setAudioCodec($output->audio_codec);
+                    $videoFile->setAudioBitRate($output->audio_bitrate_in_kbps);
+                    $videoFile->setAudioSampleRate($output->audio_sample_rate);
+                    $videoFile->setAudioChannels((int) $output->channels);
+                });
+
+                break;
+            }
+
+            // error
+            if ($details->state == 'failed') {
+                $errorCode = $input->error_class;
+                $errorMessage = $input->error_message;
+
+                $app['em']->transactional(function ($em) use ($videoFile) {
+                    $videoFile->setStatus('error');
+                });
+
+                break;
+            }
+
+            // timeout
+            if (time() - $start >= 900) {
+                $zencoder->jobs->cancel($job->id);
+
+                $app['em']->transactional(function ($em) use ($videoFile) {
+                    $videoFile->setStatus('error');
+                });
+
+                break;
+            }
+        }
     }
 
     /**
@@ -232,6 +411,7 @@ class DemoCombined extends AbstractJob
     {
         // calculate "security hash"; lifted from their javascript
 
+        $this->logger->info('Login as {tubeuser}', ['tubeuser' => $tubeuser->getUsername()]);
         $hash = function ($time) {
             $res1 = base_convert(bcsub($time, 24563844), 10, 16);
             $res2 = substr(base_convert($time, 10, 16), 3);
@@ -291,7 +471,9 @@ class DemoCombined extends AbstractJob
         );
 
         if (!$count) {
-            throw new UnexpectedResponseException('Login failed: unknown error; could not extract error from response body: ' . $body);
+            $msg = 'Login failed: unknown error; could not extract error from response body';
+            $this->logger->error($msg, ['tubeuser' => $tubeuser->getUsername()]);
+            throw new UnexpectedResponseException($msg . ':' . $body);
         }
 
         $errors = array_combine($matches['field'], $matches['error']);
@@ -317,7 +499,9 @@ class DemoCombined extends AbstractJob
             ));
         }
 
-        throw new UnexpectedResponseException(sprintf('xHamster login failed: unknown error; (%s)', $body));
+        throw new UnexpectedResponseException(
+            sprintf('xHamster login failed: unknown error; (%s)', $body)
+        );
     }
 
     /**
@@ -354,7 +538,7 @@ class DemoCombined extends AbstractJob
 
         try {
             $error = $dom->filter('.main .error')->text();
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
         }
 
         if ($error) {
@@ -365,10 +549,8 @@ class DemoCombined extends AbstractJob
 
         $sites = $dom->filter('.boxC.sites .item')->each(function ($node) {
             $site = [
-                'title' =>
-                    $node->filter('table tr.head td:nth-child(1)')->text(),
-                'description' =>
-                    $node->filter('table tr.head td:nth-child(2)')->text(),
+                'title'       => $node->filter('table tr.head td:nth-child(1)')->text(),
+                'description' => $node->filter('table tr.head td:nth-child(2)')->text(),
             ];
 
             $href = $node
@@ -423,10 +605,10 @@ class DemoCombined extends AbstractJob
         $response = $this->httpSession->jsonPost($baseUrl->combine('/photos/ajax.php?ajax=1&act=sponsor&id=2&tpl2'), [
             'headers' => [
                 'Referer' => (string) $baseUrl->combine('/producer.php'),
-                'Origin'  => (string) $baseUrl,
-            ],
-            'body' => $this->getUploadData($outbound),
-        ]);
+                    'Origin'  => (string) $baseUrl,
+                ],
+                'body' => $this->getUploadData($outbound),
+            ]);
 
         $body = (string) $response->getBody();
 
@@ -469,12 +651,12 @@ class DemoCombined extends AbstractJob
         $response = $this->httpSession->jsonGet($baseUrl->combine('/photos/uploader2/sp.prepare.2.php'), [
             'headers' => [
                 'Referer' => (string) $baseUrl->combine('/producer.php'),
-                'Origin'  => (string) $baseUrl,
-            ],
-            'query' => [
-                '_' => bcmul(microtime(true), 1000),
-            ],
-        ]);
+                    'Origin'  => (string) $baseUrl,
+                ],
+                'query' => [
+                    '_' => bcmul(microtime(true), 1000),
+                    ],
+                ]);
 
         $body = (string) $response->getBody();
 
@@ -514,16 +696,18 @@ class DemoCombined extends AbstractJob
         $s3  = $app['aws']->get('s3');;
 
         $video = $outbound->getVideo();
-        $key   = sprintf('videos/%d/raw/%s', $video->getId(), $video->getFilename());
+        $videoFile = $outbound->getVideoFile();
 
-        $key = 'static/cloud-test-720p.mp4';
+        $objectUrl = $s3->getObjectUrl(
+            $app['config']['aws']['bucket'],
+            $videoFile->getStoragePath(),
+            '+1 hour'
+        );
 
-        $object = $s3->getObject([
-            'Bucket' => $app['config']['aws']['bucket'],
-            'Key'    => $key,
-        ]);
-
-        $stream = $object['Body']->getStream();
+        $stream = \GuzzleHttp\Stream\Stream::factory(
+            fopen($objectUrl, 'r', false),
+            $videoFile->getFilesize()
+        );
 
         // upload
 
@@ -531,6 +715,7 @@ class DemoCombined extends AbstractJob
             'POST',
             $baseUrl->combine('/cgi-bin/ubr_upload.6.8.pl'),
             [
+                'timeout' => 900,
                 'headers' => [
                     'Referer' => (string) $baseUrl->combine('/producer.php'),
                     'Connection' => 'keep-alive',
@@ -548,8 +733,8 @@ class DemoCombined extends AbstractJob
             ->addFile(new PostFile(
                 'slot1_file',
                 $stream,
-                $outbound->getFilename(),
-                ['Content-Type' => $outbound->getFiletype()]
+                $videoFile->getFilename(),
+                ['Content-Type' => $videoFile->getFiletype()]
             ));
 
         $response = $this->httpSession->send($request);
@@ -565,7 +750,7 @@ class DemoCombined extends AbstractJob
         if (strpos($body, $uploadId) === false) {
             throw new UnexpectedResponseException(sprintf(
                 'xHamster upload failed: Response does not include expected '
-                    . 'id `%s`: %s',
+                . 'id `%s`: %s',
                 $uploadId,
                 $body
             ));
@@ -605,7 +790,7 @@ class DemoCombined extends AbstractJob
 
         try {
             $error = $dom->filter('.main .error')->text();
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             $error = 'unknown error; could not extract error from response body';
         }
 
@@ -626,11 +811,13 @@ class DemoCombined extends AbstractJob
      */
     protected function detectExternalId(VideoOutbound $outbound)
     {
+        $app      = $this->getHelper('silex')->getApplication();
+
         $video    = $outbound->getVideo();
         $tubeuser = $outbound->getTubesiteUser();
 
         $expectedSite  = $tubeuser->getParam('site')['title'];
-        $expectedTitle = substr(str_replace($this->forbiddenStrings, ' ', 'TEST - ' . $video->getTitle()), 0, 60); // FIXME: refactor
+        $expectedTitle = substr(str_replace($this->forbiddenStrings, ' ', ($app['debug'] ? 'TEST - ' : '') . $video->getTitle()), 0, 60); // FIXME: refactor
 
         $list = $this->getVideosList(1);
         $match = null;
@@ -642,7 +829,6 @@ class DemoCombined extends AbstractJob
                 && $item['title'] == $expectedTitle
             ) {
                 $match = $item;
-                //var_dump($match);
                 break;
             }
         }
@@ -650,10 +836,14 @@ class DemoCombined extends AbstractJob
         // error
 
         if (!$match) {
-            throw new InternalInconsistencyException(
+            $msg = sprintf(
                 'Could not find uploaded file on the status page to '
-                . 'detect external id'
+                    . 'detect external id: video outbound id: %s',
+                $outbound->getExternalId()
             );
+
+            $this->logger->error($msg);
+            throw new InternalInconsistencyException($msg);
         }
 
         // success
@@ -710,8 +900,6 @@ class DemoCombined extends AbstractJob
 
         // success
 
-        //var_dump($match); exit;
-
         $this->em->transactional(function ($em) use ($outbound, $match) {
             $params = array_intersect_key($match, array_flip([
                 'status',
@@ -721,6 +909,7 @@ class DemoCombined extends AbstractJob
 
             switch($match['status']) {
                 case self::STATUS_NOT_CONVERTED:
+                case self::STATUS_IN_CONVERSION:
                     $outbound->setStatus(VideoOutbound::STATUS_WORKING);
                     break;
 
@@ -750,8 +939,6 @@ class DemoCombined extends AbstractJob
             ['/my_vids/all/{page}.html', ['page' => $page]]
         );
 
-        //var_dump($response); print((string) $response->getBody());
-
         $dom = new DomCrawler();
         $dom->addHtmlContent((string) $response->getBody());
 
@@ -761,7 +948,7 @@ class DemoCombined extends AbstractJob
 
         try {
             $error = $dom->filter('.main .error')->text();
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
         }
 
         if ($error) {
@@ -773,7 +960,7 @@ class DemoCombined extends AbstractJob
         $videos = $dom->filter('.boxC.myVidList .myVideo')->each(function ($node) {
             $video = [
                 'id' => (int) $node->attr('vid'),
-            ];
+                ];
 
             $info = $node->filter('.info')->html();
             $info = explode('<br>', $info);
@@ -792,7 +979,7 @@ class DemoCombined extends AbstractJob
             try {
                 $statusImage = $node->filter('.thumb2 img')->attr('src');
                 $video['status_image'] = $statusImage;
-            } catch (\InvalidArgumentException $e) {
+            } catch (InvalidArgumentException $e) {
             }
 
             return $video;
@@ -800,29 +987,30 @@ class DemoCombined extends AbstractJob
 
         $videos = array_column($videos, null, 'id');
 
-        //var_dump($videos); exit;
-
         return $videos;
     }
 
     protected function getUploadData(VideoOutbound $outbound)
     {
+        $app      = $this->getHelper('silex')->getApplication();
+
         $video    = $outbound->getVideo();
         $tubeuser = $outbound->getTubesiteUser();
+
+        $videoFile = $outbound->getVideoFile();
 
         return [
             // TODO: refactor
             'slot1_title' =>
-                substr(str_replace($this->forbiddenStrings, ' ', 'TEST - ' . $video->getTitle()), 0, 60),
+                substr(str_replace($this->forbiddenStrings, ' ', ($app['debug'] ? 'TEST - ' : '') . $video->getTitle()), 0, 60),
             'slot1_descr' =>
-                substr(str_replace($this->forbiddenStrings, ' ', 'TEST PLEASE REJECT - ' . $video->getDescription()), 0, 500),
+                substr(str_replace($this->forbiddenStrings, ' ', ($app['debug'] ? 'TEST PLEASE REJECT - ' : '') . $video->getDescription()), 0, 500),
 
             'slot1_site' => $tubeuser->getParam('site')['id'],
 
             // TODO: pull from video tags
-            //'slot1_chanell' => '',
-            'slot1_chanell' => '.15',
-            'slot1_channels15' => '',
+            'slot1_chanell'    => '.101',
+            'slot1_channels101' => '',
 
             'slot1_fileType'  => '',
             'slot1_http_url'  => '',
@@ -831,7 +1019,7 @@ class DemoCombined extends AbstractJob
             'slot1_ftp_url'   => '',
             'slot1_ftp_user'  => '',
             'slot1_ftp_pass'  => '',
-            'slot1_file'      => $outbound->getFilename(),
+            'slot1_file'      => $videoFile->getFilename(),
         ];
     }
 

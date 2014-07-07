@@ -64,13 +64,6 @@ class DoctrineOrmConverter
      */
     public function convertAll()
     {
-        $entities = $this->em->getRepository($this->entityName)->findAll();
-        if (!$entities) {
-            throw new NotFoundHttpException(
-                sprintf('Entities #%s do not exist', $this->entityName)
-            );
-        }
-
-        return $entities;
+        return $this->em->getRepository($this->entityName)->findAll();
     }
 }

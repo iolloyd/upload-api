@@ -58,9 +58,7 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
 
             $video->setTitle('Test Video ' . $x);
             $video->setDescription('Description description description');
-            $video->addCategory(
-                $this->getReference('category-1')
-            );
+            //$video->setPrimaryCategory($this->getReference('category-1'));
 
             $em->persist($video);
             $em->persist($stat);
@@ -76,7 +74,7 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
     {
         return [
             __NAMESPACE__ . '\UserFixture',
-            __NAMESPACE__ . '\SecondaryCategoryFixture',
+            __NAMESPACE__ . '\CategoryFixture',
         ];
     }
 
