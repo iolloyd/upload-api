@@ -11,26 +11,61 @@
 
 namespace Cloud\Silex\Provider;
 
-use Doctrine\Common\Collections\Criteria;
+use Cloud\Silex\Security\ForbiddenErrorAuthenticationEntryPoint;
+use Cloud\Silex\Security\UnauthorizedErrorAuthenticationEntryPoint;
 use Silex\Application;
-use Silex\ServiceProviderInterface;
+use Silex\Provider\SecurityServiceProvider as BaseSecurityServiceProvider;
+use Symfony\Component\Security\Core\Encoder\EncoderFactory;
+use Symfony\Component\Security\Http\Firewall\ChannelListener;
+use Symfony\Component\Security\Core\Encoder\BCryptPasswordEncoder;
 
-class SecurityServiceProvider implements ServiceProviderInterface
+class SecurityServiceProvider extends BaseSecurityServiceProvider
 {
     /**
      * {@inheritDoc}
      */
     public function register(Application $app)
     {
-        $app['security.users'] = $app->share(function () use ($app) {
-            return $app['em']->getRepository('cx:user');
+        parent::register($app);
+
+        /**
+         * Returns the logged in user
+         */
+        $app['user'] = $app->share(function () use ($app) {
+            $token = $app['security']->getToken();
+
+            if ($token && $app['security']->isGranted('ROLE_USER')) {
+                return $token->getUser();
+            }
+
+            return null;
         });
-        $app->register(new \Silex\Provider\SecurityServiceProvider(), [
-            'security.firewalls' => [
+
+        /**
+         * Returns the logged in company
+         */
+        $app['company'] = $app->share(function () use ($app) {
+            $user = $app['user'];
+
+            if ($user) {
+                return $user->getCompany();
+            }
+
+            return null;
+        });
+
+        // configuration
+
+        $app['security.users'] = $app->share(function () use ($app) {
+            return $app['em']->getRepository('Cloud\Model\User');
+        });
+
+        $app['security.firewalls'] = $app->share(function () use ($app) {
+            return [
                 'default' => [
-                    'pattern'   => '^.*$',
-                    'users'     => $app['security.users'],
-                    'form'      => [
+                    'pattern' => '^.*$',
+                    'users' => $app['security.users'],
+                    'form' => [
                         'login_path'                     => '/session',
                         'default_target_path'            => '/session',
                         'failure_path'                   => '/session/failure',
@@ -46,34 +81,44 @@ class SecurityServiceProvider implements ServiceProviderInterface
                     ],
                     'anonymous' => true,
                 ],
-            ],
-            'security.access_rules' => [
+            ];
+        });
+
+        $app['security.access_rules'] = $app->share(function () use ($app) {
+            return [
                 ['^/session$', 'IS_AUTHENTICATED_ANONYMOUSLY', $app['debug'] ? 'http' : 'https'],
                 ['^.*$',       'ROLE_USER',                    $app['debug'] ? 'http' : 'https'],
-            ],
-            'security.role_hierarchy' => [
+            ];
+        });
+
+        $app['security.role_hierarchy'] = $app->share(function () use ($app) {
+            return [
                 'ROLE_USER'  => [],
                 'ROLE_ADMIN' => ['ROLE_USER'],
-            ],
-            'security.hide_user_not_found' => !$app['debug'],
+            ];
+        });
 
-            'security.channel_listener' => $app->share(function ($app) {
-                return new \Symfony\Component\Security\Http\Firewall\ChannelListener(
-                    $app['security.access_map'],
-                    new \Cloud\Silex\Security\ForbiddenErrorAuthenticationEntryPoint(),
-                    $app['logger']
-                );
-            }),
-            'security.entry_point.default.form' => $app->share(function () use ($app) {
-                return new \Cloud\Silex\Security\UnauthorizedErrorAuthenticationEntryPoint();
-            }),
-            'security.encoder_factory' => $app->share(function ($app) {
-                return new \Symfony\Component\Security\Core\Encoder\EncoderFactory(array(
-                    'Cloud\Model\User' => new \Symfony\Component\Security\Core\Encoder\BCryptPasswordEncoder(10),
-                ));
-            }),
-        ]);
+        $app['security.hide_user_not_found'] = $app->share(function () use ($app) {
+            return !$app['debug'];
+        });
 
+        $app['security.channel_listener'] = $app->share(function ($app) {
+            return new ChannelListener(
+                $app['security.access_map'],
+                new ForbiddenErrorAuthenticationEntryPoint(),
+                $app['logger.security']
+            );
+        });
+
+        $app['security.entry_point.default.form'] = $app->share(function () use ($app) {
+            return new UnauthorizedErrorAuthenticationEntryPoint();
+        });
+
+        $app['security.encoder_factory'] = $app->share(function ($app) {
+            return new EncoderFactory([
+                'Cloud\Model\User' => new BCryptPasswordEncoder(10),
+            ]);
+        });
     }
 
     /**
@@ -81,6 +126,19 @@ class SecurityServiceProvider implements ServiceProviderInterface
      */
     public function boot(Application $app)
     {
+        parent::boot($app);
+
+        // enable sql filter
+        $app->before(function () use ($app) {
+            if (!$app['company']) {
+                return;
+            }
+
+            foreach ($app['orm.ems.options'] as $name => $options) {
+                $securityFilter = $app['orm.ems'][$name]->getFilters()->enable('security');
+                $securityFilter->setParameter('company_id', $app['company']->getId());
+            }
+        });
     }
 }
 
