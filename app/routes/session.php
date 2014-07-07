@@ -34,6 +34,9 @@ $sessionData = function () use ($app)
         $data['user'] = $user;
         $data['company'] = $user->getCompany();
 
+        $data['config']['sites'] =
+            $app['converter.site']->convertAll();
+
         $data['config']['categories'] =
             $app['converter.category']->convertAll();
 

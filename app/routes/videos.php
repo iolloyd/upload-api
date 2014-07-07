@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 $app->get('/videos', function(Request $request) use ($app)
 {
     $groups = ['list', 'list.videos'];
-    $options = ['filterFields' => ['status']];
+    $options = ['filterFields' => ['status', 'site']];
     return $app['paginator.response.json']('cx:video', $groups, $options);
 });
 
