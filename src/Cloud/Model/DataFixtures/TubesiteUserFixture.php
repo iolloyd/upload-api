@@ -32,6 +32,7 @@ class TubesiteUserFixture extends AbstractFixture implements DependentFixtureInt
             $this->getReference('youporn'),
             $this->getReference('cumulus')
         );
+        $youpornUser->setSite($this->getReference('site-danejones'));
         $youpornUser->setUsername('DaneJones');
         $youpornUser->setPassword('...'); // update db manually
         $youpornUser->setExternalId(4864148);
@@ -41,6 +42,7 @@ class TubesiteUserFixture extends AbstractFixture implements DependentFixtureInt
             $this->getReference('xhamster'),
             $this->getReference('cumulus')
         );
+        $xhamsterUser->setSite($this->getReference('site-danejones'));
         $xhamsterUser->setUsername('Ruseful2011');
         $xhamsterUser->setPassword('...'); // update db manually
         $xhamsterUser->setExternalId(2021166);
@@ -54,6 +56,7 @@ class TubesiteUserFixture extends AbstractFixture implements DependentFixtureInt
             $this->getReference('xvideos'),
             $this->getReference('cumulus')
         );
+        $xvideosUser->setSite($this->getReference('site-danejones'));
         $xvideosUser->setUsername('reggie@ruseful.com');
         $xvideosUser->setPassword('...'); // update db manually
         $xvideosUser->setExternalId(8302147);
