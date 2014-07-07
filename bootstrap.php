@@ -48,7 +48,7 @@ $app->register(new Silex\Provider\DoctrineServiceProvider(), [
 $app->extend('dbs.event_manager', function ($managers, $app) {
     foreach ($app['dbs.options'] as $name => $options) {
         $managers[$name]->addEventSubscriber(new Cloud\Doctrine\TimestampEventSubscriber());
-        $managers[$name]->addEventSubscriber(new Cloud\Doctrine\IdentityEventSubscriber($app));
+        $managers[$name]->addEventSubscriber(new Cloud\Doctrine\SecurityEventSubscriber($app));
     }
     return $managers;
 });
@@ -69,6 +69,7 @@ $app->extend('orm.ems.config', function ($configs, $app) {
     foreach ($app['orm.ems.options'] as $name => $options) {
         $configs[$name]->setNamingStrategy(new Doctrine\ORM\Mapping\UnderscoreNamingStrategy());
         $configs[$name]->setClassMetadataFactoryName('Cloud\Doctrine\ORM\Mapping\ClassMetadataFactory');
+        $configs[$name]->addFilter('security', 'Cloud\Doctrine\ORM\Query\Filter\SecurityFilter');
     }
     return $configs;
 });
