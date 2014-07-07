@@ -3,6 +3,8 @@
  * Silex Application Bootstrap
  */
 
+use Symfony\Component\Routing\RequestContext;
+
 $app = new Cloud\Silex\Application();
 $app['route_class'] = 'Cloud\Silex\Route';
 
@@ -27,6 +29,15 @@ $app['config'] = array_reduce($configs, function (array $data, $file) use ($app)
     try { return array_replace_recursive($data, $app['wise']->load($file)); }
     catch (Exception $e) { return $data; }
 }, []);
+
+$app['request_context'] = $app->extend('request_context', function (RequestContext $context, $app) {
+    $context->setHost($app['config']['app']['host']);
+    $context->setHttpPort($app['config']['app']['http_port']);
+    $context->setBaseUrl($context->getScheme() . '://' . $context->getHost() . ':' . $context->getHttpPort());
+    return $context;
+});
+
+$app['base_url'] = $app['request_context']->getBaseUrl();
 
 // opsworks
 if ($app['env'] != 'development') {

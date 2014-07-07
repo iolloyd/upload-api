@@ -14,6 +14,7 @@ namespace Cloud\Silex\Provider;
 use Doctrine\Common\Collections\Criteria;
 use JMS\Serializer\SerializerBuilder;
 use JMS\Serializer\SerializationContext;
+use JMS\Serializer\Handler\HandlerRegistry;
 use Pagerfanta\Adapter\DoctrineCollectionAdapter;
 use Pagerfanta\Pagerfanta;
 use Silex\Application;
@@ -22,12 +23,12 @@ use Silex\ServiceProviderInterface;
 class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 {
     /**
-     * @param Application $app
+     * {@inheritDoc}
      */
     public function register(Application $app)
     {
-        $app['paginator'] = $app->protect(function ($model, $options = []) use ($app) {
-
+        $app['paginator'] = $app->protect(function ($model, $options = []) use ($app)
+        {
             $criteria = Criteria::create();
             $filterFields = count($options) && isset($options['filterFields'])
                 ? $options['filterFields']
@@ -69,20 +70,20 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return $pager;
         });
 
-        $app['serializer'] = $app->protect(function($results, $groups = []) use ($app) {
+        $app['serializer'] = $app->protect(function($results, $groups = []) use ($app)
+        {
             $serializer = SerializerBuilder::create()
                 ->setDebug($app['debug'])
                 ->addDefaultHandlers()
                 ->configureHandlers(
-                    function(\JMS\Serializer\Handler\HandlerRegistry $registry) {
-                        $registry->registerHandler('serialization', 'Cloud\Model\Category', 'json',
-                            function($visitor, \Cloud\Model\Category $obj, array $type) {
+                    function(HandlerRegistry $registry) {
+                        $registry->registerHandler('serialization', '\Cloud\Model\Category', 'json',
+                            function($visitor, Category $obj, array $type) {
                                 return $obj->getId();
                             }
                         );
                     }
                 )
-
                 ->build()
             ;
             $context = SerializationContext::create()->setSerializeNull(true);
@@ -91,18 +92,19 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
                 $context->setGroups($groups);
             }
             $jsonContent = $serializer->serialize($results, 'json', $context);
+            $result = json_decode($jsonContent);
 
-            return json_decode($jsonContent);
+            return $result;
         });
 
-        $app['single.response.json'] = $app->protect(function ($model, $groups, $headerLink = true) use ($app) {
-
+        $app['single.response.json'] = $app->protect(function ($model, $groups, $headerLink = true) use ($app)
+        {
             $jsonContent = $app['serializer']($model, $groups);
 
             $response = $app->json($jsonContent);
             if ($headerLink) {
-                $link = $app['request']->getSchemeAndHttpHost() .
-                        $app['request']->getPathInfo();
+                $link = $app['request']->getSchemeAndHttpHost()
+                      . $app['request']->getPathInfo();
 
                 $response->headers->add(['Location' => $link]);
             }
@@ -110,92 +112,98 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return $response;
         });
 
-        $app['paginator.response.json'] = $app->protect(function ($model, $groups, $options = []) use ($app) {
+        $app['paginator.response.json'] = $app->protect(function ($model, $groups, $options = []) use ($app)
+        {
+            $pager         = $app['paginator']($model, $options);
+            $requestUrl    = $app['base_url'] . $app['request']->getPathInfo();
+            $requestParams = $app['request']->query->all();
 
-            $hostUrl = $app['request']->getSchemeAndHttpHost() . $app['request']->getPathInfo();
-            $params  = $app['request']->query->all();
-            $pager   = $app['paginator']($model, $options);
-            $navlinks = $this->getLinks($hostUrl, $params, $pager);
-            $jsonContent = $app['serializer']($pager->getCurrentPageResults(), $groups);
+            $content = $app['serializer']($pager->getCurrentPageResults(), $groups);
+            $headers = $this->getHeaders($requestUrl, $requestParams, $pager);
 
-            $response = $app->json($jsonContent);
-            $response->headers->add(['Link' => $navlinks['link']]);
-            $response->headers->add(['X-Pagination-Range' => $navlinks['range']]);
+            $response = $app->json($content);
+            $response->headers->add($headers);
 
             return $response;
         });
     }
 
     /**
-     * {@inheritdoc}
-     *
-     * @param Application $app The application
-     *
-     * @return void
+     * {@inheritDoc}
      */
     public function boot(Application $app)
     {
     }
 
     /**
-     * Returns the http links
+     * Returns the paginator related response headers
      *
-     * @param string     $hostUrl The host url
-     * @param array      $params  Required parameters
-     * @param Pagerfanta $pager   The pager
+     * @param string     $requestUrl
+     * @param array      $requestParams
+     * @param Pagerfanta $pager
      *
      * @return array
      */
-    protected function getLinks($hostUrl, $params, $pager)
+    protected function getHeaders($requestUrl, array $requestParams, Pagerfanta $pager)
     {
-        $link = $this->getLink($hostUrl, $params);
-        $currentPage    = $pager->getCurrentPage();
-        $pageSize       = $pager->getMaxPerPage();
-        $lastPage       = $pager->getNbPages();
-        $totalItemCount = $pager->getNbResults();
+        $curPage  = $pager->getCurrentPage();
+        $prevPage = $pager->hasPreviousPage()
+            ? $pager->getPreviousPage()
+            : null;
 
-        $navLink = [
-            $link('first', 1),
-            $link('last', $lastPage),
-            $pager->hasPreviousPage()
-                ? $link('prev', $pager->getPreviousPage())
-                : "",
-            $pager->hasNextPage()
-                ? $link('next', $pager->getNextPage())
-                : "",
+        $nextPage = $pager->hasNextPage()
+            ? $pager->getNextPage()
+            : null;
+
+        $lastPage = $pager->getNbPages();
+
+        $pageSize  = $pager->getMaxPerPage();
+        $itemCount = $pager->getNbResults();
+
+        $pages = [
+            'first' => 1,
+            'last' => $lastPage,
+            'next' => $nextPage,
+            'prev' => $prevPage,
         ];
+        $pages = array_filter($pages);
 
-        $rangeLink = $this->getRangeLinks($currentPage, $pageSize, $lastPage, $totalItemCount);
-        $navLink   = str_replace(', ,', ', ', implode(', ', $navLink));
+        $linkHeader  = $this->formatLink($requestUrl, $requestParams, $pages);
+        $rangeHeader = $this->formatRange($curPage, $pageSize, $lastPage, $itemCount);
 
-        return ['link' => $navLink, 'range' => $rangeLink,];
+        return [
+            'Link' => $linkHeader,
+            'X-Pagination-Range' => $rangeHeader,
+        ];
     }
 
     /**
-     * Returns a function that returns a link
-     * that looks like the following example:
+     * Returns a link header with http links for first, last, next and prev
+     * where applicable.
+     *
+     * @param string $requestUrl
+     * @param array $params
+     * @param array $pages
+     *
+     * @return string
+     */
+    protected function formatLink($requestUrl, array $params, array $pages)
+    {
+        $result = [];
+        foreach ($pages as $rel => $page) {
+            $newParams = $params;
+            $newParams['page'] = $page;
+            $newParams = http_build_query($newParams);
+            $result[] = sprintf('<%s?%s>; rel="%s"', $requestUrl, $newParams, $rel);
+        }
+
+        return implode(', ', $result);
+    }
+
+    /**
+     * Returns the value of the `X-Pagination-Range` header for the given page and item counts
      *
      *     X-Pagination-Range: items 1-10/250; pages 1/25
-     *
-     * @param string $hostUrl
-     * @param array  $params
-     *
-     * @return callable
-     */
-    protected function getLink($hostUrl, $params)
-    {
-        return function ($rel, $page) use ($hostUrl, $params) {
-            $params['page'] = $page;
-            $params = http_build_query($params);
-            $link = sprintf('<%s?%s>; rel="%s"', $hostUrl, $params, $rel);
-
-            return $link;
-        };
-
-    }
-
-    /**
-     * Returns http links for ranges
      *
      * @param int $currentPage
      * @param int $pageSize
@@ -204,16 +212,20 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
      *
      * @return string
      */
-    protected function getRangeLinks(
-        $currentPage, $pageSize, $lastPage, $totalItemCount
-    ) {
-        $currentItem = ($currentPage * $pageSize) - $pageSize;
-        $lastItemOfPage = min($currentItem + $pageSize - 1, $totalItemCount);
-        $links = "X-Pagination-Range: "
-               . "items $currentItem-$lastItemOfPage/$totalItemCount; "
-               . "page $currentPage/$lastPage";
+    protected function formatRange($currentPage, $pageSize, $lastPage, $totalItemCount)
+    {
+        $currentItem    = (($currentPage * $pageSize) - $pageSize) + 1;
+        $lastItemOfPage = min(($currentItem + $pageSize) - 1, $totalItemCount);
 
-        return $links;
+        $result = sprintf('items %d-%d/%d; pages %d/%d',
+            $currentItem,
+            $lastItemOfPage,
+            $totalItemCount,
+            $currentPage,
+            $lastPage
+        );
+
+        return $result;
     }
 
 }
