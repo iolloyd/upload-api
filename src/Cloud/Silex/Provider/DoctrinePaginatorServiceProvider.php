@@ -5,7 +5,7 @@
  * Copyright (C) 2014 Really Useful Limited.
  * Proprietary code. Usage restrictions apply.
  *
- * @copyright 2014 Really Useful Limited
+ * @copyright Copyright (c) 2014 Really Useful Limited
  * @license   Proprietary
  */
 
@@ -19,22 +19,10 @@ use Pagerfanta\Pagerfanta;
 use Silex\Application;
 use Silex\ServiceProviderInterface;
 
-/**
- * Class DoctrinePaginatorServiceProvider
- *
- * @package   Cloud\Silex\Provider
- * @author    Lloyd Moore <lloyd@cloud.xxx>
- * @copyright 2014 Really Useful Limited
- * @license   Proprietary
- */
 class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 {
     /**
-     * {@inheritDoc}
-     *
-     * @param Application $app The application
-     *
-     * @return PagerFanta
+     * @param Application $app
      */
     public function register(Application $app)
     {
@@ -170,9 +158,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
                 : "",
         ];
 
-        $rangeLink = $this->getRangeLinks(
-            $currentPage, $pageSize, $lastPage, $totalItemCount
-        );
+        $rangeLink = $this->getRangeLinks($currentPage, $pageSize, $lastPage, $totalItemCount);
         $navLink   = str_replace(', ,', ', ', implode(', ', $navLink));
 
         return ['link' => $navLink, 'range' => $rangeLink,];
@@ -180,9 +166,12 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
     /**
      * Returns a function that returns a link
+     * that looks like the following example:
      *
-     * @param string $hostUrl The host url
-     * @param array  $params  The required parameters for the link
+     *     X-Pagination-Range: items 1-10/250; pages 1/25
+     *
+     * @param string $hostUrl
+     * @param array  $params
      *
      * @return callable
      */
@@ -201,12 +190,12 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
     /**
      * Returns http links for ranges
      *
-     * @param int $currentPage    The number of the current page
-     * @param int $pageSize       The number of items per page
-     * @param int $lastPage       The number of the last page
-     * @param int $totalItemCount The total number of items
+     * @param int $currentPage
+     * @param int $pageSize
+     * @param int $lastPage
+     * @param int $totalItemCount
      *
-     * @return string $links The generated http links
+     * @return string
      */
     protected function getRangeLinks(
         $currentPage, $pageSize, $lastPage, $totalItemCount
