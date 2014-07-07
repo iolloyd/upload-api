@@ -9,8 +9,9 @@
  * @license    Proprietary
  */
 
-namespace Cloud\Doctrine;
+namespace Cloud\Doctrine\Internal;
 
+use Cloud\Doctrine\Exception;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Annotations\Reader as AnnotationReader;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -18,7 +19,6 @@ use Doctrine\Common\Persistence\ObjectManagerAware;
 use Doctrine\Common\Persistence\Mapping\ClassMetadata;
 use Doctrine\Common\NotifyPropertyChanged;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
-use Cloud\Doctrine\Exception;
 
 abstract class AbstractEventSubscriber implements EventSubscriber
 {
@@ -168,168 +168,6 @@ abstract class AbstractEventSubscriber implements EventSubscriber
     }
 
     /**
-     * Set a class level configuration value in the given metadata
-     *
-     * @param  ClassMetadata $metadata
-     * @param  string $key
-     * @param  mixed $value
-     * @return AbstractEventSubscriber
-     */
-    protected function setMetadataClassFlag(ClassMetadata $metadata, $key, $value = true)
-    {
-        $this->prepareClassMetadata($metadata);
-
-        $metadata->table['options'][$key] = $value;
-
-        return $this;
-    }
-
-    /**
-     * Get a class level configuration value from the given metadata
-     *
-     * @param  ClassMetadata $metadata
-     * @param  string $key
-     * @return mixed
-     */
-    protected function getMetadataClassFlag(ClassMetadata $metadata, $key)
-    {
-        $this->prepareClassMetadata($metadata);
-
-        if (!array_key_exists($key, $metadata->table['options'])) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                '%s(): Class metadata flag "%s" not found for "%s"',
-                __METHOD__,
-                $key, $metadata->name
-            ));
-        }
-
-        return $metadata->table['options'][$key];
-    }
-
-    /**
-     * Check if the given metadata has a class level configuration value set
-     *
-     * @param  ClassMetadata $metadata
-     * @param  string $key
-     * @return bool
-     */
-    protected function hasMetadataClassFlag(ClassMetadata $metadata, $key)
-    {
-        $this->prepareClassMetadata($metadata);
-        return array_key_exists($key, $metadata->table['options']);
-    }
-
-    /**
-     * Remove a class level configuration value from the given metadata
-     *
-     * @param  ClassMetadata $metadata
-     * @param  string $key
-     * @return AbstractEventSubscriber
-     */
-    protected function unsetMetadataClassFlag(ClassMetadata $metadata, $key)
-    {
-        $this->prepareClassMetadata($metadata);
-
-        if (array_key_exists($key, $metadata->table['options'])) {
-            unset($metadata->table['options'][$key]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Set a field level configuration value in the given metadata
-     *
-     * @param  ClassMetadata $metadata
-     * @param  string $fieldName
-     * @param  string $key
-     * @param  mixed $value
-     * @return AbstractEventSubscriber
-     */
-    protected function setMetadataFieldFlag(ClassMetadata $metadata, $fieldName, $key, $value = true)
-    {
-        if (array_key_exists($fieldName, $metadata->fieldMappings)) {
-            $metadata->fieldMappings[$fieldName][$key] = $value;
-        } elseif (array_key_exists($fieldName, $metadata->associationMappings)) {
-            $metadata->associationMappings[$fieldName][$key] = $value;
-        } else {
-            throw new Exception\InvalidArgumentException(sprintf(
-                '%s(): Field "%s" of "%s" does not exist',
-                __METHOD__,
-                $fieldName, $metadata->name
-            ));
-        }
-
-        return $this;
-    }
-
-    /**
-     * Get a field level configuration value from the given metadata
-     *
-     * @param  ClassMetadata $metadata
-     * @param  string $fieldName
-     * @param  string $key
-     * @return mixed
-     */
-    protected function getMetadataFieldFlag(ClassMetadata $metadata, $fieldName, $key)
-    {
-        if (array_key_exists($fieldName, $metadata->fieldMappings)
-            && array_key_exists($key, $metadata->fieldMappings[$fieldName])
-        ) {
-            return $metadata->fieldMappings[$fieldName][$key];
-        } elseif (array_key_exists($fieldName, $metadata->associationMappings)
-            && array_key_exists($key, $metadata->associationMappings[$fieldName])
-        ) {
-            return $metadata->associationMappings[$fieldName][$key];
-        } else {
-            throw new Exception\InvalidArgumentException(sprintf(
-                '%s(): Field metadata flag "%s" not found for field "%s" of "%s"',
-                __METHOD__,
-                $key, $fieldName, $metadata->name
-            ));
-        }
-    }
-
-    /**
-     * Check if the given metadata has a field level configuration value set
-     *
-     * @param  ClassMetadata $metadata
-     * @param  string $fieldName
-     * @param  string $key
-     * @return bool
-     */
-    protected function hasMetadataFieldFlag(ClassMetadata $metadata, $fieldName, $key)
-    {
-        return (array_key_exists($fieldName, $metadata->fieldMappings)
-                && array_key_exists($key, $metadata->fieldMappings[$fieldName]))
-            || (array_key_exists($fieldName, $metadata->associationMappings)
-                && array_key_exists($key, $metadata->associationMappings[$fieldName]));
-    }
-
-    /**
-     * Remove a field level configuration value from the given metadata
-     *
-     * @param  ClassMetadata $metadata
-     * @param  string $fieldName
-     * @param  string $key
-     * @return AbstractEventSubscriber
-     */
-    protected function unsetMetadataFieldFlag(ClassMetadata $metadata, $fieldName, $key)
-    {
-        if (array_key_exists($fieldName, $metadata->fieldMappings)
-            && array_key_exists($key, $metadata->fieldMappings[$fieldName])
-        ) {
-            unset($metadata->fieldMappings[$fieldName][$key]);
-        } elseif (array_key_exists($fieldName, $metadata->associationMappings)
-            && array_key_exists($key, $metadata->associationMappings[$fieldName])
-        ) {
-            unset($metadata->associationMappings[$fieldName][$key]);
-        }
-
-        return $this;
-    }
-
-    /**
      * Create new entity instance and apply ObjectManagerAware
      *
      * @param  ClassMetadata $metadata
@@ -382,19 +220,6 @@ abstract class AbstractEventSubscriber implements EventSubscriber
             $om->getUnitOfWork()->propertyChanged($object, $fieldName, $oldValue, $newValue);
         } else {
             $metadata->setFieldValue($object, $fieldName, $newValue);
-        }
-    }
-
-    /**
-     * Prepares the metadata object to store class options
-     *
-     * @param  ClassMetadata $metadata
-     * @return void
-     */
-    protected function prepareClassMetadata(ClassMetadata $metadata)
-    {
-        if (!isset($metadata->table['options'])) {
-            $metadata->table['options'] = [];
         }
     }
 }
