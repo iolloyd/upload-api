@@ -5,9 +5,9 @@ php:
 install:
   - composer self-update
   - composer install --prefer-dist
-  - ./bin/cloud doctrine:proxies:generate
 
 script:
+  - ./bin/cloud doctrine:proxies:generate
   - mkdir archive
   - zip -r archive/abc.zip . -x archive/ .git/ >/dev/null
   - zip -r archive/current.zip . -x archive/ .git/ >/dev/null
