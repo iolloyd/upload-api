@@ -43,6 +43,9 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
             $video->setCompany(
                 $this->getReference('cumulus')
             );
+            $video->setSite(
+                $this->getReference('site-foo')
+            );
             $thumbnails = ['foo', 'bar', 'waz', 'kim', 'yas', 'bot', 'tir'];
             $video->setThumbnail(
                 $thumbnails[rand(1, count($thumbnails)-1)].'.png'
