@@ -30,8 +30,7 @@
         "pagerfanta/pagerfanta": "~1.0",
         "jms/serializer": "0.16.0",
 
-        "monolog/monolog": "~1.10.0",
-        "logentries/logentries-monolog-handler": "dev-master",
+        "monolog/monolog": "~1.10",
 
         "zencoder/zencoder-php": "~2.1.2"
     },
