@@ -9,26 +9,28 @@
  * @license    Proprietary
  */
 
-namespace Cloud\Monolog\Provider;
+namespace Cloud\Silex\Provider;
 
 use Cloud\Monolog\Formatter\LineFormatter;
-use Monolog\Handler\GroupHandler;
-use Monolog\Handler\LogEntriesHandler;
-use Monolog\Handler\StreamHandler;
+use Cloud\Monolog\Handler\LogEntriesHandler;
 use Monolog\Logger;
+use Monolog\Handler\GroupHandler;
+use Monolog\Handler\StreamHandler;
 use Silex\Application;
-use Silex\Provider\MonologServiceProvider;
 use Silex\ServiceProviderInterface;
+use Silex\Provider\MonologServiceProvider;
 
 class LogServiceProvider implements ServiceProviderInterface
 {
+    /**
+     * @param Application $app
+     */
     public function register(Application $app)
     {
         $app->register(new MonologServiceProvider(), [
             'monolog.name' => 'cloudxxx',
         ]);
 
-        $formatter = new LineFormatter();
 
         // default handler
         $app['monolog.handler'] = function () use ($app) {
@@ -37,34 +39,35 @@ class LogServiceProvider implements ServiceProviderInterface
             ]);
         };
 
-        // logentries handler
-
-        $app['monolog.handler.logentries'] = function() use ($app, $formatter) {
+        // handler to send logs to logentries.com
+        $app['monolog.handler.logentries'] = function() use ($app)
+        {
             $token = $app['config']['logentries']['token'];
-            $handler = new LogEntriesHandler($token, Logger::WARNING);
-            $handler->setFormatter($formatter);
+            $handler = new LogEntriesHandler($token, Logger::WARNING, true);
+            $handler->setFormatter(new LineFormatter());
 
             return $handler;
         };
 
-        // debug to cli handler
-
-        $app['monolog.handler.debug'] = function() use ($app, $formatter) {
-            $handler = new StreamHandler(fopen('php://stderr', 'w'), Logger::DEBUG);
-            $handler->setFormatter($formatter);
-
+        // handler to send logs to local terminal on stderr
+        $app['monolog.handler.local'] = function() use ($app)
+        {
+            $handler = new StreamHandler(fopen('php://stderr', 'w'), Logger::DEBUG, true);
+            $handler->setFormatter(new LineFormatter());
             return $handler;
         };
+
+        $app['monolog']->pushHandler($app['monolog.handler.logentries']);
 
         // define a factory to allow setup of namespaced loggers or 'channels'
-
         $app['monolog.factory'] = $app->protect(function($name) use ($app)
         {
+            /** @var $logger \Monolog\Logger */
             $logger = new $app['monolog.logger.class']($name);
             $logger->pushHandler($app['monolog.handler']);
 
-            if ($app['debug'] && isset($app['monolog.handler.debug'])) {
-                $logger->pushHandler($app['monolog.handler.debug']);
+            if ($app['debug'] && isset($app['monolog.handler.local'])) {
+                $logger->pushHandler($app['monolog.handler.local']);
             }
 
             $logger->pushProcessor(function($record) use ($app) {
@@ -82,6 +85,9 @@ class LogServiceProvider implements ServiceProviderInterface
         });
     }
 
+    /**
+     * @param Application $app
+     */
     public function boot(Application $app)
     {
     }
