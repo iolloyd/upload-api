@@ -3,6 +3,7 @@ php:
   - 5.5
 
 install:
+  - echo 'extension = redis.so' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - composer install --prefer-dist --no-dev --optimize-autoloader
 
 script:
