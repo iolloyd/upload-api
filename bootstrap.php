@@ -1,4 +1,8 @@
 <?php
+
+\Symfony\Component\Debug\ErrorHandler::register();
+\Symfony\Component\Debug\ExceptionHandler::register();
+
 /*
  * Silex Application Bootstrap
  */
@@ -28,6 +32,9 @@ $app['config'] = array_reduce($configs, function (array $data, $file) use ($app)
     try { return array_replace_recursive($data, $app['wise']->load($file)); }
     catch (Exception $e) { return $data; }
 }, []);
+
+// log
+$app->register(new Cloud\Silex\Provider\LogServiceProvider());
 
 // opsworks
 if ($app['env'] != 'development') {
@@ -93,6 +100,7 @@ $app->register(new Aws\Silex\AwsServiceProvider(), [
 
 $app->register(new Cloud\Monolog\Provider\LogServiceProvider());
 $app->register(new Cloud\Silex\Provider\ZencoderServiceProvider());
+$app->register(new Cloud\Silex\Provider\ResqueServiceProvider());
 
 // loader
 $app->register(new Cloud\Silex\Loader(), [
