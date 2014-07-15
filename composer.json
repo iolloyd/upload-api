@@ -1,13 +1,16 @@
 {
-    "name": "cloudxxx-api",
-    "private": true,
+    "name": "cloudxxx/api",
+    "description": "cloud.xxx – Backend API and Workers",
+    "license": "proprietary",
 
     "require": {
         "php": ">=5.5.7",
+        "ext-bcmath": "*",
+        "ext-redis": "*",
 
         "silex/silex": "~1.2",
+        "monolog/monolog": "~1.10",
         "herrera-io/silex-wise": "~1.0",
-        "dflydev/doctrine-orm-service-provider": "~1.0",
 
         "symfony/console": "~2.4",
         "symfony/process": "~2.4",
@@ -15,23 +18,20 @@
         "symfony/security": "~2.4",
         "symfony/dom-crawler": "~2.4",
         "symfony/css-selector": "~2.4",
+        "symfony/serializer": "~2.4",
 
         "doctrine/orm": "~2.4",
         "doctrine/data-fixtures": "~1.0",
+        "dflydev/doctrine-orm-service-provider": "~1.0",
 
         "guzzlehttp/guzzle": "~4.0",
         "guzzlehttp/streams": "~1.1",
         "aws/aws-sdk-php": "~2.6",
         "aws/aws-sdk-php-silex": "~1.1",
 
-        "kamisama/php-resque-ex": "~1.2",
-        "kamisama/php-resque-ex-scheduler": "dev-master",
-
+        "kriswallsmith/spork": "dev-master",
         "pagerfanta/pagerfanta": "~1.0",
         "jms/serializer": "0.16.0",
-
-        "monolog/monolog": "~1.10.0",
-        "logentries/logentries-monolog-handler": "dev-master",
 
         "zencoder/zencoder-php": "~2.1.2"
     },
