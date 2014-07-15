@@ -11,9 +11,12 @@
 
 namespace Cloud\Job;
 
-use Resque;
-use Resque_Job_Status;
-use ResqueScheduler\Job\Status;
+use InvalidArgumentException;
+use Cloud\Resque\Resque;
+use Cloud\Resque\Job;
+use Cloud\Resque\Job\PerformInterface;
+use Cloud\Resque\Job\Status;
+use Cloud\Resque\Scheduler\ResqueScheduler;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputArgument;
@@ -23,24 +26,8 @@ use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 abstract class AbstractJob extends Command
+    implements PerformInterface
 {
-    const QUEUE_DEFAULT = 'default';
-
-    /**
-     * @var array
-     */
-    public $args = [];
-
-    /**
-     * @var Resque_Job
-     */
-    public $job;
-
-    /**
-     * @var string
-     */
-    public $queue;
-
     /**
      * @var Logger;
      */
@@ -53,11 +40,11 @@ abstract class AbstractJob extends Command
      * @param  string  $queue  Name of the queue to place the job in.
      * @return \Resque_Job_Status
      */
-    public static function enqueue($args = [], $queue = self::QUEUE_DEFAULT)
-    {
-        $id = \Resque::enqueue($queue, get_called_class(), $args, true);
-        return new \Resque_Job_Status($id);
-    }
+    //public static function enqueue($args = [], $queue = Resque::QUEUE_DEFAULT)
+    //{
+        //$id = Resque::enqueue($queue, get_called_class(), $args, true);
+        //return new Status($id);
+    //}
 
     /**
      * Enqueue a job in a given number of seconds from now
@@ -70,11 +57,11 @@ abstract class AbstractJob extends Command
      * @param  string $queue  Name of the queue to place the job in.
      * @return \ResqueScheduler\Job\Status
      */
-    public static function enqueueIn($in, $args = [], $queue = self::QUEUE_DEFAULT)
-    {
-        $id = \ResqueScheduler\ResqueScheduler::enqueueIn($in, $queue, get_called_class(), $args, true);
-        return new \ResqueScheduler\Job\Status($id);
-    }
+    //public static function enqueueIn($in, $args = [], $queue = Resque::QUEUE_DEFAULT)
+    //{
+        //$id = ResqueScheduler::enqueueIn($in, $queue, get_called_class(), $args, true);
+        //return new Status($id);
+    //}
 
     /**
      * Enqueue a job in a given number of seconds from now
@@ -87,28 +74,22 @@ abstract class AbstractJob extends Command
      * @param  string       $queue  Name of the queue to place the job in.
      * @return \ResqueScheduler\Job\Status
      */
-    public static function enqueueAt($time, $args = [], $queue = self::QUEUE_DEFAULT)
-    {
-        $id = \ResqueScheduler\ResqueScheduler::enqueueAt($time, $queue, get_called_class(), $args, true);
-        return new \ResqueScheduler\Job\Status($id);
-    }
+    //public static function enqueueAt($time, $args = [], $queue = Resque::QUEUE_DEFAULT)
+    //{
+        //$id = ResqueScheduler::enqueueAt($time, $queue, get_called_class(), $args, true);
+        //return new Status($id);
+    //}
 
     /**
      * resque: Run job
      */
-    public function perform()
+    public function perform(Job $job)
     {
-        $args = $this->args ?: [];
-
-        if (!is_array($args)) {
-            throw new \InvalidArgumentException(sprintf(
-                'Job `args` must be of type array, got %s',
-                gettype($args)
-            ));
-        }
+        $args = $job->getArgs();
 
         array_unshift($args, $this->getName());
-        unset($args['s_time']);
+        unset($args['_id']);
+        unset($args['_scheduled_at']);
 
         $input = new ArrayInput($args);
         $input->setInteractive(false);

@@ -9,14 +9,15 @@
  * @license    Proprietary
  */
 
-namespace Cloud\Job;
+namespace Cloud\Job\Test;
 
+use Cloud\Job\AbstractJob;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class TestJob extends AbstractJob
+class AnotherJob extends AbstractJob
 {
     /**
      * Configures this job
@@ -25,9 +26,8 @@ class TestJob extends AbstractJob
     {
         $this
             ->setDefinition([
-                new InputArgument('sleep', InputArgument::OPTIONAL, '', 5),
             ])
-            ->setName('job:test')
+            ->setName('job:another-test')
         ;
     }
 
@@ -36,11 +36,5 @@ class TestJob extends AbstractJob
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $sleep = (int) $input->getArgument('sleep');
-
-        printf('Sleeping for %d secs', $sleep);
-        sleep($sleep);
-
-        throw new \Exception('Something went wrong!!');
     }
 }
