@@ -98,7 +98,6 @@ $app->register(new Aws\Silex\AwsServiceProvider(), [
     'aws.config' => $app['config']['aws'],
 ]);
 
-$app->register(new Cloud\Monolog\Provider\LogServiceProvider());
 $app->register(new Cloud\Silex\Provider\ZencoderServiceProvider());
 $app->register(new Cloud\Silex\Provider\ResqueServiceProvider());
 
