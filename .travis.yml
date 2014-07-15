@@ -33,6 +33,22 @@ deploy:
     on:
       branch: staging
 
+  - provider: s3
+    access_key_id: AKIAJGFXNYKXB75SIPGQ
+    secret-access-key:
+      secure: dunrkHjTJ7VNz4jPGL/DfgrncaEdDiMLIKIV32HoyXkPOjFZ9pOGnTztWdXhhF2MkwHEbE8MG/01PC9AYqAK+2EL0AiHjNRIDIpjKo2J4WuJjJemh4mqDR8ZmC0nwCbeJKatPWdqrdweaSgVYHbPg/TetRpjV37HOOBDbKonSKY=
+    skip_cleanup: true
+    bucket: cldsys-travis-prod
+    local-dir: archive
+    upload-dir: cloudxxx-api
+
+  - provider: opsworks
+    access-key-id: AKIAJGFXNYKXB75SIPGQ
+    secret-access-key:
+      secure: dunrkHjTJ7VNz4jPGL/DfgrncaEdDiMLIKIV32HoyXkPOjFZ9pOGnTztWdXhhF2MkwHEbE8MG/01PC9AYqAK+2EL0AiHjNRIDIpjKo2J4WuJjJemh4mqDR8ZmC0nwCbeJKatPWdqrdweaSgVYHbPg/TetRpjV37HOOBDbKonSKY=
+    app-id: 6dfb8967-9387-4be4-838d-d010fb6ea9e3
+    wait-until-deployed: true
+
 env:
   - NOKOGIRI_USE_SYSTEM_LIBRARIES=true
 
