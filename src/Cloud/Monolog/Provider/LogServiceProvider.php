@@ -41,7 +41,7 @@ class LogServiceProvider implements ServiceProviderInterface
 
         $app['monolog.handler.logentries'] = function() use ($app, $formatter) {
             $token = $app['config']['logentries']['token'];
-            $handler = new LogEntriesHandler($token, Logger::WARNING);
+            $handler = new LogEntriesHandler($token, Logger::INFO);
             $handler->setFormatter($formatter);
 
             return $handler;
@@ -68,9 +68,10 @@ class LogServiceProvider implements ServiceProviderInterface
             }
 
             $logger->pushProcessor(function($record) use ($app) {
-                $record['extra']['user']    = empty($app['user']) ? 0 : $app['user']->getId();
-                $record['extra']['company'] = empty($app['user']) ? 0 : $app['user']->getCompany()->getId();
+                $record['extra']['user']    = $app['user'] ? $app['user']->getId() : 0;
+                $record['extra']['company'] = $app['company'] ? $app['company']->getId() : 0;
                 $record['extra']['host']    = gethostname();
+
                 foreach ($record['context'] as $k => $v) {
                     $record['extra'][$k] = $v;
                 }
