@@ -23,6 +23,7 @@ $app->register(new Herrera\Wise\WiseServiceProvider(), [
         ],
     ],
 ]);
+
 $app['config'] = array_reduce($configs, function (array $data, $file) use ($app) {
     try { return array_replace_recursive($data, $app['wise']->load($file)); }
     catch (Exception $e) { return $data; }
@@ -52,6 +53,8 @@ $app->extend('dbs.event_manager', function ($managers, $app) {
     }
     return $managers;
 });
+
+// Doctrine ORM setup
 $app->register(new Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider(), [
     'orm.em.options' => [
         'mappings' => [
@@ -64,7 +67,14 @@ $app->register(new Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider
             ],
         ],
     ],
+    'orm.default_cache' => $app['debug']
+            ? 'array'
+            : 'apc',
+
+    'orm.auto_generate_proxies' => !$app['debug'],
+    'orm.proxies_dir' => 'data/cache/doctrine/proxies',
 ]);
+
 $app->extend('orm.ems.config', function ($configs, $app) {
     foreach ($app['orm.ems.options'] as $name => $options) {
         $configs[$name]->setNamingStrategy(new Doctrine\ORM\Mapping\UnderscoreNamingStrategy());
@@ -73,12 +83,14 @@ $app->extend('orm.ems.config', function ($configs, $app) {
     }
     return $configs;
 });
+
 $app['em'] = $app['orm.em'];
 
 // middleware
 $app->register(new Aws\Silex\AwsServiceProvider(), [
     'aws.config' => $app['config']['aws'],
 ]);
+
 $app->register(new Cloud\Monolog\Provider\LogServiceProvider());
 $app->register(new Cloud\Silex\Provider\ZencoderServiceProvider());
 
