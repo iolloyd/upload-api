@@ -3,6 +3,10 @@
     "description": "cloud.xxx – Backend API and Workers",
     "license": "proprietary",
 
+    "config": {
+        "github-oauth": {"github.com": "9aea5b2c88ea7d54b81b7ef7880055f150e68633"}
+    },
+
     "require": {
         "php": ">=5.5.7",
         "ext-bcmath": "*",
