@@ -78,7 +78,7 @@ $app->register(new Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider
             ? 'array'
             : 'apc',
 
-    'orm.auto_generate_proxies' => !$app['debug'],
+    'orm.auto_generate_proxies' => $app['debug'],
     'orm.proxies_dir' => 'data/cache/doctrine/proxies',
 ]);
 
