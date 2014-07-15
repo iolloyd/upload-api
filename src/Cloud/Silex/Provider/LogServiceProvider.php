@@ -9,7 +9,7 @@
  * @license    Proprietary
  */
 
-namespace Cloud\Monolog\Provider;
+namespace Cloud\Silex\Provider;
 
 use Cloud\Monolog\Formatter\LineFormatter;
 use Monolog\Handler\GroupHandler;
