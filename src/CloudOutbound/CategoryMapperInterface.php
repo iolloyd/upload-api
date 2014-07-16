@@ -11,18 +11,15 @@
 
 namespace CloudOutbound;
 
-/**
- * Interface TubeCategoryStrategyInteface
- *
- * @package CloudOutbound
- */
-interface TubeCategoryStrategyInterface
+use Cloud\Model\Category;
+
+interface CategoryMapperInterface
 {
     /**
-     * @param $slug
+     * @param Category $category
      * @return mixed
      */
-    public function getCategoryBySlug($slug);
+    public function convert(Category $category);
 }
 
 
