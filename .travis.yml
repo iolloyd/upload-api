@@ -4,7 +4,7 @@ php:
 
 install:
   - echo 'extension = redis.so' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-  - hhvm /usr/local/bin/composer install --prefer-dist --no-dev --optimize-autoloader -vvv --profile
+  - hhvm "$(which composer)" install --prefer-dist --no-dev --optimize-autoloader -vvv --profile
 
 script:
   - ./bin/cloud doctrine:proxies:generate
