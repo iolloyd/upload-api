@@ -31,11 +31,9 @@ $sessionData = function () use ($app)
     if ($token && $app['security']->isGranted('ROLE_USER')) {
         $user = $token->getUser();
 
-        $data['user'] = $user;
+        $data['user']    = $user;
         $data['company'] = $user->getCompany();
-
-        $data['config']['sites'] =
-            $app['converter.site']->convertAll();
+        $data['sites']   = $app['converter.site']->convertAll();
 
         $data['config']['categories'] =
             $app['converter.category']->convertAll();
