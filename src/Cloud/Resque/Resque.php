@@ -74,6 +74,9 @@ class Resque
      */
     protected $workers;
 
+    // FIXME: hack
+    public $redisHost = '127.0.0.1';
+
     /**
      * Constructor
      */
@@ -217,7 +220,7 @@ class Resque
             // TODO:  check if doctrine needs similar treatment:
             //          http://devlog.rolandow.com/2013/07/force-doctrine-to-close-mysql-connections/
 
-            $result = $this->redis->pconnect('127.0.0.1', 6379);
+            $result = $this->redis->pconnect($this->redisHost, 6379);
 
             if (!$result) {
                 throw new \Exception('Redis connection failed');
