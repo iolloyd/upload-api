@@ -30,6 +30,10 @@ $app->post('/videos', function(Request $request) use ($app)
 {
     $video = new Video($app['user']);
 
+    // FIXME: hack
+    $site = $app['em']->getRepository('cx:site')->findOneBy([]);
+    $video->setSite($site);
+
     $app['em']->persist($video);
     $app['em']->flush();
 
@@ -125,6 +129,14 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
             $em->persist($outbound);
         }
     });
+
+    // FIXME: hack
+
+    foreach ($video->getOutbounds() as $outbound) {
+        if ($outbound->getTubesite()->getSlug() == 'youporn') {
+            $job = $app['resque']->enqueue('CloudOutbound\YouPorn\Job\DemoCombined', ['videooutbound' => $outbound->getId()]);
+        }
+    }
 
     //TODO add redis enqueueing
     //Resque::enqueue(
