@@ -63,7 +63,7 @@ class LogServiceProvider implements ServiceProviderInterface
             $logger = new $app['monolog.logger.class']($name);
             $logger->pushHandler($app['monolog.handler']);
 
-            if ($app['debug'] && isset($app['monolog.handler.debug'])) {
+            if (/* $app['debug'] && */ isset($app['monolog.handler.debug'])) {
                 $logger->pushHandler($app['monolog.handler.debug']);
             }
 
