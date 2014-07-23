@@ -49,6 +49,9 @@ class ResqueServiceProvider implements ServiceProviderInterface
 
             $resque = new Resque($app['resque.logger'], $app['resque.dispatcher']);
 
+            // FIXME: hack
+            $resque->redisHost = $app['config']['redis']['host'];
+
             return $resque;
         });
 
