@@ -28,14 +28,12 @@ $app->get('/videos', function(Request $request) use ($app)
  */
 $app->post('/videos', function(Request $request) use ($app)
 {
-    $video = new Video($app['user']);
+    $site  = $app['converter.site']->convert($request->get('site'));
+    $video = new Video($site);
 
-    // FIXME: hack
-    $site = $app['em']->getRepository('cx:site')->findOneBy([]);
-    $video->setSite($site);
-
-    $app['em']->persist($video);
-    $app['em']->flush();
+    $app['em']->transactional(function ($em) use ($video) {
+        $em->persist($video);
+    });
 
     return $app['single.response.json']($video, ['details', 'details.videos']);
 });
