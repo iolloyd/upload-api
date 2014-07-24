@@ -165,13 +165,19 @@ class Video extends AbstractModel
 
     /**
      * Constructor
+     *
+     * @param Site $site  parent site entity this video belongs to
      */
-    public function __construct()
+    public function __construct(Site $site = null)
     {
         $this->inbounds = new ArrayCollection();
         $this->outbounds = new ArrayCollection();
         $this->secondaryCategories = new ArrayCollection();
         $this->tags = new ArrayCollection();
+
+        if ($site) {
+            $this->setSite($site);
+        }
     }
 
     /**
