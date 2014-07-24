@@ -37,13 +37,15 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
             if (count($filterFields)) {
                 foreach ($app['request']->query->all() as $field => $values) {
+                    if (!in_array($field, $filterFields)) {
+                        continue;
+                    }
+
                     if (!is_array($values)) {
                         $values = [$values];
                     }
 
-                    if (in_array($field, $filterFields)) {
-                        $criteria = $criteria->where(Criteria::expr()->in($field, $values));
-                    }
+                    $criteria->andWhere(Criteria::expr()->in($field, $values));
                 }
             }
 
@@ -60,7 +62,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $pager = new Pagerfanta($adapter);
 
             $page    = $app['request']->get('page')     ?: 1;
-            $perPage = $app['request']->get('per_page') ?: 10;
+            $perPage = $app['request']->get('per_page') ?: 100;
 
             $pager
                 ->setMaxPerPage($perPage)
