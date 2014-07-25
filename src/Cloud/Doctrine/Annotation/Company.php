@@ -17,4 +17,9 @@ namespace Cloud\Doctrine\Annotation;
  */
 class Company
 {
+    /**
+     * @var boolean  if true, allow unfiltered listing when no user is logged
+     *                 in
+     */
+    public $allowAnonymous = false;
 }
