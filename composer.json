@@ -35,9 +35,9 @@
 
         "kriswallsmith/spork": "dev-master",
         "pagerfanta/pagerfanta": "~1.0",
-        "jms/serializer": "0.16.0",
+        "jms/serializer": "~0.16",
 
-        "zencoder/zencoder-php": "~2.1.2"
+        "zencoder/zencoder-php": "~2.2"
     },
 
     "require-dev": {
