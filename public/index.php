@@ -24,7 +24,9 @@ require 'autoload.php';
 require 'bootstrap.php';
 
 // providers
-$app->register(new SecurityServiceProvider());
+$app->register(new SecurityServiceProvider(), [
+    'security.logger' => function ($app) { return $app['monolog']('security'); },
+]);
 $app->register(new SessionServiceProvider(), [
     'session.storage.options' => [
         'name'                    => 'CLOUD',

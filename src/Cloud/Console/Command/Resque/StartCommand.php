@@ -185,8 +185,6 @@ EOT
     {
         $app = $this->getHelper('silex')->getApplication();
 
-        $app['resque.logger'] = new \Symfony\Component\Console\Logger\ConsoleLogger($output);
-
         $resque = $app['resque'];
 
         if ($input->hasOption('prefix')) {
