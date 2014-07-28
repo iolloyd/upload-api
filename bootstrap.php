@@ -1,6 +1,6 @@
 <?php
 
-\Symfony\Component\Debug\ErrorHandler::register();
+\Symfony\Component\Debug\ErrorHandler::register(E_PARSE | E_ERROR | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR);
 \Symfony\Component\Debug\ExceptionHandler::register();
 
 /*
@@ -34,7 +34,10 @@ $app['config'] = array_reduce($configs, function (array $data, $file) use ($app)
 }, []);
 
 // log
-$app->register(new Cloud\Silex\Provider\LogServiceProvider());
+$app->register(new Cloud\Silex\Provider\LogServiceProvider(), [
+    'monolog.logfile' => $app['config']['monolog']['logfile'],
+    'monolog.security.logfile' => $app['config']['monolog']['security.logfile'],
+]);
 
 // opsworks
 if ($app['env'] != 'development') {
@@ -99,7 +102,9 @@ $app->register(new Aws\Silex\AwsServiceProvider(), [
 ]);
 
 $app->register(new Cloud\Silex\Provider\ZencoderServiceProvider());
-$app->register(new Cloud\Silex\Provider\ResqueServiceProvider());
+$app->register(new Cloud\Silex\Provider\ResqueServiceProvider(), [
+    'resque.logger' => $app['monolog']('worker'),
+]);
 
 // loader
 $app->register(new Cloud\Silex\Loader(), [
