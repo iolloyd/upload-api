@@ -18,10 +18,15 @@ use Silex\Application;
 use Silex\Provider\SecurityServiceProvider as BaseSecurityServiceProvider;
 use Symfony\Component\Security\Core\AuthenticationEvents;
 use Symfony\Component\Security\Core\Event\AuthenticationEvent;
+use Symfony\Component\Security\Core\Encoder\BCryptPasswordEncoder;
 use Symfony\Component\Security\Core\Encoder\EncoderFactory;
+use Symfony\Component\Security\Http\Authentication\DefaultAuthenticationSuccessHandler;
+use Symfony\Component\Security\Http\Authentication\DefaultAuthenticationFailureHandler;
+use Symfony\Component\Security\Http\Firewall\AccessListener;
+use Symfony\Component\Security\Http\Firewall\AnonymousAuthenticationListener;
+use Symfony\Component\Security\Http\Firewall\ContextListener;
 use Symfony\Component\Security\Http\Firewall\ChannelListener;
 use Symfony\Component\Security\Http\Firewall\ExceptionListener;
-use Symfony\Component\Security\Core\Encoder\BCryptPasswordEncoder;
 
 class SecurityServiceProvider extends BaseSecurityServiceProvider
 {
@@ -59,6 +64,10 @@ class SecurityServiceProvider extends BaseSecurityServiceProvider
         };
 
         // configuration
+
+        $app['security.logger'] = function ($app) {
+            return $app['logger'];
+        };
 
         $app['security.users'] = $app->share(function () use ($app) {
             return $app['em']->getRepository('Cloud\Model\User');
@@ -110,30 +119,75 @@ class SecurityServiceProvider extends BaseSecurityServiceProvider
             return new ChannelListener(
                 $app['security.access_map'],
                 new SslRequiredEntryPoint(),
-                $app['logger.security']
+                $app['security.logger']
             );
+        });
+
+        $app['security.access_listener'] = $app->share(function ($app) {
+            return new AccessListener(
+                $app['security'],
+                $app['security.access_manager'],
+                $app['security.access_map'],
+                $app['security.authentication_manager'],
+                $app['security.logger']
+            );
+        });
+
+        $app['security.context_listener._proto'] = $app->protect(function ($providerKey, $userProviders) use ($app) {
+            return $app->share(function () use ($app, $userProviders, $providerKey) {
+                return new ContextListener(
+                    $app['security'],
+                    $userProviders,
+                    $providerKey,
+                    $app['security.logger'],
+                    $app['dispatcher']
+                );
+            });
         });
 
         $app['security.entry_point.default.form'] = $app->share(function () use ($app) {
             return new InsufficientAuthenticationEntryPoint();
         });
 
-        $app['security.exception_listener.default'] = $app->share(function () use ($app) {
-            return new ExceptionListener(
-                $app['security'],
-                $app['security.trust_resolver'],
-                $app['security.http_utils'],
-                'default',
-                $app['security.entry_point.default.form'],
-                null, // errorPage
-                new AccessDeniedHandler(),
-                $app['logger']
-            );
+        $app['security.exception_listener._proto'] = $app->protect(function ($entryPoint, $name) use ($app) {
+            return $app->share(function () use ($app, $entryPoint, $name) {
+                return new ExceptionListener(
+                    $app['security'],
+                    $app['security.trust_resolver'],
+                    $app['security.http_utils'],
+                    $name,
+                    $app[$entryPoint],
+                    null, // errorPage
+                    new AccessDeniedHandler(),
+                    $app['security.logger']
+                );
+            });
+        });
+
+        $app['security.authentication.failure_handler._proto'] = $app->protect(function ($name, $options) use ($app) {
+            return $app->share(function () use ($name, $options, $app) {
+                return new DefaultAuthenticationFailureHandler(
+                    $app,
+                    $app['security.http_utils'],
+                    $options,
+                    $app['security.logger']
+                );
+            });
+        });
+
+        $app['security.authentication_listener.anonymous._proto'] = $app->protect(function ($providerKey, $options) use ($app) {
+            return $app->share(function () use ($app, $providerKey, $options) {
+                return new AnonymousAuthenticationListener(
+                    $app['security'],
+                    $providerKey,
+                    $app['security.logger']
+                );
+            });
         });
 
         $app['security.encoder_factory'] = $app->share(function ($app) {
             return new EncoderFactory([
-                'Cloud\Model\User' => new BCryptPasswordEncoder(10),
+                'Cloud\Model\User' => new BCryptPasswordEncoder(12),
             ]);
         });
     }
