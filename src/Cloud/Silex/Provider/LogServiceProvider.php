@@ -36,8 +36,6 @@ class LogServiceProvider implements ServiceProviderInterface
      */
     public function register(Application $app)
     {
-        $hasBridge = class_exists('Symfony\Bridge\Monolog\Logger');
-
         $app['logger'] = function ($app) {
             return $app['monolog']($app['monolog.name']);
         };
@@ -161,11 +159,7 @@ class LogServiceProvider implements ServiceProviderInterface
         $app['monolog.logfile'] = 'data/logs/cloud.log';
         $app['monolog.security.logfile'] = 'data/logs/security.log';
 
-        if ($hasBridge) {
-            $app['monolog.logger.class'] = 'Symfony\Bridge\Monolog\Logger';
-        } else {
-            $app['monolog.logger.class'] = 'Monolog\Logger';
-        }
+        $app['monolog.logger.class'] = 'Symfony\Bridge\Monolog\Logger';
 
         $app['monolog.translateLevel'] = $app->protect(function ($level = null) use ($app) {
             if ($level === null) {
@@ -201,28 +195,26 @@ class LogServiceProvider implements ServiceProviderInterface
             );
         });
 
-        if ($hasBridge) {
-            $app['monolog.handler.console'] = $app->protect(function ($level = null) use ($app) {
-                $handler = new ConsoleHandler();
+        $app['monolog.handler.console'] = $app->protect(function ($level = null) use ($app) {
+            $handler = new ConsoleHandler();
 
-                if (php_sapi_name() == 'cli-server') {
-                    // FIXME: hack
-                    $handler->setOutput(new \Symfony\Component\Console\Output\ConsoleOutput(3, true));
-                }
+            if (php_sapi_name() == 'cli-server') {
+                // FIXME: hack
+                $handler->setOutput(new \Symfony\Component\Console\Output\ConsoleOutput(3, true));
+            }
 
-                foreach ($handler->getSubscribedEvents() as $eventName => $methodName) {
-                    $app->on($eventName, [$handler, $methodName]);
-                }
+            foreach ($handler->getSubscribedEvents() as $eventName => $methodName) {
+                $app->on($eventName, [$handler, $methodName]);
+            }
 
-                return $handler;
-            });
+            return $handler;
+        });
 
-            $app['monolog.handler.debug'] = $app->protect(function ($level = null) use ($app) {
-                return new DebugHandler(
-                    $app['monolog.translateLevel']($level)
-                );
-            });
-        }
+        $app['monolog.handler.debug'] = $app->protect(function ($level = null) use ($app) {
+            return new DebugHandler(
+                $app['monolog.translateLevel']($level)
+            );
+        });
 
         // formatters
 
@@ -253,13 +245,11 @@ class LogServiceProvider implements ServiceProviderInterface
             });
         }
 
-        if ($hasBridge) {
-            $app['monolog.processor.web'] = $app->share(function () use ($app) {
-                $processor = new WebProcessor();
-                $app->on(KernelEvents::REQUEST, [$processor, 'onKernelRequest']);
-                return $processor;
-            });
-        }
+        $app['monolog.processor.web'] = $app->share(function () use ($app) {
+            $processor = new WebProcessor();
+            $app->on(KernelEvents::REQUEST, [$processor, 'onKernelRequest']);
+            return $processor;
+        });
 
         $app['monolog.processor.source'] = $app->share(function () use ($app) {
             return new IntrospectionProcessor($app['debug'] ? Logger::DEBUG : Logger::WARNING);
