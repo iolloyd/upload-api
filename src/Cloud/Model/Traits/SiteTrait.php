@@ -16,7 +16,7 @@ trait SiteTrait
     /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Cloud\Model\Site")
-     * @JMS\Groups({"details"})
+     * @JMS\Groups({"details", "list.tubesiteusers"})
      */
     protected $site;
 

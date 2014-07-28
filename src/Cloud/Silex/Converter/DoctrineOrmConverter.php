@@ -46,12 +46,16 @@ class DoctrineOrmConverter
      */
     public function convert($id)
     {
-        $entity = $this->em->find($this->entityName, (int) $id);
+        $id = (int) $id;
+
+        $entity = $this->em->find($this->entityName, $id);
 
         if (!$entity) {
-            throw new NotFoundHttpException(
-                sprintf('Entity #%d does not exist', $id)
-            );
+            throw new NotFoundHttpException(sprintf(
+                'Could not find `%s` with id `%d`',
+                $this->entityName,
+                $id
+            ));
         }
 
         return $entity;
