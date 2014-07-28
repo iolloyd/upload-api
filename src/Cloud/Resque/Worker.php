@@ -158,7 +158,7 @@ class Worker
             }
 
             if (!$this->isPaused()) {
-                $this->procline('Waiting for ' . implode(',', $this->queues));
+                $this->procline('Waiting for ' . implode(',', $this->queues), true);
                 $this->logger->debug('Polling for {interval} seconds...', [ 'interval' => $interval ]);
 
                 // poll
@@ -203,7 +203,7 @@ class Worker
                     $job->perform();
                 });
 
-                $this->procline('Forked ' . $fork->getPid() . ' at ' . time(), false);
+                $this->procline('Forked ' . $fork->getPid() . ' at ' . time());
                 $fork->wait(true);
                 $this->logger->info('Fork exited with code {exitCode}', ['exitCode' => $fork->getExitStatus()]);
 
