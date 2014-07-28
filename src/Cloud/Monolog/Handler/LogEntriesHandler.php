@@ -11,6 +11,7 @@
 
 namespace Cloud\Monolog\Handler;
 
+use RuntimeException;
 use Monolog\Handler\LogEntriesHandler as BaseLogEntriesHandler;
 
 /**
@@ -18,6 +19,21 @@ use Monolog\Handler\LogEntriesHandler as BaseLogEntriesHandler;
  */
 class LogEntriesHandler extends BaseLogEntriesHandler
 {
+    /**
+     * {@inheritDoc}
+     */
+    public function handle(array $record)
+    {
+        // prevent application crashes if we can't connect to logentries
+
+        try {
+            return parent::handle($record);
+        } catch (RuntimeException $e) {
+            trigger_error(sprintf('%s(): %s', __METHOD__, $e->getMessage()), E_USER_WARNING);
+            return false;
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
