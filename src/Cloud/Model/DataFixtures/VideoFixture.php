@@ -31,25 +31,15 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
     {
 
         foreach (range(1, 5) as $x) {
-            $video = new Video(
-                $this->getReference('user')
-            );
+            $video = new Video($this->getReference('site-foo'));
 
             $video->setTitle('Eye iz vidayo' . $x);
             $video->setDescription('Me iz dizcreyeber' . $x);
-            $video->setCreatedBy(
-                $this->getReference('user')
-            );
-            $video->setCompany(
-                $this->getReference('cumulus')
-            );
-            $video->setSite(
-                $this->getReference('site-foo')
-            );
+            $video->setCreatedBy($this->getReference('user'));
+            $video->setCompany($this->getReference('cumulus'));
+
             $thumbnails = ['foo', 'bar', 'waz', 'kim', 'yas', 'bot', 'tir'];
-            $video->setThumbnail(
-                $thumbnails[rand(1, count($thumbnails)-1)].'.png'
-            );
+            $video->setThumbnail($thumbnails[rand(1, count($thumbnails)-1)].'.png');
 
             $clicks = rand(100, 20000);
             $plays = rand($clicks*0.1, $clicks*0.6);
@@ -77,6 +67,8 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
     {
         return [
             __NAMESPACE__ . '\UserFixture',
+            __NAMESPACE__ . '\SiteFixture',
+            __NAMESPACE__ . '\CompanyFixture',
             __NAMESPACE__ . '\CategoryFixture',
         ];
     }

@@ -17,10 +17,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Returns a `403 Forbidden` response on authentication errors. Used with our
- * API when a HTTPS endpoint is requested over HTTP.
+ * Returns a `401 Unauthorized` response on authentication errors
  */
-class ForbiddenErrorAuthenticationEntryPoint implements AuthenticationEntryPointInterface
+class InsufficientAuthenticationEntryPoint implements AuthenticationEntryPointInterface
 {
     /**
      * {@inheritdoc}
@@ -28,11 +27,14 @@ class ForbiddenErrorAuthenticationEntryPoint implements AuthenticationEntryPoint
     public function start(Request $request, AuthenticationException $authException = null)
     {
         $response = new JsonResponse();
-        $response->setStatusCode(403);
+
+        $response->setStatusCode(401);
         $response->setData([
-            'error' => 'ssl_required',
-            'error_description' => 'Requests to this resource must be SSL encrypted',
+            'status' => 401,
+            'title'  => 'Authentication Required',
+            'detail' => 'You have not logged in or your session has expired. Please login to continue.',
         ]);
+
         return $response;
     }
 }

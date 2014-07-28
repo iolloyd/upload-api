@@ -24,7 +24,9 @@ require 'autoload.php';
 require 'bootstrap.php';
 
 // providers
-$app->register(new SecurityServiceProvider());
+$app->register(new SecurityServiceProvider(), [
+    'security.logger' => function ($app) { return $app['monolog']('security'); },
+]);
 $app->register(new SessionServiceProvider(), [
     'session.storage.options' => [
         'name'                    => 'CLOUD',
@@ -38,7 +40,7 @@ $app->register(new SessionServiceProvider(), [
 $app->register(new CorsHeadersServiceProvider(), [
     'cors.options' => [
         'allow_credentials' => true,
-        'allow_origin'      => $app['debug'] ? null : 'https://app.cldstaging.net',
+        'allow_origin'      => $app['debug'] ? null : ($app['env'] == 'staging' ? 'https://app.cldstaging.net' : 'https://beta.cloud.xxx'),
         'max_age'           => 604800,
     ],
 ]);
