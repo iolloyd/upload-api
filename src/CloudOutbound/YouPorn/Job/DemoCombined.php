@@ -236,7 +236,7 @@ class DemoCombined extends AbstractJob
             'outputs' => [
                 [
                     'url' => $outputUrl,
-                    'credentials' => 's3-cldsys-dev',
+                    'credentials' => $app['debug'] ? 's3-cldsys-dev' : 's3-cldsys-prod',
 
                     'format' => 'mp4',
                     'width' => 1280,
@@ -244,7 +244,7 @@ class DemoCombined extends AbstractJob
 
                     'audio_codec'   => 'aac',
                     'audio_quality' => 4,
-                    'video_bitrate' => 4000,
+                    'max_video_bitrate' => 4000,
 
                     'video_codec'   => 'h264',
                     'h264_profile'  => 'high',
@@ -277,6 +277,29 @@ class DemoCombined extends AbstractJob
             $details = $zencoder->jobs->details($job->id);
             $output = $details->outputs[0];
 
+            // error
+            if ($details->state == 'failed') {
+                $errorCode = $details->error_class;
+                $errorMessage = $details->error_message;
+
+                $app['em']->transactional(function ($em) use ($videoFile) {
+                    $videoFile->setStatus('error');
+                });
+
+                break;
+            }
+
+            if ($details->state == 'finished' && $details->backup_server_used) {
+                $errorCode = $details->primary_upload_error_link;
+                $errorMessage = $details->primary_upload_error_message;
+
+                $app['em']->transactional(function ($em) use ($videoFile) {
+                    $videoFile->setStatus('error');
+                });
+
+                break;
+            }
+
             // success
             if ($details->state == 'finished') {
                 $app['em']->transactional(function ($em) use ($videoFile, $output) {
@@ -306,18 +329,6 @@ class DemoCombined extends AbstractJob
                 break;
             }
 
-            // error
-            if ($details->state == 'failed') {
-                $errorCode = $details->error_class;
-                $errorMessage = $details->error_message;
-
-                $app['em']->transactional(function ($em) use ($videoFile) {
-                    $videoFile->setStatus('error');
-                });
-
-                break;
-            }
-
             // timeout
             if (time() - $start >= 900) {
                 $zencoder->jobs->cancel($job->id);
@@ -328,6 +339,10 @@ class DemoCombined extends AbstractJob
 
                 break;
             }
+        }
+
+        if ($videoFile->getStatus() != 'complete') {
+            throw new \Exception('Failed to encode outbound video file');
         }
     }
 
