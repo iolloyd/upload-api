@@ -175,7 +175,8 @@ class LogServiceProvider implements ServiceProviderInterface
             return new RotatingFileHandler(
                 $app['monolog.logfile'],
                 5,
-                $app['monolog.translateLevel']($level)
+                $app['monolog.translateLevel']($level),
+                0664
             );
         });
 
@@ -183,7 +184,8 @@ class LogServiceProvider implements ServiceProviderInterface
             return new RotatingFileHandler(
                 $app['monolog.security.logfile'],
                 5,
-                $app['monolog.translateLevel']($level)
+                $app['monolog.translateLevel']($level),
+                0664
             );
         });
 
