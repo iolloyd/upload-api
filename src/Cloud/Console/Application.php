@@ -55,32 +55,8 @@ class Application extends BaseApplication
             InputOption::VALUE_REQUIRED,
             'Silex application mode: development, staging, production', $app['env'])
         );
-    }
 
-    /**
-     * Adjust Silex configuration before running
-     *
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     * @return int
-     */
-    public function doRun(InputInterface $input, OutputInterface $output)
-    {
-        /*
-        $log = $this->app->log;
-
-        if ($output->isQuiet()) {
-            $log->setLevel(SlimLog::ERROR);
-        } elseif ($output->isVerbose()) {
-            $log->setLevel(SlimLog::INFO);
-        } elseif ($output->isVeryVerbose()) {
-            $log->setLevel(SlimLog::DEBUG);
-        } else {
-            $log->setLevel(SlimLog::NOTICE);
-        }
-        */
-
-        return parent::doRun($input, $output);
+        $this->setDispatcher($app['dispatcher']);
     }
 
     /**
