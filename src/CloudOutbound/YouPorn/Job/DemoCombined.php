@@ -11,6 +11,7 @@
 
 namespace CloudOutbound\YouPorn\Job;
 
+use InvalidArgumentException;
 use Cloud\Job\AbstractJob;
 use Cloud\Model\TubesiteUser;
 use Cloud\Model\VideoOutbound;
@@ -21,11 +22,13 @@ use CloudOutbound\Exception\InternalInconsistencyException;
 use CloudOutbound\Exception\UnexpectedResponseException;
 use CloudOutbound\Exception\UnexpectedValueException;
 use CloudOutbound\Exception\UploadException;
+use CloudOutbound\YouPorn\CategoryMapper;
 use CloudOutbound\YouPorn\HttpClient;
+use Doctrine\ORM\EntityManager;
 use GuzzleHttp\Post\PostFile;
+use GuzzleHttp\Stream\Stream;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
@@ -98,6 +101,7 @@ class DemoCombined extends AbstractJob
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        /** @var $outbound VideoOutbound */
         $outbound = $this->em->find('cx:videoOutbound', $input->getArgument('videooutbound'));
 
         if (!$outbound) {
@@ -304,8 +308,8 @@ class DemoCombined extends AbstractJob
 
             // error
             if ($details->state == 'failed') {
-                $errorCode = $input->error_class;
-                $errorMessage = $input->error_message;
+                $errorCode = $details->error_class;
+                $errorMessage = $details->error_message;
 
                 $app['em']->transactional(function ($em) use ($videoFile) {
                     $videoFile->setStatus('error');
@@ -550,7 +554,7 @@ class DemoCombined extends AbstractJob
             '+1 hour'
         );
 
-        $stream = \GuzzleHttp\Stream\Stream::factory(
+        $stream = Stream::factory(
             fopen($objectUrl, 'r', false),
             $videoFile->getFilesize()
         );
@@ -602,6 +606,8 @@ class DemoCombined extends AbstractJob
         $video    = $outbound->getVideo();
         $tubeuser = $outbound->getTubesiteUser();
 
+        $mapper   = new CategoryMapper();
+
         $disableComments = $tubeuser->getParam('video_options_disable_commenting', null);
 
         if ($disableComments === true) {
@@ -611,6 +617,21 @@ class DemoCombined extends AbstractJob
         } else {
             $disableComments = '';
         }
+
+        // categories
+
+        $category = $mapper->convert($video->getPrimaryCategory());
+
+        $tags = $video
+            ->getSecondaryCategories()
+            ->map(function ($d) { return $d->getSlug(); })
+            ->toArray();
+
+        array_unshift($tags, $video->getPrimaryCategory()->getSlug());
+
+        $tags = implode(',', $tags);
+
+        // request
 
         $response = $this->httpSession->jsonPost(
             ['/change/video/{id}/', ['id' => $outbound->getExternalId()]],
@@ -623,10 +644,9 @@ class DemoCombined extends AbstractJob
                     'videoedit[description]' =>
                         substr(($app['debug'] ? '(TEST ONLY - PLEASE REJECT) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getDescription()), 0, 2000),
 
-                    // TODO: pull from video tags
-                    'videoedit[uploader_category_id]' => '36',
+                    'videoedit[uploader_category_id]' => $category,
                     'videoedit[orientation]' => 'straight',
-                    'videoedit[tags]' => '',
+                    'videoedit[tags]' => $tags,
                     'videoedit[pornstars]' => '',
 
                     'videoedit[content_partner_site_id]' =>
@@ -659,6 +679,19 @@ class DemoCombined extends AbstractJob
         $app   = $this->getHelper('silex')->getApplication();
         $video = $outbound->getVideo();
 
+        // categories
+
+        $tags = $video
+            ->getSecondaryCategories()
+            ->map(function ($d) { return $d->getSlug(); })
+            ->toArray();
+
+        array_unshift($tags, $video->getPrimaryCategory()->getSlug());
+
+        $tags = implode(',', $tags);
+
+        // request
+
         $response = $this->httpSession->jsonPost('/upload/word_validation/', [
             'headers' => [
                 'Referer' => 'http://www.youporn.com/upload-legacy/',
@@ -669,7 +702,7 @@ class DemoCombined extends AbstractJob
                     substr(($app['debug'] ? '(TEST) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getTitle()), 0, 250),
                 'description' =>
                     substr(($app['debug'] ? '(TEST ONLY - PLEASE REJECT) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getDescription()), 0, 2000),
-                'tags' => 'pov',
+                'tags' => $tags,
             ],
         ]);
 
@@ -711,10 +744,25 @@ class DemoCombined extends AbstractJob
             '+1 hour'
         );
 
-        $stream = \GuzzleHttp\Stream\Stream::factory(
+        $stream = Stream::factory(
             fopen($objectUrl, 'r', false),
             $videoFile->getFilesize()
         );
+
+        // categories
+
+        $mapper = new CategoryMapper();
+
+        $category = $mapper->convert($video->getPrimaryCategory());
+
+        $tags = $video
+            ->getSecondaryCategories()
+            ->map(function ($d) { return $d->getSlug(); })
+            ->toArray();
+
+        array_unshift($tags, $video->getPrimaryCategory()->getSlug());
+
+        $tags = implode(',', $tags);
 
         // upload
 
@@ -737,9 +785,9 @@ class DemoCombined extends AbstractJob
                     'upload[description]' =>
                         substr(($app['debug'] ? '(TEST ONLY - PLEASE REJECT) ' : '') . str_replace($this->forbiddenStrings, ' ', $video->getDescription()), 0, 2000),
 
-                    'upload[uploader_category_id]' => '36',
+                    'upload[uploader_category_id]' => $category,
                     'upload[type]' => 'straight',
-                    'upload[tags]' => 'pov',
+                    'upload[tags]' => $tags,
                 ],
             ]
         );
@@ -789,6 +837,7 @@ class DemoCombined extends AbstractJob
 
                 return [$key => $value];
             } catch (InvalidArgumentException $e) {
+                return [];
             }
         });
 

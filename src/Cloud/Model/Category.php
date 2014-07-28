@@ -43,11 +43,11 @@ class Category extends AbstractModel
     /**
      * @param string $title
      *
-     * @return Tag
+     * @return Category
      */
     public function setTitle($title)
     {
       $this->title = $title;
+      return $this;
     }
 }
-
