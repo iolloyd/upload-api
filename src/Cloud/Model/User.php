@@ -39,7 +39,7 @@ class User extends AbstractModel implements AdvancedUserInterface, EquatableInte
      *   fetch="EAGER",
      *   inversedBy="users"
      * )
-     * @CX\Company
+     * @CX\Company(allowAnonymous=true)
      * @JMS\Groups({"details.user"})
      */
     protected $company;

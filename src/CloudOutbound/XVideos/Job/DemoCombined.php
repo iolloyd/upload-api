@@ -101,7 +101,7 @@ class DemoCombined extends AbstractJob
         ]);
 
         $this->em  = $app['em'];
-        $this->log = $app['monolog.factory']('outbound.xvideos');
+        $this->log = $app['monolog']('worker.outbound');
     }
 
     /**

@@ -28,10 +28,12 @@ $app->get('/videos', function(Request $request) use ($app)
  */
 $app->post('/videos', function(Request $request) use ($app)
 {
-    $video = new Video($app['user']);
+    $site  = $app['converter.site']->convert($request->get('site'));
+    $video = new Video($site);
 
-    $app['em']->persist($video);
-    $app['em']->flush();
+    $app['em']->transactional(function ($em) use ($video) {
+        $em->persist($video);
+    });
 
     return $app['single.response.json']($video, ['details', 'details.videos']);
 });
@@ -125,6 +127,14 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
             $em->persist($outbound);
         }
     });
+
+    // FIXME: hack
+
+    foreach ($video->getOutbounds() as $outbound) {
+        if ($outbound->getTubesite()->getSlug() == 'youporn') {
+            $job = $app['resque']->enqueue('CloudOutbound\YouPorn\Job\DemoCombined', ['videooutbound' => $outbound->getId()]);
+        }
+    }
 
     //TODO add redis enqueueing
     //Resque::enqueue(

@@ -247,15 +247,15 @@ class DemoCombined extends AbstractJob
                     'h264_level'    => 5.1,
                     'tuning'        => 'film',
 
-                    'watermarks' => [
-                        [
-                            'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-youporn.png',
-                            'x' => 0,
-                            'y' => 0,
-                            'width' => 1280,
-                            'height' => 720,
-                        ]
-                    ],
+                    //'watermarks' => [
+                        //[
+                            //'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-youporn.png',
+                            //'x' => 0,
+                            //'y' => 0,
+                            //'width' => 1280,
+                            //'height' => 720,
+                        //]
+                    //],
                 ],
             ],
         ]);
