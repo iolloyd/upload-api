@@ -11,10 +11,11 @@
 
 namespace CloudOutbound;
 
+use DomainException;
+use UnexpectedValueException;
 use Cloud\Model\Category;
-use Exception;
 
-class AbstractCategoryMapper implements CategoryMapperInterface
+abstract class AbstractCategoryMapper implements CategoryMapperInterface
 {
     protected $config = null;
 
@@ -25,7 +26,7 @@ class AbstractCategoryMapper implements CategoryMapperInterface
     public function convert(Category $category)
     {
         if (!$this->config) {
-            throw new Exception("You must set a config file");
+            throw new DomainException('You must set a config file');
         }
 
         $config = array_map('str_getcsv', file($this->config));
@@ -37,7 +38,10 @@ class AbstractCategoryMapper implements CategoryMapperInterface
             }
         }
 
-        throw new Exception(sprintf("Could not find mapping for category slug %s", $slug));
+        throw new UnexpectedValueException(sprintf(
+            'Could not find mapping for category slug `%s`',
+            $slug
+        ));
     }
 
 }
