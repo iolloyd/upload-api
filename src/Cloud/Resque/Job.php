@@ -173,6 +173,10 @@ class Job implements NormalizableInterface, DenormalizableInterface, JsonSeriali
         set_exception_handler([$this, 'fail']);
         ErrorHandler::stackErrors();
 
+        $this->logger->notice('Job exection started: {job}', [
+            'job' => $this,
+        ]);
+
         try {
             $instance = $this->getInstance();
 
@@ -195,7 +199,9 @@ class Job implements NormalizableInterface, DenormalizableInterface, JsonSeriali
 
             $this->events->dispatch(JobEvents::AFTER_PERFORM, $event);
 
-            $this->logger->info('Job execution successful');
+            $this->logger->notice('Job exection successful: {job}', [
+                'job' => $this,
+            ]);
 
             if (method_exists($instance, 'tearDown')) {
                 $instance->tearDown();
@@ -242,10 +248,11 @@ class Job implements NormalizableInterface, DenormalizableInterface, JsonSeriali
 
         $this->events->dispatch(JobEvents::ON_FAILURE, $event);
 
-        $this->logger->error('Job execution failed: {failure}', [
-            'job'       => $this,
-            'exception' => $exception,
+        $this->logger->error('Job execution failed: {error}', [
+            'exception' => $failure->getException(),
+            'error'     => $failure->getError(),
             'failure'   => $failure,
+            'job'       => $this,
         ]);
 
         $item = $this->resque->normalize($failure);
