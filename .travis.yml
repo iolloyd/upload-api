@@ -3,10 +3,11 @@ php:
   - 5.5
 
 install:
-  - composer self-update
-  - composer install --prefer-dist
+  - echo 'extension = redis.so' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - composer install --prefer-dist --no-dev --optimize-autoloader -vvv --profile
 
 script:
+  - ./bin/cloud doctrine:proxies:generate
   - mkdir archive
   - zip -r archive/abc.zip . -x archive/ .git/ >/dev/null
   - zip -r archive/current.zip . -x archive/ .git/ >/dev/null
@@ -32,6 +33,26 @@ deploy:
     on:
       branch: staging
 
+  - provider: s3
+    access_key_id: AKIAJGFXNYKXB75SIPGQ
+    secret-access-key:
+      secure: dunrkHjTJ7VNz4jPGL/DfgrncaEdDiMLIKIV32HoyXkPOjFZ9pOGnTztWdXhhF2MkwHEbE8MG/01PC9AYqAK+2EL0AiHjNRIDIpjKo2J4WuJjJemh4mqDR8ZmC0nwCbeJKatPWdqrdweaSgVYHbPg/TetRpjV37HOOBDbKonSKY=
+    skip_cleanup: true
+    bucket: cldsys-travis-prod
+    local-dir: archive
+    upload-dir: cloudxxx-api
+    on:
+      branch: prod
+
+  - provider: opsworks
+    access-key-id: AKIAJGFXNYKXB75SIPGQ
+    secret-access-key:
+      secure: dunrkHjTJ7VNz4jPGL/DfgrncaEdDiMLIKIV32HoyXkPOjFZ9pOGnTztWdXhhF2MkwHEbE8MG/01PC9AYqAK+2EL0AiHjNRIDIpjKo2J4WuJjJemh4mqDR8ZmC0nwCbeJKatPWdqrdweaSgVYHbPg/TetRpjV37HOOBDbKonSKY=
+    app-id: 6dfb8967-9387-4be4-838d-d010fb6ea9e3
+    wait-until-deployed: true
+    on:
+      branch: prod
+
 env:
   - NOKOGIRI_USE_SYSTEM_LIBRARIES=true
 
@@ -41,5 +62,5 @@ cache:
 
 branches:
   only:
-    - master
     - staging
+    - prod

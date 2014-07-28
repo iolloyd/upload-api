@@ -22,9 +22,10 @@ use Symfony\Component\Security\Core\SecurityContext;
 
 class SecurityEventSubscriber extends AbstractEventSubscriber
 {
-    const FLAG_COMPANY    = 'cx:identity:company';
-    const FLAG_CREATED_BY = 'cx:identity:createdBy';
-    const FLAG_UPDATED_BY = 'cx:identity:updatedBy';
+    const FLAG_COMPANY         = 'cx:security:company';
+    const FLAG_CREATED_BY      = 'cx:security:createdBy';
+    const FLAG_UPDATED_BY      = 'cx:security:updatedBy';
+    const FLAG_ALLOW_ANONYMOUS = 'cx:security:allowAnonymous';
 
     /**
      * @var Application
@@ -41,6 +42,7 @@ class SecurityEventSubscriber extends AbstractEventSubscriber
      */
     protected $subscribedEvents = [
         'prePersist',
+        'preUpdate',
     ];
 
     /**
@@ -139,6 +141,7 @@ class SecurityEventSubscriber extends AbstractEventSubscriber
         if ($annotation instanceof Annotation\Company) {
             Utils::setMetadataClassFlag($metadata, self::FLAG_COMPANY);
             Utils::setMetadataFieldFlag($metadata, $fieldName, self::FLAG_COMPANY);
+            Utils::setMetadataFieldFlag($metadata, $fieldName, self::FLAG_ALLOW_ANONYMOUS, $annotation->allowAnonymous);
         }
 
         if ($annotation instanceof Annotation\CreatedBy) {

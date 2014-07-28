@@ -17,10 +17,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Returns a `401 Unauthorized` response on authentication errors. Used with
- * our API where no login form exists.
+ * Returns a `426 Upgrade Required` response when a HTTPS endpoint is requested
+ * over HTTP.
  */
-class UnauthorizedErrorAuthenticationEntryPoint implements AuthenticationEntryPointInterface
+class SslRequiredEntryPoint implements AuthenticationEntryPointInterface
 {
     /**
      * {@inheritdoc}
@@ -28,14 +28,14 @@ class UnauthorizedErrorAuthenticationEntryPoint implements AuthenticationEntryPo
     public function start(Request $request, AuthenticationException $authException = null)
     {
         $response = new JsonResponse();
-        $response->setStatusCode(401);
+
+        $response->setStatusCode(426);
         $response->setData([
-            'error' => 'invalid_client',
-            'error_description' => sprintf(
-                'You are not authorized to access %s %s',
-                $request->getMethod(), $request->getRequestUri()
-            )
+            'status' => 426,
+            'title'  => 'SSL Connection Required',
+            'detail' => 'Requests to this URL must be SSL encrypted',
         ]);
+
         return $response;
     }
 }

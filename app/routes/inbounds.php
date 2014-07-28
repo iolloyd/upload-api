@@ -10,8 +10,8 @@
  */
 
 use Aws\S3\Enum\CannedAcl;
-use Aws\S3\Model\PostObject;
 use Cloud\Aws\S3\Model\FlowUpload;
+use Cloud\Aws\S3\Model\PostObject;
 use Cloud\Model\Video;
 use Cloud\Model\VideoInbound;
 use Cloud\Model\VideoFile\InboundVideoFile;

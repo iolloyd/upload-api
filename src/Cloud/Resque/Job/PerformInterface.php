@@ -9,7 +9,11 @@
  * @license    Proprietary
  */
 
-/* var $app \Silex\Application */
-$app['logger.api']      = $app['monolog.factory']('api');
-$app['logger.doctrine'] = $app['monolog.factory']('doctrine');
-$app['logger.security'] = $app['monolog.factory']('security');
+namespace Cloud\Resque\Job;
+
+use Cloud\Resque\Job;
+
+interface PerformInterface
+{
+    public function perform(Job $job);
+}
