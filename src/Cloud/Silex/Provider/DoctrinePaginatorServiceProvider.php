@@ -52,9 +52,11 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $list = $app['em']->getRepository($model)->matching($criteria);
 
             if (!$list->count()) {
-                $app['logger.doctrine']->error(
-                    "No results found when requesting paginator using {model}",
-                    ['model' => $model]
+                $app['logger']->notice(
+                    'Paginator got empty result set', [
+                        'model'    => $model,
+                        'criteria' => $criteria,
+                    ]
                 );
             }
 
