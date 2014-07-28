@@ -35,8 +35,13 @@ class ResqueServiceProvider implements ServiceProviderInterface
 
         // services
 
-        $app['resque.logger'] = $app['logger'];
-        $app['resque.dispatcher'] = $app['dispatcher'];
+        $app['resque.logger'] = function ($app) {
+            return $app['logger'];
+        };
+
+        $app['resque.dispatcher'] = function ($app) {
+            return $app['dispatcher'];
+        };
 
         /**
          * Get the  Resque manager instance

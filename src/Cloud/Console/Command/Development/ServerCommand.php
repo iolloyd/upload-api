@@ -70,7 +70,7 @@ EOF
         $process = $builder->getProcess();
         $process->run(function ($type, $message) use ($output) {
             if ($type == Process::ERR) {
-                $output->write('<error>' . $message . '</error>');
+                $output->getErrorOutput()->write($message);
             } elseif ($output->isVerbose()) {
                 $output->write($message);
             }
