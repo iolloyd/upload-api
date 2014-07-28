@@ -25,6 +25,7 @@ class TestJob extends AbstractJob
     {
         $this
             ->setDefinition([
+                new InputArgument('sleep', InputArgument::OPTIONAL, '', 5),
             ])
             ->setName('job:test')
         ;
@@ -35,7 +36,11 @@ class TestJob extends AbstractJob
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        sleep(15);
+        $sleep = (int) $input->getArgument('sleep');
+
+        printf('Sleeping for %d secs', $sleep);
+        sleep($sleep);
+
         throw new \Exception('Something went wrong!!');
     }
 }

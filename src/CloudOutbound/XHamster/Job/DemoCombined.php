@@ -101,7 +101,7 @@ class DemoCombined extends AbstractJob
         ]);
 
         $this->em = $this->getHelper('em')->getEntityManager();
-        $this->logger = $app['monolog.factory'](get_called_class());
+        $this->logger = $app['monolog']('worker.outbound');
     }
 
     /**
