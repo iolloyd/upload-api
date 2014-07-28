@@ -36,5 +36,13 @@ class AnotherJob extends AbstractJob
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $app = $this->getHelper('silex')->getApplication();
+        $logger = $app['monolog']('worker.outbound');
+
+        $logger->debug('test {message}', ['message' => 'foo']);
+        $logger->info('test');
+        $logger->notice('test');
+        $logger->error('test');
+        $logger->emergency('test');
     }
 }
