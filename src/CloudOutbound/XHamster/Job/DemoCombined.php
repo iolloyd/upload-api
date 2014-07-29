@@ -23,13 +23,15 @@ use CloudOutbound\Exception\LoginException;
 use CloudOutbound\Exception\UnexpectedResponseException;
 use CloudOutbound\Exception\UnexpectedValueException;
 use CloudOutbound\Exception\UploadException;
+use CloudOutbound\XHamster\CategoryMapper;
 use CloudOutbound\XHamster\HttpClient;
+use Doctrine\ORM\EntityManager;
 use GuzzleHttp\Url;
 use GuzzleHttp\Cookie\SetCookie;
 use GuzzleHttp\Post\PostFile;
+use GuzzleHttp\Stream\Stream;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
@@ -445,7 +447,6 @@ class DemoCombined extends AbstractJob
                 'act'      => 'login',
                 'ref'      => 'https://upload.xhamster.com/producer.php',
                 'stats'    => $stats,
-                'act'      => 'login',
                 'username' => $tubeuser->getUsername(),
                 'password' => $tubeuser->getPassword(),
                 'remember' => 'on',
@@ -704,7 +705,7 @@ class DemoCombined extends AbstractJob
             '+1 hour'
         );
 
-        $stream = \GuzzleHttp\Stream\Stream::factory(
+        $stream = Stream::factory(
             fopen($objectUrl, 'r', false),
             $videoFile->getFilesize()
         );
@@ -992,25 +993,31 @@ class DemoCombined extends AbstractJob
 
     protected function getUploadData(VideoOutbound $outbound)
     {
-        $app      = $this->getHelper('silex')->getApplication();
+        $app       = $this->getHelper('silex')->getApplication();
 
-        $video    = $outbound->getVideo();
-        $tubeuser = $outbound->getTubesiteUser();
-
+        $video     = $outbound->getVideo();
+        $tubeuser  = $outbound->getTubesiteUser();
         $videoFile = $outbound->getVideoFile();
 
-        return [
+        $mapper    = new CategoryMapper();
+
+        // data
+
+        $data = [
             // TODO: refactor
             'slot1_title' =>
                 substr(str_replace($this->forbiddenStrings, ' ', ($app['debug'] ? 'TEST - ' : '') . $video->getTitle()), 0, 60),
             'slot1_descr' =>
                 substr(str_replace($this->forbiddenStrings, ' ', ($app['debug'] ? 'TEST PLEASE REJECT - ' : '') . $video->getDescription()), 0, 500),
 
-            'slot1_site' => $tubeuser->getParam('site')['id'],
+            'slot1_site'    => $tubeuser->getParam('site')['id'],
+            'slot1_chanell' => '',
 
-            // TODO: pull from video tags
-            'slot1_chanell'    => '.101',
-            'slot1_channels101' => '',
+            // example:
+            //
+            //   'slot1_chanell'     => '.101.20',
+            //   'slot1_channels101' => '',
+            //   'slot1_channels20'  => '',
 
             'slot1_fileType'  => '',
             'slot1_http_url'  => '',
@@ -1021,6 +1028,26 @@ class DemoCombined extends AbstractJob
             'slot1_ftp_pass'  => '',
             'slot1_file'      => $videoFile->getFilename(),
         ];
+
+        // channels
+
+        // FIXME: handle unmappable categories (catch exceptions)
+
+        $channels = $video
+            ->getAllCategories()
+            ->map(function ($d) use ($mapper) {
+                return $mapper->convert($d);
+            })
+            ->toArray();
+
+        foreach ($channels as $id) {
+            $data['slot1_chanell'] .= '.' . $id;
+            $data['slot1_channels' . $id] = '';
+        }
+
+        // done
+
+        return $data;
     }
 
     /**
