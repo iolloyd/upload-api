@@ -289,7 +289,11 @@ class DemoCombined extends AbstractJob
                 break;
             }
 
-            if ($details->state == 'finished' && $details->backup_server_used) {
+            // transfer error
+            if ($details->state == 'finished'
+                && isset($details->backup_server_used)
+                && $details->backup_server_used
+            ) {
                 $errorCode = $details->primary_upload_error_link;
                 $errorMessage = $details->primary_upload_error_message;
 
@@ -638,11 +642,9 @@ class DemoCombined extends AbstractJob
         $category = $mapper->convert($video->getPrimaryCategory());
 
         $tags = $video
-            ->getSecondaryCategories()
+            ->getAllCategories()
             ->map(function ($d) { return $d->getSlug(); })
             ->toArray();
-
-        array_unshift($tags, $video->getPrimaryCategory()->getSlug());
 
         $tags = implode(',', $tags);
 
@@ -697,11 +699,9 @@ class DemoCombined extends AbstractJob
         // categories
 
         $tags = $video
-            ->getSecondaryCategories()
+            ->getAllCategories()
             ->map(function ($d) { return $d->getSlug(); })
             ->toArray();
-
-        array_unshift($tags, $video->getPrimaryCategory()->getSlug());
 
         $tags = implode(',', $tags);
 
@@ -771,11 +771,9 @@ class DemoCombined extends AbstractJob
         $category = $mapper->convert($video->getPrimaryCategory());
 
         $tags = $video
-            ->getSecondaryCategories()
+            ->getAllCategories()
             ->map(function ($d) { return $d->getSlug(); })
             ->toArray();
-
-        array_unshift($tags, $video->getPrimaryCategory()->getSlug());
 
         $tags = implode(',', $tags);
 

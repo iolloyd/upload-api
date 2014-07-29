@@ -14,6 +14,7 @@ namespace Cloud\Model;
 
 use DateTime;
 use InvalidArgumentException;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -271,7 +272,7 @@ class Video extends AbstractModel
     /**
      * Set the secondary categories
      *
-     * @param  array|Iteratable $categories
+     * @param  array|\Traversable $categories
      * @return Video
      */
     public function setSecondaryCategories($categories)
@@ -288,7 +289,7 @@ class Video extends AbstractModel
     /**
      * Add a secondary category
      *
-     * @param  Tag $tag
+     * @param  Category $category
      * @return Video
      */
     public function addSecondaryCategory(Category $category)
@@ -300,7 +301,7 @@ class Video extends AbstractModel
     /**
      * Remove a secondary category
      *
-     * @param  Tag $tag
+     * @param Category $category
      * @return Video
      */
     public function removeSecondaryCategory(Category $category)
@@ -312,7 +313,7 @@ class Video extends AbstractModel
     /**
      * Get the secondary categories
      *
-     * @return ArrayCollection
+     * @return Collection
      */
     public function getSecondaryCategories()
     {
@@ -320,9 +321,25 @@ class Video extends AbstractModel
     }
 
     /**
+     * Get a combined collection of primary and secondary categories
+     *
+     * @return Collection
+     */
+    public function getAllCategories()
+    {
+        $result = $this->getSecondaryCategories()->toArray();
+
+        if ($primary = $this->getPrimaryCategory()) {
+            array_unshift($result, $primary);
+        }
+
+        return new ArrayCollection($result);
+    }
+
+    /**
      * Set the tags
      *
-     * @param  array|Iteratable $tags
+     * @param  array|\Traversable $tags
      * @return Video
      */
     public function setTags($tags)
@@ -363,7 +380,7 @@ class Video extends AbstractModel
     /**
      * Get the tags
      *
-     * @return ArrayCollection
+     * @return Collection
      */
     public function getTags()
     {
