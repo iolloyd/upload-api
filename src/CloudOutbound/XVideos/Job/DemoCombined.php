@@ -15,7 +15,6 @@ use InvalidArgumentException;
 use Cloud\Job\AbstractJob;
 use Cloud\Model\TubesiteUser;
 use Cloud\Model\VideoOutbound;
-use CloudOutbound\Exception\AccountLockedException;
 use CloudOutbound\Exception\AccountMismatchException;
 use CloudOutbound\Exception\AccountStateException;
 use CloudOutbound\Exception\InternalInconsistencyException;
@@ -23,13 +22,15 @@ use CloudOutbound\Exception\LoginException;
 use CloudOutbound\Exception\UnexpectedResponseException;
 use CloudOutbound\Exception\UnexpectedValueException;
 use CloudOutbound\Exception\UploadException;
+use CloudOutbound\XVideos\CategoryMapper;
 use CloudOutbound\XHamster\HttpClient;
-use GuzzleHttp\Url;
+use Doctrine\ORM\EntityManager;
 use GuzzleHttp\Cookie\SetCookie;
+use GuzzleHttp\Exception\AdapterException;
 use GuzzleHttp\Post\PostFile;
+use GuzzleHttp\Stream\Stream;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
@@ -159,7 +160,7 @@ class DemoCombined extends AbstractJob
             $output->writeln('<info> + uploading video</info>');
             try {
                 $this->uploadVideo($outbound);
-            } catch (\GuzzleHttp\Exception\AdapterException $e) {
+            } catch (AdapterException $e) {
                 // try again
                 $output->writeln(sprintf('<info> +</info> <error>failed: %s</error>', $e->getMessage()));
                 $output->writeln('<info> + retrying...</info>');
@@ -579,7 +580,7 @@ class DemoCombined extends AbstractJob
             '+1 hour'
         );
 
-        $stream = \GuzzleHttp\Stream\Stream::factory(
+        $stream = Stream::factory(
             fopen($objectUrl, 'r', false),
             $videoFile->getFilesize()
         );
@@ -721,8 +722,26 @@ class DemoCombined extends AbstractJob
     protected function submitVideoMetadata(VideoOutbound $outbound)
     {
         $app      = $this->getHelper('silex')->getApplication();
-        $tubeuser = $outbound->getTubesiteUser();
+
         $video    = $outbound->getVideo();
+        $tubeuser = $outbound->getTubesiteUser();
+
+        $mapper   = new CategoryMapper();
+
+        // tags
+
+        // FIXME: handle unmappable categories (catch exceptions)
+
+        $tags = $video
+            ->getAllCategories()
+            ->map(function ($d) use ($mapper) {
+                return $mapper->convert($d);
+            })
+            ->toArray();
+
+        $tags = implode(' ', $tags);
+
+        // request
 
         $response = $this->httpSession->post(
             ['/account/uploads/{id}/edit', ['id' => $outbound->getExternalId()]],
@@ -736,10 +755,9 @@ class DemoCombined extends AbstractJob
                     'description' =>
                         substr(str_replace($this->forbiddenStrings, ' ', ($app['debug'] ? 'TEST PLEASE REJECT - ' : '') . $video->getDescription()), 0, 500),
 
-                    // TODO:
-                    'keywords' => 'pov',
+                    'keywords' => $tags,
+                    'channel'  => $tubeuser->getParam('channel'),
 
-                    'channel' => $tubeuser->getParam('channel'),
                     'update_video_information' => 'Update information',
                 ],
             ]
@@ -811,6 +829,7 @@ class DemoCombined extends AbstractJob
 
                 return [$label => $content];
             } catch (InvalidArgumentException $e) {
+                return [];
             }
         });
 
