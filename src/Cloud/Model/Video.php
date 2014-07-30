@@ -23,6 +23,7 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity
+ * @JMS\AccessType("public_method")
  */
 class Video extends AbstractModel
 {
@@ -46,6 +47,7 @@ class Video extends AbstractModel
      * @ORM\Column(type="integer")
      * @ORM\Version
      * @JMS\Groups({"details"})
+     * @JMS\ReadOnly
      */
     protected $version = 1;
 
@@ -68,6 +70,7 @@ class Video extends AbstractModel
      * @ORM\Column(type="boolean")
      * @JMS\Accessor(getter="isDraft")
      * @JMS\Groups({"list", "details"})
+     * @JMS\ReadOnly
      */
     protected $isDraft = true;
 
@@ -101,7 +104,7 @@ class Video extends AbstractModel
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({"list", "details"})
      */
-    protected $orientation;
+    protected $orientation = self::ORIENTATION_STRAIGHT;
 
     /**
      * Inbounds: user upload from browser
@@ -112,6 +115,7 @@ class Video extends AbstractModel
      *   cascade={"persist", "remove"}
      * )
      * @JMS\Groups({"details"})
+     * @JMS\ReadOnly
      */
     protected $inbounds;
 
@@ -124,6 +128,7 @@ class Video extends AbstractModel
      *   cascade={"persist", "remove"}
      * )
      * @JMS\Groups({"details"})
+     * @JMS\ReadOnly
      */
     protected $outbounds;
 
@@ -134,6 +139,7 @@ class Video extends AbstractModel
      *   cascade={"persist", "remove"}
      * )
      * @JMS\Groups({"list", "details"})
+     * @JMS\ReadOnly
      */
     protected $stats;
 
@@ -147,6 +153,7 @@ class Video extends AbstractModel
      * @ORM\ManyToMany(targetEntity="Category")
      * @ORM\JoinTable(name="video_category")
      * @JMS\Groups({"list", "details"})
+     * @JMS\ReadOnly
      */
     protected $secondaryCategories;
 
@@ -161,6 +168,12 @@ class Video extends AbstractModel
      * @JMS\Groups({"list", "details"})
      */
     protected $thumbnail;
+
+    /**
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Groups({"list", "details"})
+     */
+    protected $duration;
 
     //////////////////////////////////////////////////////////////////////////
 
@@ -189,16 +202,6 @@ class Video extends AbstractModel
     public function getVersion()
     {
         return $this->version;
-    }
-
-    /**
-     * Get the orientation of the video
-     *
-     * @return string
-     */
-    public function getOrientation()
-    {
-      return $this->orientation;
     }
 
     /**
@@ -243,6 +246,47 @@ class Video extends AbstractModel
     public function getDescription()
     {
         return $this->description;
+    }
+
+    /**
+     * Set the orientation
+     *
+     * @param  string $orientation
+     * @return Video
+     */
+    public function setOrientation($orientation)
+    {
+        if (!in_array($orientation, [
+            self::ORIENTATION_GAY,
+            self::ORIENTATION_SOLO,
+            self::ORIENTATION_STRAIGHT,
+        ])) {
+            throw new InvalidArgumentException("Invalid orientation");
+        }
+
+        $this->orientation = $orientation;
+
+        return $this;
+    }
+
+    /**
+     * Get the orientation
+     *
+     * @return string
+     */
+    public function getOrientation()
+    {
+        return $this->orientation;
+    }
+
+    /**
+     * Get the stats object
+     *
+     * @return VideoStat
+     */
+    public function getStats()
+    {
+        return $this->stats;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -454,26 +498,6 @@ class Video extends AbstractModel
     }
 
     /**
-     * Returns the associated inbounds
-     *
-     * @return array
-     */
-    public function getVideoInbounds()
-    {
-        return $this->inbounds;
-    }
-
-    /**
-     * Returns the associated outbounds
-     *
-     * @return array
-     */
-    public function getVideoOutbounds()
-    {
-        return $this->outbounds;
-    }
-
-    /**
      * Returns the video thumbnail image
      *
      * @return string
@@ -539,6 +563,40 @@ class Video extends AbstractModel
     {
       $this->completedAt = $date;
       return $this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Set the video duration
+     *
+     * @param  float $duration  duration in seconds.milliseconds
+     * @return Video
+     */
+    public function setDuration($duration)
+    {
+        $this->duration = $duration;
+        return $this;
+    }
+
+    /**
+     * Get the video duration
+     *
+     * @return float  duration in seconds.milliseconds
+     */
+    public function getDuration()
+    {
+        if ($this->duration === null
+            && $this->inbounds->count()
+        ) {
+            if (($inbound = $this->inbounds->last())
+                && ($file = $inbound->getVideoFile())
+            ) {
+                $this->setDuration($file->getDuration());
+            }
+        }
+
+        return $this->duration;
     }
 
     //////////////////////////////////////////////////////////////////////////
