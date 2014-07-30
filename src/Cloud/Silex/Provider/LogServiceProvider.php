@@ -176,6 +176,7 @@ class LogServiceProvider implements ServiceProviderInterface
                 $app['monolog.logfile'],
                 5,
                 $app['monolog.translateLevel']($level),
+                true,
                 0664
             );
         });
@@ -185,6 +186,7 @@ class LogServiceProvider implements ServiceProviderInterface
                 $app['monolog.security.logfile'],
                 5,
                 $app['monolog.translateLevel']($level),
+                true,
                 0664
             );
         });
