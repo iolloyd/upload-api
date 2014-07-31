@@ -64,7 +64,7 @@ class WatermarkFilter implements VideoFilterInterface
 
         return [
             '-vf',
-            sprintf($commandString, $this->imagePath, $x, $y),
+            sprintf($commandString, $info['watermark'], $x, $y),
         ];
     }
 }
