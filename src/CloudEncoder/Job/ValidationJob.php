@@ -11,14 +11,18 @@
 
 namespace CloudEncoder\Job;
 
-use Cloud\Job\AbstractJob;
-use CloudEncoder\VideoEncoder;
 use FFMpeg\FFProbe;
+use Cloud\Job\AbstractJob;
+use CloudEncoder\PHPFFmpeg\VideoValidator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Class ValidationJob
+ *
+ */
 class ValidationJob extends AbstractJob
 {
     /**
@@ -28,54 +32,26 @@ class ValidationJob extends AbstractJob
     {
         $this
             ->setDefinition([
-                new InputArgument('input', InputArgument::REQUIRED, 'The url of the video to validate'),
+                new InputArgument('video', InputArgument::REQUIRED, 'The url of the video to validate'),
             ])
             ->setName('job:encoder:validate')
         ;
     }
 
     /**
-     * Executes this job
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @return int|null|void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->writeln('<info>Validating ... </info>');
-
-        $videoFile     = $input->getArgument('input');
-        $videoMetadata = $this->validate($videoFile);
+        $video = $input->getArgument('video');
+        $output->writeln(sprintf('<info>Validating %s</info>', $video));
+        $validator = new VideoValidator();
+        $videoMetadata = $validator->process($video);
         foreach ($videoMetadata as $key => $value) {
-            $output->writeLn('<info>' . $key . ': ' . $value. '</info>');
+            $output->writeLn(sprintf('<info>%s: %s</info>', $key, $value));
         }
-
-        $output->writeln('<info>done</info>');
-
-    }
-
-    /**
-     * @param $input
-     */
-    protected function validate($videoFile)
-    {
-        $app = $this->getHelper('silex')->getApplication();
-        $ffprobe = FFProbe::create();
-        $video   = $ffprobe->streams($videoFile)->videos()->first();
-        $audio   = $ffprobe->streams($videoFile)->audios()->first();
-
-        return [
-            "url"    => $videoFile,
-            "height" => $video->get('height'),
-            "width"  => $video->get('width'),
-            "format" => $video->get('pix_fmt'),
-            "frame_rate"    => $video->get('r_frame_rate'),
-            "video_codec"   => $video->get('codec_name'),
-            "duration"      => $video->get('duration_ts'),
-            "file_size"     => filesize($videoFile),
-            "video_bitrate" => $video->get('bit_rate'),
-            "channels"      => $audio->get('channels'),
-            "audio_codec"   => $audio->get('codec_name'),
-            "audio_bitrate" => $audio->get('bit_rate'),
-            "audio_sample_rate" => $audio->get('sample_rate'),
-        ];
     }
 }
 
