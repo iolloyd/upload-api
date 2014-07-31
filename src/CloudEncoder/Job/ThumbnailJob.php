@@ -12,11 +12,8 @@
 namespace CloudEncoder\Job;
 
 use Cloud\Job\AbstractJob;
-use CloudEncoder\VideoEncoder;
-use CloudEncoder\PHPFFmpeg\Filters\Video\ThumbnailFilter;
-use FFMpeg\FFMpeg;
+use CloudEncoder\PHPFFmpeg\ThumbnailCreator;
 use FFMpeg\FFProbe;
-use FFMpeg\Format\Video\X264;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -34,10 +31,8 @@ class ThumbnailJob extends AbstractJob
     {
         $this
             ->setDefinition([
-                new InputArgument('input',  InputArgument::REQUIRED, 'The url of the video to get thumbnails for'),
+                new InputArgument('input',  InputArgument::REQUIRED, 'The video url to get thumbnails for'),
                 new InputArgument('amount', InputArgument::REQUIRED, 'The total number of thumbnails'),
-
-
             ])
             ->setName('job:encoder:thumbnails')
         ;
@@ -49,26 +44,9 @@ class ThumbnailJob extends AbstractJob
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $videoFile = $input->getArgument('input');
-        $amount = $input->getArgument('amount');
-        $this->thumbnails($videoFile, $amount);
-    }
-
-    /**
-     * @param $videoFile
-     */
-    protected function thumbnails($videoFile, $amount)
-    {
-        $ffmpeg = FFMpeg::create()->open($videoFile);
-        $ffprobe = FFProbe::create();
-        $video   = $ffprobe->streams($videoFile)->videos()->first();
-        $duration = $video->get('duration');
-
-        // Add the watermark
-        $ffmpeg->addFilter(new ThumbnailFilter($videoFile, $duration, $amount));
-
-        // Encode and save the video
-        $result = 'watermarked-test.mp4';
-        $ffmpeg->save(new X264(), $result);
+        $amount    = $input->getArgument('amount');
+        $thumbnailCreator = new ThumbnailCreator();
+        $thumbnailCreator->process($videoFile, $amount);
     }
 }
 
