@@ -12,7 +12,7 @@
 namespace CloudEncoder\Job;
 
 use Cloud\Job\AbstractJob;
-use CloudEncoder\VideoEncoder;
+use CloudEncoder\PHPFFmpeg\VideoEncoder;
 use CloudEncoder\PHPFFmpeg\Filters\Video\WatermarkFilter;
 use FFMpeg\FFMpeg;
 use FFMpeg\Format\Video\X264;
@@ -33,53 +33,34 @@ class EncodingJob extends AbstractJob
     {
         $this
             ->setDefinition([
-                new InputArgument('input',     InputArgument::REQUIRED, 'The url of the video to validate'),
-
+                new InputArgument('video', InputArgument::REQUIRED, 'The video location'),
             ])
             ->addOption('watermark', 'w', InputOption::VALUE_REQUIRED, 'Path of watermark image')
-            ->addOption('top',       't', InputOption::VALUE_REQUIRED, 'Top aligned')
-            ->addOption('bottom',    'b', InputOption::VALUE_REQUIRED, 'Bottom aligned')
-            ->addOption('left',      'l', InputOption::VALUE_REQUIRED, 'Left aligned')
-            ->addOption('right',     'r', InputOption::VALUE_REQUIRED, 'Right aligned')
+            ->addOption('top',       't', InputOption::VALUE_REQUIRED, 'Pixels aligned from top')
+            ->addOption('bottom',    'b', InputOption::VALUE_REQUIRED, 'Pixels aligned from bottom')
+            ->addOption('left',      'l', InputOption::VALUE_REQUIRED, 'Pixels aligned from left')
+            ->addOption('right',     'r', InputOption::VALUE_REQUIRED, 'Pixels aligned from right')
             ->setName('job:encoder:encode')
         ;
     }
 
     /**
-     * Executes this job
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @return int|null|void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $watermarkInfo = array_filter($input->getOptions());
         $output->writeln('<info>Encoding ... </info>');
 
-        $videoFile = $input->getArgument('input');
-        $watermarkImage = isset($watermarkInfo['watermark'])
-            ? $watermarkInfo['watermark']
-            : null;
-
-        $result = $this->encode($videoFile, $watermarkInfo);
+        $videoFile = $input->getArgument('video');
+        $videoEncoder = new VideoEncoder();
+        $result = $videoEncoder->process($videoFile, $watermarkInfo);
 
         $output->writeln('<info>done</info>');
 
     }
 
-    /**
-     * @param $videoFile
-     */
-    protected function encode($videoFile, $watermarkInfo)
-    {
-        $ffmpeg = FFMpeg::create()->open($videoFile);
-
-        print_r($watermarkInfo); die;
-        // Add the watermark
-        if (isset($watermarkInfo['watermarkImage'])) {
-            $ffmpeg->addFilter(new WatermarkFilter($watermarkInfo));
-        }
-
-        // Encode and save the video
-        $result = 'watermarked-test.mp4';
-        $ffmpeg->save(new X264(), $result);
-    }
 }
 

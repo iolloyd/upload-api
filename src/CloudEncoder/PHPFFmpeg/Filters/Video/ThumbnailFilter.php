@@ -15,11 +15,21 @@ use FFMpeg\Format\VideoInterface;
 use FFMpeg\Filters\Video\VideoFilterInterface;
 use FFMpeg\Media\Video;
 
+/**
+ * Class ThumbnailFilter
+ *
+ */
 class ThumbnailFilter implements VideoFilterInterface
 {
-    public function __construct($videoFile, $duration, $amount = 10, $priority = 0)
+    /**
+     * @param     $videoFile
+     * @param     $duration
+     * @param int $amount
+     * @param int $priority
+     */
+    public function __construct($videoFile, $amount = 10, $priority = 0)
     {
-        $this->fps       = floor($duration / $amount * 1000);
+        $this->amount    = $amount;
         $this->videoFile = $videoFile;
         $this->priority  = $priority;
     }
@@ -39,15 +49,8 @@ class ThumbnailFilter implements VideoFilterInterface
      */
     public function apply(Video $video, VideoInterface $format)
     {
-        $commandString = 'fps=fps=%s thumb%%d.jpg';
-
-        return [
-            '-f',
-            'image2',
-            '-vf',
-            sprintf('fps=fps=%s/60', $this->fps),
-            'thumb%d.jpg',
-        ];
+        $fpsCommand = sprintf('fps=fps=%f', number_format($this->amount / 60, 1));
+        return ['-f', 'image2', '-vf', $fpsCommand, 'thumb%d.jpg',];
     }
 }
 
