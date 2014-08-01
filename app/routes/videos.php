@@ -56,7 +56,7 @@ $app->get('/videos/{video}', function(Video $video) use ($app)
 $app->post('/videos/{video}', function(Video $video, Request $request) use ($app)
 {
     if (!$video->isDraft()) {
-        $app['logger.api']->error(
+        $app['monolog']('api')->error(
             "Tried updating a non-draft status video with id {video}",
             ['video' => $video->getId()]
         );
@@ -102,7 +102,7 @@ $app->post('/videos/{video}', function(Video $video, Request $request) use ($app
 $app->post('/videos/{video}/publish', function(Video $video) use ($app)
 {
     if (!$video->isDraft()) {
-        $app['logger.api']->error(
+        $app['monolog']('api')->error(
             "Tried publishing a non-draft status video with id {video}",
             ['video' => $video->getId()]
         );
