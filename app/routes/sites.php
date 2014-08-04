@@ -42,9 +42,7 @@ $app->get('/sites/{site}/tubesite-users', function (Site $site, Request $request
         ->findBy(['site' => $site])
     ;
 
-    return $app->json($app['serializer'](
-        $tubeusers, ['list', 'list.tubesiteusers']
-    ));
+    return $app->serialize($tubeusers, ['list', 'list.tubesiteusers']);
 })
 ->assert('site', '\d+')
 ->convert('site', 'converter.site:convert')
