@@ -1,13 +1,5 @@
 <?php
 /**
- * tubesite name
- * thumbnail
- * description
- * url
- *
- */
-
-/**
  * cloudxxx-api (http://www.cloud.xxx)
  *
  * Copyright (C) 2014 Really Useful Limited.
