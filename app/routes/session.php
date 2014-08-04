@@ -26,11 +26,7 @@ $sessionData = function () use ($app)
         ],
     ];
 
-    $token = $app['security']->getToken();
-
-    if ($token && $app['security']->isGranted('ROLE_USER')) {
-        $user = $token->getUser();
-
+    if ($user = $app->user()) {
         $data['user']    = $user;
         $data['company'] = $user->getCompany();
         $data['sites']   = $app['converter.site']->convertAll();
@@ -42,7 +38,7 @@ $sessionData = function () use ($app)
             $app['converter.tag']->convertAll();
     }
 
-    return $app['serializer']($data, ['details', 'details.session']);
+    return $data;
 };
 
 /**
@@ -50,12 +46,12 @@ $sessionData = function () use ($app)
  */
 $app->get('/session', function () use ($app, $sessionData)
 {
-    $json = $sessionData();
+    $data = $sessionData();
 
     if ($app['security']->isGranted('ROLE_USER')) {
-        return $app->json($json);
+        return $app->serialize($data, ['details', 'details.session']);
     } else {
-        return $app->json($json, 401);
+        return $app->serialize($data, ['details', 'details.session'], 401);
     }
 });
 
@@ -85,8 +81,9 @@ $app->post('/session', function (Request $request) use ($app, $sessionData)
 
     // success
 
-    $json = $sessionData();
-    return $app->json($json);
+    $data = $sessionData();
+
+    return $app->serialize($data, ['details', 'details.session']);
 });
 
 /**
@@ -121,9 +118,9 @@ $app->delete('/session', function (Request $request) use ($app, $sessionData)
 
     // success
 
-    $json = $sessionData();
+    $data = $sessionData();
 
-    return $app->json($json);
+    return $app->serialize($data, ['details', 'details.session']);
 });
 
 /**
