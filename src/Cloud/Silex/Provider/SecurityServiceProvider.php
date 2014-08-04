@@ -39,28 +39,40 @@ class SecurityServiceProvider extends BaseSecurityServiceProvider
 
         /**
          * Returns the logged in user
+         *
+         * @return \Cloud\Model\User|null
          */
         $app['user'] = function () use ($app) {
-            $token = $app['security']->getToken();
-
-            if ($token && $app['security']->isGranted('ROLE_USER')) {
-                return $token->getUser();
+            if (null === $token = $app['security']->getToken()) {
+                return null;
             }
 
-            return null;
+            if (!$app['security']->isGranted('ROLE_USER')) {
+                return null;
+            }
+
+            if (!is_object($user = $token->getUser())) {
+                return null;
+            }
+
+            return $user;
         };
 
         /**
          * Returns the logged in company
+         *
+         * @return \Cloud\Model\Company|null
          */
         $app['company'] = function () use ($app) {
-            $user = $app['user'];
-
-            if ($user) {
-                return $user->getCompany();
+            if (null === $user = $app['user']) {
+                return null;
             }
 
-            return null;
+            if (!is_object($company = $user->getCompany())) {
+                return null;
+            }
+
+            return $company;
         };
 
         // configuration
