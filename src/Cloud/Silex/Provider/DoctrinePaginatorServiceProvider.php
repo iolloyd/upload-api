@@ -73,7 +73,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             return $pager;
         });
 
-        $app['serializer'] = $app->protect(function($results, $groups = []) use ($app) {
+        $app['paginator.serializer'] = $app->protect(function($results, $groups = []) use ($app) {
             $serializer = SerializerBuilder::create()
                 ->setDebug($app['debug'])
                 ->build();
@@ -92,7 +92,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
 
         $app['single.response.json'] = $app->protect(function ($model, $groups, $headerLink = true) use ($app) {
 
-            $jsonContent = $app['serializer']($model, $groups);
+            $jsonContent = $app['paginator.serializer']($model, $groups);
 
             $response = $app->json($jsonContent);
             if ($headerLink) {
@@ -111,7 +111,7 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
             $params  = $app['request']->query->all();
             $pager   = $app['paginator']($model, $groups, $options);
             $navlinks = $this->getLinks($hostUrl, $params, $pager);
-            $jsonContent = $app['serializer']($pager->getCurrentPageResults(), $groups);
+            $jsonContent = $app['paginator.serializer']($pager->getCurrentPageResults(), $groups);
 
             $response = $app->json($jsonContent);
             $response->headers->add(['Link' => $navlinks['link']]);
