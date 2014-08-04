@@ -49,12 +49,11 @@ if ($app['env'] != 'development') {
 $app->register(new Silex\Provider\DoctrineServiceProvider(), [
     'db.options' => $app['config']['db'],
 ]);
-\Doctrine\Common\Annotations\AnnotationRegistry::registerAutoloadNamespace(
-    'Cloud\Doctrine\Annotation', 'src/'
-);
-\Doctrine\Common\Annotations\AnnotationRegistry::registerAutoloadNamespace(
-    'JMS\Serializer\Annotation', 'vendor/jms/serializer/src'
-);
+\Doctrine\Common\Annotations\AnnotationRegistry::registerAutoloadNamespaces([
+    'Cloud\Doctrine\Annotation'               => 'src/',
+    'JMS\Serializer\Annotation'               => 'vendor/jms/serializer/src',
+    'Symfony\Component\Validator\Constraints' => 'vendor/symfony/validator',
+]);
 
 $app->extend('dbs.event_manager', function ($managers, $app) {
     foreach ($app['dbs.options'] as $name => $options) {
@@ -65,7 +64,7 @@ $app->extend('dbs.event_manager', function ($managers, $app) {
 });
 
 // Doctrine ORM setup
-$app->register(new Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider(), [
+$app->register(new Cloud\Silex\Provider\DoctrineOrmServiceProvider(), [
     'orm.em.options' => [
         'mappings' => [
             [
@@ -97,6 +96,13 @@ $app->extend('orm.ems.config', function ($configs, $app) {
 $app['em'] = $app['orm.em'];
 
 // middleware
+
+$app->register(new Cloud\Silex\Provider\ValidatorServiceProvider());
+
+$app->register(new Cloud\Silex\Provider\SerializerServiceProvider(), [
+    'serializer.cache_dir' => 'data/cache/serializer',
+]);
+
 $app->register(new Aws\Silex\AwsServiceProvider(), [
     'aws.config' => $app['config']['aws'],
 ]);

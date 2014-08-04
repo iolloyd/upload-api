@@ -31,19 +31,19 @@ class Site extends AbstractModel
 
     /**
      * @ORM\Column(type="string")
-     * @JMS\Groups({"list.sites", "details.sites", "details.session"})
+     * @JMS\Groups({"list.sites", "details.sites", "details.session", "details"})
      */
     protected $title;
 
     /**
      * @ORM\Column(type="string", nullable=true, length=7)
-     * @JMS\Groups({"list.sites", "details.sites", "details.session"})
+     * @JMS\Groups({"list.sites", "details.sites", "details.session", "details"})
      */
     protected $color;
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"list.sites", "details.sites", "details.session"})
+     * @JMS\Groups({"list.sites", "details.sites", "details.session", "details"})
      */
     protected $initials;
 
