@@ -20,10 +20,10 @@ $app->get('/beta/news', function (Request $request) use ($app)
 {
     $client   = new Client();
 
-    $response = $client->get('https://cloudxxx.squarespace.com/beta/news/?format=RSS');
+    $response = $client->get('https://cloudxxx.squarespace.com/beta/news?format=RSS');
     $feed     = $response->xml();
 
-    $num      = (int) $request->get('num');
+    $num      = ((int) $request->get('num')) ?: 5;
     $entries  = [];
 
     foreach ($feed->channel->item as $item) {
