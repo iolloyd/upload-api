@@ -58,7 +58,7 @@ class TubesiteUser extends AbstractModel implements JsonSerializable
 
     /**
      * @ORM\Column(type="string")
-     * @JMS\Groups({"details"})
+     * @JMS\Groups({"details", "list.tubesiteusers", "details.tubesiteusers"})
      */
     protected $externalId;
 

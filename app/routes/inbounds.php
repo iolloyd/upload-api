@@ -218,7 +218,8 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete', function(Video $video,
             $errorCode = $input->error_class;
             $errorMessage = $input->error_message;
 
-            $app['em']->transactional(function ($em) use ($videoFile) {
+            $app['em']->transactional(function ($em) use ($inbound, $videoFile) {
+                $inbound->setStatus('error');
                 $videoFile->setStatus('error');
             });
 
@@ -229,7 +230,8 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete', function(Video $video,
         if (time() - $start >= 90) {
             $zencoder->jobs->cancel($job->id);
 
-            $app['em']->transactional(function ($em) use ($videoFile) {
+            $app['em']->transactional(function ($em) use ($inbound, $videoFile) {
+                $inbound->setStatus('error');
                 $videoFile->setStatus('error');
             });
 
@@ -239,8 +241,11 @@ $app->post('/videos/{video}/inbounds/{inbound}/complete', function(Video $video,
 
     // response
 
-    $groups = ['details', 'details.videos', 'details.inbounds'];
-    return $app['single.response.json']($video, $groups);
+    return $app->serialize(
+        $video,
+        ['details', 'details.videos', 'details.inbounds'],
+        ($inbound->getStatus() == 'error' ? 415 : 200)
+    );
 })
 ->assert('video', '\d+')
 ->convert('video', 'converter.video:convert')
