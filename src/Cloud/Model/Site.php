@@ -31,7 +31,7 @@ class Site extends AbstractModel
 
     /**
      * @ORM\Column(type="string")
-     * @JMS\Groups({"list.sites", "details.sites", "details.session", "details"})
+     * @JMS\Groups({"list.sites", "details.sites", "details.session", "details", "list.tubesiteusers"})
      */
     protected $title;
 
