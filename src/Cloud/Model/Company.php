@@ -16,6 +16,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity
@@ -28,7 +29,8 @@ class Company extends AbstractModel
 
     /**
      * @ORM\Column(type="string")
-     * @JMS\Groups({"list.companies", "details.companies", "details.session"})
+     * @JMS\Groups({"list.companies", "details.company", "details.session"})
+     * @Assert\NotBlank
      */
     protected $title;
 
@@ -38,9 +40,19 @@ class Company extends AbstractModel
      *   mappedBy="company",
      *   cascade={"persist", "remove"}
      * )
-     * @JMS\Groups({"details.companies"})
+     * @JMS\Groups({"details.company"})
      */
     protected $users;
+
+    /**
+     * @ORM\OneToMany(
+     *   targetEntity="Site",
+     *   mappedBy="company",
+     *   cascade={"persist", "remove"}
+     * )
+     * @JMS\Groups({"details.company"})
+     */
+    protected $sites;
 
     /**
      * Constructor
@@ -48,6 +60,7 @@ class Company extends AbstractModel
     public function __construct()
     {
         $this->users = new ArrayCollection();
+        $this->sites = new ArrayCollection();
     }
 
     /**
@@ -107,6 +120,43 @@ class Company extends AbstractModel
     public function getUsers()
     {
         return $this->users;
+    }
+
+    /**
+     * Add a site
+     *
+     * @param  Site $site
+     * @return Company
+     */
+    public function addSite(Site $site)
+    {
+        $this->sites->add($site);
+        $site->setCompany($this);
+
+        return $this;
+    }
+
+    /**
+     * Remove a site
+     *
+     * @param  Site $site
+     * @return Company
+     */
+    public function removeSite(Site $site)
+    {
+        $this->sites->removeElement($site);
+
+        return $this;
+    }
+
+    /**
+     * Get the sites
+     *
+     * @return Collection
+     */
+    public function getSites()
+    {
+        return $this->sites;
     }
 
     /**
