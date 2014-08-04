@@ -9,10 +9,7 @@
  * @license    Proprietary
  */
 
-/**
- * Parameter Converters
- */
-
+use Cloud\Silex\Converter\DeserializeConverter;
 use Cloud\Silex\Converter\DoctrineOrmConverter;
 
 /* var $app \Silex\Application */
@@ -21,11 +18,19 @@ $app['converter'] = $app->protect(function($entityName) use ($app) {
     return new DoctrineOrmConverter($app['em'], $entityName);
 });
 
+$app['deserialize_converter'] = $app->protect(function($className) use ($app) {
+    return new DeserializeConverter($app['serializer'], $className);
+});
+
 $app['converter.category'] = $app['converter'](
     'Cloud\Model\Category'
 );
 
 $app['converter.company'] = $app['converter'](
+    'Cloud\Model\Company'
+);
+
+$app['converter.company.deserialize'] = $app['deserialize_converter'](
     'Cloud\Model\Company'
 );
 
@@ -38,6 +43,10 @@ $app['converter.outbound'] = $app['converter'](
 );
 
 $app['converter.site'] = $app['converter'](
+    'Cloud\Model\Site'
+);
+
+$app['converter.site.deserialize'] = $app['deserialize_converter'](
     'Cloud\Model\Site'
 );
 
