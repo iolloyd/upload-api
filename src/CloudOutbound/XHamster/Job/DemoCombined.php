@@ -259,26 +259,46 @@ class DemoCombined extends AbstractJob
 
         $outputUrl = 's3://' . $app['config']['aws']['bucket'] . '/' . $videoFile->getStoragePath();
 
+        // ---
+
+        // FIXME: this doesnt work for larger than HD videos
+
+        $targetWidth = $inboundVideoFile->getWidth();
+        $targetHeight = $inboundVideoFile->getHeight();
+
+        $originalWidth = 1280;
+        $originalHeight = 720;
+
+        $heightFactor = $targetHeight / $originalHeight;
+        $widthFactor = $targetWidth / $originalWidth;
+
+        $factor = min($heightFactor, $widthFactor);
+
+        $targetHeight = floor($originalHeight * $factor);
+        $targetWidth = floor($originalWidth * $factor);
+
+        // ---
+
         $watermarks = [];
         if ($outbound->getVideo()->getSite()->getSlug() == 'hdpov') {
             // RU: HDPOV
             $watermarks[] = [
                 'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-generic.png',
-                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+                'x' => '-0', 'y' => '-0', 'width' => $targetWidth, 'height' => $targetHeight,
             ];
         }
         if ($outbound->getVideo()->getSite()->getSlug() == 'sexfromrussia') {
             // PornNerd: Sex From Russia
             $watermarks[] = [
                 'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/sexfromrussia-generic.png',
-                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+                'x' => '-0', 'y' => '-0', 'width' => $targetWidth, 'height' => $targetHeight,
             ];
         }
         if ($outbound->getVideo()->getSite()->getSlug() == 'suckonitbaby') {
             // PornNerd: Suck On It Baby
             $watermarks[] = [
                 'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/suckonitbaby-generic.png',
-                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+                'x' => '-0', 'y' => '-0', 'width' => $targetWidth, 'height' => $targetHeight,
             ];
         }
 
@@ -963,10 +983,11 @@ class DemoCombined extends AbstractJob
             $outbound->addParams($params);
 
             switch($match['status']) {
-                case self::STATUS_NOT_CONVERTED:
-                    $outbound->setStatus(VideoOutbound::STATUS_WORKING);
-                    break;
+                //case self::STATUS_NOT_CONVERTED:
+                    //$outbound->setStatus(VideoOutbound::STATUS_WORKING);
+                    //break;
 
+                case self::STATUS_NOT_CONVERTED:
                 case self::STATUS_IN_CONVERSION:
                 case self::STATUS_PUBLICATION:
                 case self::STATUS_ACTIVE:

@@ -246,26 +246,44 @@ class DemoCombined extends AbstractJob
 
         $outputUrl = 's3://' . $app['config']['aws']['bucket'] . '/' . $videoFile->getStoragePath();
 
+        // ---
+
+        $targetWidth = $inboundVideoFile->getWidth();
+        $targetHeight = $inboundVideoFile->getHeight();
+
+        $originalWidth = 1280;
+        $originalHeight = 720;
+
+        $heightFactor = $targetHeight / $originalHeight;
+        $widthFactor = $targetWidth / $originalWidth;
+
+        $factor = min($heightFactor, $widthFactor);
+
+        $targetHeight = floor($originalHeight * $factor);
+        $targetWidth = floor($originalWidth * $factor);
+
+        // ---
+
         $watermarks = [];
         if ($outbound->getVideo()->getSite()->getSlug() == 'hdpov') {
             // RU: HDPOV
             $watermarks[] = [
                 'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-youporn.png',
-                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+                'x' => '-0', 'y' => '-0', 'width' => $targetWidth, 'height' => $targetHeight,
             ];
         }
         if ($outbound->getVideo()->getSite()->getSlug() == 'sexfromrussia') {
             // PornNerd: Sex From Russia
             $watermarks[] = [
                 'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/sexfromrussia-youporn.png',
-                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+                'x' => '-0', 'y' => '-0', 'width' => $targetWidth, 'height' => $targetHeight,
             ];
         }
         if ($outbound->getVideo()->getSite()->getSlug() == 'suckonitbaby') {
             // PornNerd: Suck On It Baby
             $watermarks[] = [
                 'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/suckonitbaby-youporn.png',
-                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+                'x' => '-0', 'y' => '-0', 'width' => $targetWidth, 'height' => $targetHeight,
             ];
         }
 
