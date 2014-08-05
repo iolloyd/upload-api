@@ -116,7 +116,9 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
     $app['em']->transactional(function ($em) use ($app, $video) {
         $video->setStatus(Video::STATUS_PENDING);
 
-        $tubeusers = $app['em']->getRepository('cx:tubesiteUser')->findAll();
+        $tubeusers = $app['em']->getRepository('cx:tubesiteUser')->findBy([
+            'site' => $video->getSite()
+        ]);
 
         foreach ($tubeusers as $tubeuser) {
             $outbound = new VideoOutbound($video);
@@ -132,7 +134,7 @@ $app->post('/videos/{video}/publish', function(Video $video) use ($app)
 
     foreach ($video->getOutbounds() as $outbound) {
         if ($outbound->getTubesite()->getSlug() == 'youporn') {
-            $job = $app['resque']->enqueue('CloudOutbound\YouPorn\Job\DemoCombined', ['videooutbound' => $outbound->getId()]);
+            //$job = $app['resque']->enqueue('CloudOutbound\YouPorn\Job\DemoCombined', ['videooutbound' => $outbound->getId()]);
         }
     }
 
