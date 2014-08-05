@@ -297,6 +297,7 @@ class DemoCombined extends AbstractJob
                     'audio_codec'   => 'aac',
                     'audio_quality' => 4,
                     'max_video_bitrate' => 4000,
+                    'max_frame_rate' => 30,
 
                     'video_codec'   => 'h264',
                     'h264_profile'  => 'high',
