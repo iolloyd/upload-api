@@ -42,9 +42,9 @@ use Symfony\Component\DomCrawler\Crawler as DomCrawler;
  */
 class DemoCombined extends AbstractJob
 {
-    const STATUS_QUEUED = 'Queued for encoding';
+    const STATUS_QUEUED   = 'Queued for encoding';
     const STATUS_ENCODING = 'Encoding process';
-    const STATUS_ONLINE = 'Online';
+    const STATUS_ONLINE   = 'Online';
 
     /**
      * @var \Monolog\Logger
@@ -116,6 +116,8 @@ class DemoCombined extends AbstractJob
             throw new \InvalidArgumentException('No VideoOutbound with this ID');
         }
 
+        try {
+
         // --
 
         if (!$outbound->getVideoFile()) {
@@ -141,7 +143,11 @@ class DemoCombined extends AbstractJob
 
         //exit;
 
-        if ($outbound->getExternalId()) {
+        if ($outbound->getStatus() == 'error') {
+
+            $output->write('<error>VideoOutbound has error, skipping ... </error>');
+
+        } elseif ($outbound->getExternalId()) {
 
             $output->write('<info>VideoOutbound has externalId set, only refreshing status ... </info>');
             $this->refreshVideoStatus($outbound);
@@ -150,6 +156,10 @@ class DemoCombined extends AbstractJob
         } else {
 
             $output->writeln('<info>Starting <comment>XVideos</comment> outbound upload...</info>');
+
+            $this->em->transactional(function ($em) use ($outbound) {
+                $outbound->setStatus('working');
+            });
 
             $output->writeln('<info> + validating video</info>');
             $this->validateVideo($outbound);
@@ -173,12 +183,24 @@ class DemoCombined extends AbstractJob
             $output->writeln('<info> + saving metadata</info>');
             $this->submitVideoMetadata($outbound);
 
+            sleep(5);
+
+            $output->write('<info> + refreshing status ... </info>');
             $this->refreshVideoStatus($outbound);
+            $output->writeln('<comment>' . $outbound->getStatus() . '</comment>');
         }
 
         $this->logout($tubeuser);
 
         $output->writeln('<info>done.</info>');
+
+        } catch (\Exception $e) {
+            $this->em->transactional(function ($em) use ($outbound) {
+                $outbound->setStatus('error');
+            });
+
+            throw $e;
+        }
     }
 
     /**
@@ -206,9 +228,8 @@ class DemoCombined extends AbstractJob
 
         $app['em']->transactional(function ($em) use ($outbound, $videoFile) {
             $em->persist($videoFile);
+            $outbound->setVideoFile($videoFile);
         });
-
-        $outbound->setVideoFile($videoFile);
 
         // transcode
 
@@ -247,7 +268,7 @@ class DemoCombined extends AbstractJob
             'outputs' => [
                 [
                     'url' => $outputUrl,
-                    'credentials' => 's3-cldsys-dev',
+                    'credentials' => $app['debug'] ? 's3-cldsys-dev' : 's3-cldsys-prod',
 
                     'format' => 'mp4',
                     'width' => 1280,
@@ -327,7 +348,8 @@ class DemoCombined extends AbstractJob
                 $errorCode = $input->error_class;
                 $errorMessage = $input->error_message;
 
-                $app['em']->transactional(function ($em) use ($videoFile) {
+                $app['em']->transactional(function ($em) use ($outbound, $videoFile) {
+                    $outbound->setStatus('error');
                     $videoFile->setStatus('error');
                 });
 
@@ -338,7 +360,8 @@ class DemoCombined extends AbstractJob
             if (time() - $start >= 900) {
                 $zencoder->jobs->cancel($job->id);
 
-                $app['em']->transactional(function ($em) use ($videoFile) {
+                $app['em']->transactional(function ($em) use ($outbound, $videoFile) {
+                    $outbound->setStatus('error');
                     $videoFile->setStatus('error');
                 });
 
@@ -503,10 +526,6 @@ class DemoCombined extends AbstractJob
      */
     protected function validateVideo(VideoOutbound $outbound)
     {
-        $this->em->transactional(function ($em) use ($outbound) {
-            $outbound->setStatus(VideoOutbound::STATUS_WORKING);
-        });
-
         $videoFile = $outbound->getVideoFile();
 
         $response = $this->httpSession->get('/account/title_blacklist/', [
@@ -848,10 +867,10 @@ class DemoCombined extends AbstractJob
 
             switch ($data['status']) {
                 case self::STATUS_QUEUED:
-                case self::STATUS_ENCODING:
                     $outbound->setStatus(VideoOutbound::STATUS_WORKING);
                     break;
 
+                case self::STATUS_ENCODING:
                 case self::STATUS_ONLINE:
                     $outbound->setStatus(VideoOutbound::STATUS_COMPLETE);
                     break;
