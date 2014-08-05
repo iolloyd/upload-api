@@ -249,6 +249,29 @@ class DemoCombined extends AbstractJob
 
         $outputUrl = 's3://' . $app['config']['aws']['bucket'] . '/' . $videoFile->getStoragePath();
 
+        $watermarks = [];
+        if ($outbound->getVideo()->getSite()->getSlug() == 'hdpov') {
+            // RU: HDPOV
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-generic.png',
+                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+            ];
+        }
+        if ($outbound->getVideo()->getSite()->getSlug() == 'sexfromrussia') {
+            // PornNerd: Sex From Russia
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/sexfromrussia-generic.png',
+                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+            ];
+        }
+        if ($outbound->getVideo()->getSite()->getSlug() == 'suckonitbaby') {
+            // PornNerd: Suck On It Baby
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/suckonitbaby-generic.png',
+                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+            ];
+        }
+
         $job = $zencoder->jobs->create([
             // options
             'region'  => 'europe',
@@ -276,9 +299,7 @@ class DemoCombined extends AbstractJob
 
                     'audio_codec'   => 'aac',
                     'audio_quality' => 4,
-                    'force_aac_profile' => 'aac-lc',
-
-                    'video_bitrate' => 5000,
+                    'max_video_bitrate' => 4000,
                     'max_frame_rate' => 30,
 
                     'video_codec'   => 'h264',
@@ -286,17 +307,7 @@ class DemoCombined extends AbstractJob
                     'h264_level'    => 5.1,
                     'tuning'        => 'film',
 
-                    'speed' => 5,
-
-                    'watermarks' => [
-                        [
-                            'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-generic.png',
-                            'x' => 0,
-                            'y' => 0,
-                            'width' => 1280,
-                            'height' => 720,
-                        ]
-                    ],
+                    'watermarks' => $watermarks,
                 ],
             ],
         ]);
@@ -313,6 +324,33 @@ class DemoCombined extends AbstractJob
 
             $details = $zencoder->jobs->details($job->id);
             $output = $details->outputs[0];
+
+            // error
+            if ($details->state == 'failed') {
+                $errorCode = $details->error_class;
+                $errorMessage = $details->error_message;
+
+                $app['em']->transactional(function ($em) use ($videoFile) {
+                    $videoFile->setStatus('error');
+                });
+
+                break;
+            }
+
+            // transfer error
+            if ($details->state == 'finished'
+                && isset($details->backup_server_used)
+                && $details->backup_server_used
+            ) {
+                $errorCode = $details->primary_upload_error_link;
+                $errorMessage = $details->primary_upload_error_message;
+
+                $app['em']->transactional(function ($em) use ($videoFile) {
+                    $videoFile->setStatus('error');
+                });
+
+                break;
+            }
 
             // success
             if ($details->state == 'finished') {
@@ -343,30 +381,20 @@ class DemoCombined extends AbstractJob
                 break;
             }
 
-            // error
-            if ($details->state == 'failed') {
-                $errorCode = $input->error_class;
-                $errorMessage = $input->error_message;
-
-                $app['em']->transactional(function ($em) use ($outbound, $videoFile) {
-                    $outbound->setStatus('error');
-                    $videoFile->setStatus('error');
-                });
-
-                break;
-            }
-
             // timeout
             if (time() - $start >= 900) {
                 $zencoder->jobs->cancel($job->id);
 
-                $app['em']->transactional(function ($em) use ($outbound, $videoFile) {
-                    $outbound->setStatus('error');
+                $app['em']->transactional(function ($em) use ($videoFile) {
                     $videoFile->setStatus('error');
                 });
 
                 break;
             }
+        }
+
+        if ($videoFile->getStatus() != 'complete') {
+            throw new \Exception('Failed to encode outbound video file');
         }
     }
 
