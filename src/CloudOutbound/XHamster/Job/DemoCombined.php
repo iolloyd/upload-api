@@ -119,6 +119,8 @@ class DemoCombined extends AbstractJob
             throw new InvalidArgumentException($msg);
         }
 
+        try {
+
         // --
 
         if (!$outbound->getVideoFile()) {
@@ -154,7 +156,11 @@ class DemoCombined extends AbstractJob
 
         // $sites = $this->getCppSites(); var_dump($sites); exit;
 
-        if ($outbound->getExternalId()) {
+        if ($outbound->getStatus() == 'error') {
+
+            $output->write('<error>VideoOutbound has error, skipping ... </error>');
+
+        } elseif ($outbound->getExternalId()) {
 
             $output->write('<info>VideoOutbound has externalId set, only refreshing status ... </info>');
             $this->refreshVideoStatus($outbound);
@@ -163,6 +169,10 @@ class DemoCombined extends AbstractJob
         } else {
 
             $output->writeln('<info>Starting <comment>xHamster</comment> outbound upload...</info>');
+
+            $this->em->transactional(function ($em) use ($outbound) {
+                $outbound->setStatus('working');
+            });
 
             $output->writeln('<info> + selecting server</info>');
             $uploadBaseUrl = $this->getUploadBaseUrl();
@@ -182,11 +192,25 @@ class DemoCombined extends AbstractJob
             $output->write('<info> + detecting external id ... </info>');
             $this->detectExternalId($outbound);
             $output->writeln('<comment>' . $outbound->getExternalId() . '</comment>');
+
+            sleep(5);
+
+            $output->write('<info> + refreshing status ... </info>');
+            $this->refreshVideoStatus($outbound);
+            $output->writeln('<comment>' . $outbound->getStatus() . '</comment>');
         }
 
         $this->logout($tubeuser);
 
         $output->writeln('<info>done.</info>');
+
+        } catch (\Exception $e) {
+            $this->em->transactional(function ($em) use ($outbound) {
+                $outbound->setStatus('error');
+            });
+
+            throw $e;
+        }
     }
 
     /**
@@ -214,9 +238,8 @@ class DemoCombined extends AbstractJob
 
         $app['em']->transactional(function ($em) use ($outbound, $videoFile) {
             $em->persist($videoFile);
+            $outbound->setVideoFile($videoFile);
         });
-
-        $outbound->setVideoFile($videoFile);
 
         // transcode
 
@@ -235,6 +258,29 @@ class DemoCombined extends AbstractJob
         //);
 
         $outputUrl = 's3://' . $app['config']['aws']['bucket'] . '/' . $videoFile->getStoragePath();
+
+        $watermarks = [];
+        if ($outbound->getVideo()->getSite()->getSlug() == 'hdpov') {
+            // RU: HDPOV
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-generic.png',
+                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+            ];
+        }
+        if ($outbound->getVideo()->getSite()->getSlug() == 'sexfromrussia') {
+            // PornNerd: Sex From Russia
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/sexfromrussia-generic.png',
+                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+            ];
+        }
+        if ($outbound->getVideo()->getSite()->getSlug() == 'suckonitbaby') {
+            // PornNerd: Suck On It Baby
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/suckonitbaby-generic.png',
+                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+            ];
+        }
 
         $job = $zencoder->jobs->create([
             // options
@@ -255,7 +301,7 @@ class DemoCombined extends AbstractJob
             'outputs' => [
                 [
                     'url' => $outputUrl,
-                    'credentials' => 's3-cldsys-dev',
+                    'credentials' => $app['debug'] ? 's3-cldsys-dev' : 's3-cldsys-prod',
 
                     'format' => 'mp4',
                     'width' => 1280,
@@ -263,22 +309,14 @@ class DemoCombined extends AbstractJob
 
                     'audio_codec'   => 'aac',
                     'audio_quality' => 4,
-                    'video_bitrate' => 4000,
+                    'max_video_bitrate' => 4000,
 
                     'video_codec'   => 'h264',
                     'h264_profile'  => 'high',
                     'h264_level'    => 5.1,
                     'tuning'        => 'film',
 
-                    'watermarks' => [
-                        [
-                            'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-generic.png',
-                            'x' => 0,
-                            'y' => 0,
-                            'width' => 1280,
-                            'height' => 720,
-                        ]
-                    ],
+                    'watermarks' => $watermarks,
                 ],
             ],
         ]);
@@ -295,6 +333,33 @@ class DemoCombined extends AbstractJob
 
             $details = $zencoder->jobs->details($job->id);
             $output = $details->outputs[0];
+
+            // error
+            if ($details->state == 'failed') {
+                $errorCode = $details->error_class;
+                $errorMessage = $details->error_message;
+
+                $app['em']->transactional(function ($em) use ($videoFile) {
+                    $videoFile->setStatus('error');
+                });
+
+                break;
+            }
+
+            // transfer error
+            if ($details->state == 'finished'
+                && isset($details->backup_server_used)
+                && $details->backup_server_used
+            ) {
+                $errorCode = $details->primary_upload_error_link;
+                $errorMessage = $details->primary_upload_error_message;
+
+                $app['em']->transactional(function ($em) use ($videoFile) {
+                    $videoFile->setStatus('error');
+                });
+
+                break;
+            }
 
             // success
             if ($details->state == 'finished') {
@@ -320,18 +385,6 @@ class DemoCombined extends AbstractJob
                     $videoFile->setAudioBitRate($output->audio_bitrate_in_kbps);
                     $videoFile->setAudioSampleRate($output->audio_sample_rate);
                     $videoFile->setAudioChannels((int) $output->channels);
-                });
-
-                break;
-            }
-
-            // error
-            if ($details->state == 'failed') {
-                $errorCode = $input->error_class;
-                $errorMessage = $input->error_message;
-
-                $app['em']->transactional(function ($em) use ($videoFile) {
-                    $videoFile->setStatus('error');
                 });
 
                 break;
@@ -596,10 +649,6 @@ class DemoCombined extends AbstractJob
      */
     protected function validateVideo(Url $baseUrl, VideoOutbound $outbound)
     {
-        $this->em->transactional(function ($em) use ($outbound) {
-            //$outbound->setStatus(VideoOutbound::STATUS_WORKING);
-        });
-
         $video    = $outbound->getVideo();
         $tubeuser = $outbound->getTubesiteUser();
 
@@ -910,10 +959,10 @@ class DemoCombined extends AbstractJob
 
             switch($match['status']) {
                 case self::STATUS_NOT_CONVERTED:
-                case self::STATUS_IN_CONVERSION:
                     $outbound->setStatus(VideoOutbound::STATUS_WORKING);
                     break;
 
+                case self::STATUS_IN_CONVERSION:
                 case self::STATUS_PUBLICATION:
                 case self::STATUS_ACTIVE:
                     $outbound->setStatus(VideoOutbound::STATUS_COMPLETE);

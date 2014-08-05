@@ -108,6 +108,8 @@ class DemoCombined extends AbstractJob
             throw new \InvalidArgumentException('No VideoOutbound with this ID');
         }
 
+        try {
+
         // --
 
         if (!$outbound->getVideoFile()) {
@@ -121,16 +123,27 @@ class DemoCombined extends AbstractJob
 
         $tubeuser = $outbound->getTubesiteUser();
 
-        if (!$this->isLoggedIn($tubeuser)) {
-            $this->login($tubeuser);
-        }
+        if ($outbound->getStatus() == 'error') {
 
-        if ($outbound->getExternalId()) {
+            $output->writeln('<error>VideoOutbound has error, skipping ... </error>');
 
-            $output->writeln('<info>VideoOutbound has externalId set, only refreshing status...</info>');
+        } elseif ($outbound->getExternalId()) {
+
+            if (!$this->isLoggedIn($tubeuser)) {
+                $this->login($tubeuser);
+            }
+
+            $output->write('<info>VideoOutbound has externalId set, only refreshing status ... </info>');
             $this->refreshVideoStatus($outbound);
+            $output->writeln('<comment>' . $outbound->getStatus() . '</comment>');
+
+            $this->logout($tubeuser);
 
         } else {
+
+            if (!$this->isLoggedIn($tubeuser)) {
+                $this->login($tubeuser);
+            }
 
             /*
             $output->writeln('<info>Starting YouPorn outbound upload...</info>');
@@ -149,17 +162,26 @@ class DemoCombined extends AbstractJob
 
             $output->writeln('<info>Starting YouPorn <comment>Legacy Form</comment> outbound upload...</info>');
 
+            $this->em->transactional(function ($em) use ($outbound) {
+                $outbound->setStatus('working');
+            });
+
             $output->writeln('<info> + validating metadata</info>');
             $this->legacyValidateVideo($outbound);
 
             $output->writeln('<info> + uploading video and metadata</info>');
             $this->legacyUploadVideo($outbound);
 
+            sleep(5);
+
+            $output->write('<info> + refreshing status ... </info>');
+            $this->refreshVideoStatus($outbound);
+            $output->writeln('<comment>' . $outbound->getStatus() . '</comment>');
+
+            $this->logout($tubeuser);
+
+            $output->writeln('<info>done.</info>');
         }
-
-        $this->logout($tubeuser);
-
-        $output->writeln('<info>done.</info>');
 
         /*
          * TODO: refactor
@@ -168,6 +190,14 @@ class DemoCombined extends AbstractJob
         //$output->writeln('<info>Queueing refresh</info> ... in 10 seconds');
         //sleep(10);
         //\Resque::enqueue('default', get_called_class(), ['videooutbound' => $outbound->getId()]);
+
+        } catch (\Exception $e) {
+            $this->em->transactional(function ($em) use ($outbound) {
+                $outbound->setStatus('error');
+            });
+
+            throw $e;
+        }
     }
 
     /**
@@ -195,9 +225,8 @@ class DemoCombined extends AbstractJob
 
         $app['em']->transactional(function ($em) use ($outbound, $videoFile) {
             $em->persist($videoFile);
+            $outbound->setVideoFile($videoFile);
         });
-
-        $outbound->setVideoFile($videoFile);
 
         // transcode
 
@@ -216,6 +245,29 @@ class DemoCombined extends AbstractJob
         //);
 
         $outputUrl = 's3://' . $app['config']['aws']['bucket'] . '/' . $videoFile->getStoragePath();
+
+        $watermarks = [];
+        if ($outbound->getVideo()->getSite()->getSlug() == 'hdpov') {
+            // RU: HDPOV
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-youporn.png',
+                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+            ];
+        }
+        if ($outbound->getVideo()->getSite()->getSlug() == 'sexfromrussia') {
+            // PornNerd: Sex From Russia
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/sexfromrussia-youporn.png',
+                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+            ];
+        }
+        if ($outbound->getVideo()->getSite()->getSlug() == 'suckonitbaby') {
+            // PornNerd: Suck On It Baby
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/suckonitbaby-youporn.png',
+                'x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720,
+            ];
+        }
 
         $job = $zencoder->jobs->create([
             // options
@@ -251,15 +303,7 @@ class DemoCombined extends AbstractJob
                     'h264_level'    => 5.1,
                     'tuning'        => 'film',
 
-                    //'watermarks' => [
-                        //[
-                            //'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/HDPOV-youporn.png',
-                            //'x' => 0,
-                            //'y' => 0,
-                            //'width' => 1280,
-                            //'height' => 720,
-                        //]
-                    //],
+                    'watermarks' => $watermarks,
                 ],
             ],
         ]);
@@ -502,15 +546,16 @@ class DemoCombined extends AbstractJob
 
             switch($data['status']) {
                 case 'uploaded':
-                case 'encoding_in_progress':
                     $outbound->setStatus(VideoOutbound::STATUS_WORKING);
                     break;
 
+                case 'encoding_in_progress':
                 case 'waiting_for_approval':
                 case 'released':
                     $outbound->setStatus(VideoOutbound::STATUS_COMPLETE);
                     break;
 
+                case 'encoding_failure':
                 case 'refused':
                     $outbound->setStatus(VideoOutbound::STATUS_ERROR);
                     break;
