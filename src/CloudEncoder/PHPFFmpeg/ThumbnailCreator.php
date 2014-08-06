@@ -20,7 +20,8 @@ use FFMpeg\Format\Video\X264;
  * Class ThumbnailCreator
  *
  */
-class ThumbnailCreator {
+class ThumbnailCreator 
+{
 
     protected $videoFile;
 

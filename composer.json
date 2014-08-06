@@ -36,6 +36,7 @@
         "symfony/serializer": "~2.5",
         "symfony/monolog-bridge": "~2.5",
         "symfony/validator": "~2.5",
+        "symfony/debug": "~2.5",
 
         "doctrine/orm": "~2.4",
         "doctrine/data-fixtures": "~1.0",
@@ -51,7 +52,9 @@
         "jms/serializer": "dev-master",
 
         "zencoder/zencoder-php": "~2.1.2",
-        "php-ffmpeg/php-ffmpeg": "~0.4"
+        "php-ffmpeg/php-ffmpeg": "~0.4",
+        "symfony/browser-kit": "~2.6"
+
     },
 
     "require-dev": {
