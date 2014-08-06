@@ -11,18 +11,19 @@
 
 namespace CloudEncoder\Job;
 
-use Cloud\Job\AbstractJob;
-use CloudEncoder\PHPFFmpeg\ThumbnailCreator;
 use FFMpeg\FFProbe;
+use Cloud\Job\AbstractJob;
+use CloudEncoder\PHPFFmpeg\VideoValidator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Class ThumbnailJob
+ * Class ValidateJob
+ *
  */
-class ThumbnailJob extends AbstractJob
+class ValidateJob extends AbstractJob
 {
     /**
      * Configures this job
@@ -31,22 +32,26 @@ class ThumbnailJob extends AbstractJob
     {
         $this
             ->setDefinition([
-                new InputArgument('input',  InputArgument::REQUIRED, 'The video url to get thumbnails for'),
-                new InputArgument('amount', InputArgument::REQUIRED, 'The total number of thumbnails'),
+                new InputArgument('input', InputArgument::REQUIRED, 'The url of the video to validate'),
             ])
-            ->setName('job:encoder:thumbnails')
+            ->setName('job:encoder:validate')
         ;
     }
 
     /**
-     * Executes this job
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @return int|null|void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $videoFile = $input->getArgument('input');
-        $amount    = $input->getArgument('amount');
-        $thumbnailCreator = new ThumbnailCreator();
-        $thumbnailCreator->process($videoFile, $amount);
+        $video = $input->getArgument('input');
+        $output->writeln(sprintf('<info>Validating %s</info>', $video));
+        $validator = new VideoValidator();
+        $videoMetadata = $validator->process($video);
+        foreach ($videoMetadata as $key => $value) {
+            $output->writeLn(sprintf('<info>%s: %s</info>', $key, $value));
+        }
     }
 }
 

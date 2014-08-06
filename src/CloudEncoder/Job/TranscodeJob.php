@@ -22,9 +22,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Class EncodingJob
+ * Class TranscodeJob 
  */
-class EncodingJob extends AbstractJob
+class TranscodeJob extends AbstractJob
 {
     /**
      * Configures this job
@@ -33,14 +33,16 @@ class EncodingJob extends AbstractJob
     {
         $this
             ->setDefinition([
-                new InputArgument('video', InputArgument::REQUIRED, 'The video location'),
+                new InputArgument('input', InputArgument::REQUIRED, 'The video location'),
             ])
-            ->addOption('watermark', 'w', InputOption::VALUE_REQUIRED, 'Path of watermark image')
-            ->addOption('top',       't', InputOption::VALUE_REQUIRED, 'Pixels aligned from top')
-            ->addOption('bottom',    'b', InputOption::VALUE_REQUIRED, 'Pixels aligned from bottom')
-            ->addOption('left',      'l', InputOption::VALUE_REQUIRED, 'Pixels aligned from left')
-            ->addOption('right',     'r', InputOption::VALUE_REQUIRED, 'Pixels aligned from right')
-            ->setName('job:encoder:encode')
+            ->addOption('watermark_input',  'wi', InputOption::VALUE_REQUIRED, 'Watermark image')
+            ->addOption('watermark_top',    'wt', InputOption::VALUE_REQUIRED, 'Top align')
+            ->addOption('watermark_bottom', 'wb', InputOption::VALUE_REQUIRED, 'Bottom align')
+            ->addOption('watermark_left',   'wl', InputOption::VALUE_REQUIRED, 'Left align')
+            ->addOption('watermark_right',  'wr', InputOption::VALUE_REQUIRED, 'Right align')
+            ->addOption('thumbnails_count', 'tc', InputOption::VALUE_REQUIRED, 'Total thumbnails')
+            ->addOption('thumbnails_first_frame', 'tf', InputOption::VALUE_NONE, 'If set, will start thumbnail collection at first frame')
+            ->setName('job:encoder:transcode')
         ;
     }
 
