@@ -14,5 +14,6 @@ if (!class_exists('Silex\Application')) {
 }
 
 $autoloader->add('Cloud\\', 'src/');
+$autoloader->add('CloudEncoder\\', 'src/');
 $autoloader->add('CloudOutbound\\', 'src/');
 $autoloader->add('CloudTest\\', 'tests/');
