@@ -43,7 +43,7 @@ $app->post('/encoder/jobs', function (Request $request) use ($app)
  */
 
 // Encode a job
-$app->get('/encoder/jobs/{job}/encode', function ($job) use ($app)
+$app->get('/encoder/jobs/{job}/transcode', function ($job) use ($app)
 {
     $encoder = new VideoEncoder();
     $result = $encoder->process($job);
@@ -57,10 +57,9 @@ $app->get('/encoder/jobs/{job}/encode', function ($job) use ($app)
  * /encoder/jobs/{job}
  */
 
-// Get details of a single job
+// Retrieve and encoding job
 $app->get('/encoder/jobs/{job}', function ($job) use ($app)
 {
 })
 ->convert('job', 'converter.encoding_job:convert');
-
 
