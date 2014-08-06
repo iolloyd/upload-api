@@ -11,19 +11,18 @@
 
 namespace CloudEncoder\Job;
 
-use FFMpeg\FFProbe;
 use Cloud\Job\AbstractJob;
-use CloudEncoder\PHPFFmpeg\VideoValidator;
+use CloudEncoder\VideoDownload;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Class ValidationJob
+ * Class VideoEncoder
  *
  */
-class ValidationJob extends AbstractJob
+class DownloadJob extends AbstractJob 
 {
     /**
      * Configures this job
@@ -32,26 +31,17 @@ class ValidationJob extends AbstractJob
     {
         $this
             ->setDefinition([
-                new InputArgument('video', InputArgument::REQUIRED, 'The url of the video to validate'),
+                new InputArgument('input',  InputArgument::REQUIRED, 'The video url to get thumbnails for'),
             ])
-            ->setName('job:encoder:validate')
+            ->setName('job:encoder:download')
         ;
     }
 
-    /**
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     * @return int|null|void
-     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $video = $input->getArgument('video');
-        $output->writeln(sprintf('<info>Validating %s</info>', $video));
-        $validator = new VideoValidator();
-        $videoMetadata = $validator->process($video);
-        foreach ($videoMetadata as $key => $value) {
-            $output->writeLn(sprintf('<info>%s: %s</info>', $key, $value));
-        }
+        $videoFile = $input->getArgument('input');
+        $downloader = new VideoDownload();
+        $downloader->process($videoFile);
     }
 }
 
