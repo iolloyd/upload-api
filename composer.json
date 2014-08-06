@@ -50,7 +50,8 @@
         "pagerfanta/pagerfanta": "~1.0",
         "jms/serializer": "dev-master",
 
-        "zencoder/zencoder-php": "~2.2"
+        "zencoder/zencoder-php": "~2.1.2",
+        "php-ffmpeg/php-ffmpeg": "~0.4"
     },
 
     "require-dev": {
