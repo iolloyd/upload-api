@@ -262,8 +262,8 @@ class DemoCombined extends AbstractJob
 
         $factor = min($heightFactor, $widthFactor);
 
-        $targetHeight = floor($originalHeight * $factor);
-        $targetWidth = floor($originalWidth * $factor);
+        $targetHeight = min(floor($originalHeight * $factor), $originalHeight);
+        $targetWidth = min(floor($originalWidth * $factor), $originalWidth);
 
         // ---
 
@@ -286,6 +286,20 @@ class DemoCombined extends AbstractJob
             // PornNerd: Suck On It Baby
             $watermarks[] = [
                 'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/suckonitbaby-generic.png',
+                'x' => '-0', 'y' => '-0', 'width' => $targetWidth, 'height' => $targetHeight,
+            ];
+        }
+        if ($outbound->getVideo()->getSite()->getSlug() == 'bollywoodnudes') {
+            // PornNerd: bollywoodnudes
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/bollywoodnudes-generic.png',
+                'x' => '-0', 'y' => '-0', 'width' => $targetWidth, 'height' => $targetHeight,
+            ];
+        }
+        if ($outbound->getVideo()->getSite()->getSlug() == 'leslesbians') {
+            // PornNerd: leslesbians
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/leslesbians-generic.png',
                 'x' => '-0', 'y' => '-0', 'width' => $targetWidth, 'height' => $targetHeight,
             ];
         }
