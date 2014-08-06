@@ -26,12 +26,16 @@ class VideoEncoder
      * @param array $watermarkInfo
      * @return \FFMpeg\Media\Video
      */
-    public function process($videoFile, array $watermarkInfo = [])
+    public function process($videoFile, $watermark, $thumbnails, array $params = [])
     {
         $ffmpeg = FFMpeg::create()->open($videoFile);
 
-        if (isset($watermarkInfo['watermark'])) {
-            $ffmpeg->addFilter(new WatermarkFilter($watermarkInfo));
+        if ($watermark) {
+            $ffmpeg->addFilter(new WatermarkFilter($params['watermark']));
+        }
+
+        if (isset($thumbnails)) {
+            $ffmpeg->addFilter(new ThumbnailFilter($params['thumbnails']));
         }
 
         // TODO For testing only
