@@ -207,8 +207,14 @@ class LogServiceProvider implements ServiceProviderInterface
                 $handler->setOutput(new \Symfony\Component\Console\Output\ConsoleOutput(3, true));
             }
 
-            foreach ($handler->getSubscribedEvents() as $eventName => $methodName) {
-                $app->on($eventName, [$handler, $methodName]);
+            foreach ($handler->getSubscribedEvents() as $eventName => $params) {
+                if (is_string($params)) {
+                    $app->on($eventName, [$handler, $params]);
+                } elseif (is_string($params[0])) {
+                    $app->on($eventName, [$handler, $params[0]], isset($params[1]) ? $params[1] : 0);
+                } else {
+                    throw new \Exception('Unexpected listener format');
+                }
             }
 
             return $handler;
