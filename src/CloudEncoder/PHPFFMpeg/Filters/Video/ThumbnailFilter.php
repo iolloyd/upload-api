@@ -24,14 +24,14 @@ class ThumbnailFilter implements VideoFilterInterface
     /**
      * @param     $videoFile
      * @param     $duration
-     * @param int $amount
+     * @param int $count
      * @param int $priority
      */
-    public function __construct($videoFile, $amount = 10, $priority = 0)
+    public function __construct($count = 1, $firstFrame = true, $priority = 0)
     {
-        $this->amount    = $amount;
-        $this->videoFile = $videoFile;
-        $this->priority  = $priority;
+        $this->count      = $count;
+        $this->firstFrame = $firstFrame;
+        $this->priority   = $priority;
     }
 
     /**
@@ -49,7 +49,7 @@ class ThumbnailFilter implements VideoFilterInterface
      */
     public function apply(Video $video, VideoInterface $format)
     {
-        $fpsCommand = sprintf('fps=fps=%f', number_format($this->amount / 60, 1));
+        $fpsCommand = sprintf("fps=fps=%.2f", $this->count / 60);
         return ['-f', 'image2', '-vf', $fpsCommand, 'thumb%d.jpg',];
     }
 }
