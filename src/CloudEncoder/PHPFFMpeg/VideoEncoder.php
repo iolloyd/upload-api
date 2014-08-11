@@ -26,21 +26,20 @@ class VideoEncoder
      * @param array $watermarkInfo
      * @return \FFMpeg\Media\Video
      */
-    public function process($videoFile, $watermark, $thumbnails, array $params = [])
+    public function process($videoFile, array $watermarkParams = [], array $thumbnailParams = [])
     {
         $ffmpeg = FFMpeg::create()->open($videoFile);
-
-        if ($watermark) {
+        if (count($watermarkParams)) {
             $ffmpeg->addFilter(new WatermarkFilter($params['watermark']));
         }
-
-        if (isset($thumbnails)) {
+        if (count($thumbnailParams)) {
             $ffmpeg->addFilter(new ThumbnailFilter($params['thumbnails']));
         }
 
-        // TODO For testing only
-        $output = 'marked.mp4';
-        unlink($output);
+        $output = 'transcoded/' . $videoFile;
+        if (file_exists($output) {
+            unlink($output);
+        }
 
         $result = $ffmpeg->save(new X264(), $output);
 

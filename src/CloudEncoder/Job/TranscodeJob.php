@@ -12,7 +12,7 @@
 namespace CloudEncoder\Job;
 
 use Cloud\Job\AbstractJob;
-use CloudEncoder\PHPFFmpeg\Transcoder;
+use CloudEncoder\Transcoder;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -33,7 +33,9 @@ class TranscodeJob extends AbstractJob
     {
         $this
             ->setDefinition([
-                new InputArgument('input', InputArgument::REQUIRED, 'The video location'),
+                new InputArgument('input', InputArgument::REQUIRED, 'The video source'),
+                new InputArgument('output', InputArgument::REQUIRED, 'The video destination'),
+
             ])
             ->addOption('watermark_input',  'w', InputOption::VALUE_REQUIRED, 'Watermark image')
             ->addOption('watermark_top',    't', InputOption::VALUE_REQUIRED, 'Top align')
@@ -55,13 +57,14 @@ class TranscodeJob extends AbstractJob
     {
         try {
             $this->checkWatermarkOptions($input);
-            $watermarkInfo = array_filter($input->getOptions());
+
+            $params = array_filter($input->getOptions());
             $output->writeln('<info>Encoding ... </info>');
-            $videoFile = $input->getArgument('input');
+
             $transcoder = new Transcoder();
-            $result = $transcoder->process($videoFile, $watermarkInfo);
-            //$output->writeln($result);
-            $output->writeln('<info>done</info>');
+            $transcoder->process($input->getArgument('input'), $input->getArgument('output'), $params);
+            $output->writeln('<info>Done</info>');
+
         } Catch (Exception $e) {
             $output->writeln('<Error>'.$e->getMessage().'</Error>');
         }
@@ -72,6 +75,7 @@ class TranscodeJob extends AbstractJob
     /**
      * @param InputInterface $input
      * @return bool
+     * @throws \Exception
      */
     protected function checkWatermarkOptions(InputInterface $input)
     {
@@ -101,7 +105,7 @@ class TranscodeJob extends AbstractJob
         }
 
         if (count($errors)) {
-            $errorMessage = implode(','.PHP_EOL, $errors);
+            $errorMessage = implode(',' . PHP_EOL, $errors);
             throw new Exception($errorMessage);
         }
     }
