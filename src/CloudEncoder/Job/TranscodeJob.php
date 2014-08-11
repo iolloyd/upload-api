@@ -12,14 +12,14 @@
 namespace CloudEncoder\Job;
 
 use Cloud\Job\AbstractJob;
-use CloudEncoder\PHPFFmpeg\VideoEncoder;
-use CloudEncoder\PHPFFmpeg\Filters\Video\WatermarkFilter;
-use FFMpeg\FFMpeg;
-use FFMpeg\Format\Video\X264;
+use CloudEncoder\PHPFFmpeg\Transcoder;
+
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+
+use Exception;
 
 /**
  * Class TranscodeJob 
@@ -35,13 +35,13 @@ class TranscodeJob extends AbstractJob
             ->setDefinition([
                 new InputArgument('input', InputArgument::REQUIRED, 'The video location'),
             ])
-            ->addOption('watermark_input',  'wi', InputOption::VALUE_REQUIRED, 'Watermark image')
-            ->addOption('watermark_top',    'wt', InputOption::VALUE_REQUIRED, 'Top align')
-            ->addOption('watermark_bottom', 'wb', InputOption::VALUE_REQUIRED, 'Bottom align')
-            ->addOption('watermark_left',   'wl', InputOption::VALUE_REQUIRED, 'Left align')
-            ->addOption('watermark_right',  'wr', InputOption::VALUE_REQUIRED, 'Right align')
-            ->addOption('thumbnails_count', 'tc', InputOption::VALUE_REQUIRED, 'Total thumbnails')
-            ->addOption('thumbnails_first_frame', 'tf', InputOption::VALUE_NONE, 'If set, will start thumbnail collection at first frame')
+            ->addOption('watermark_input',  'w', InputOption::VALUE_REQUIRED, 'Watermark image')
+            ->addOption('watermark_top',    't', InputOption::VALUE_REQUIRED, 'Top align')
+            ->addOption('watermark_bottom', 'b', InputOption::VALUE_REQUIRED, 'Bottom align')
+            ->addOption('watermark_left',   'l', InputOption::VALUE_REQUIRED, 'Left align')
+            ->addOption('watermark_right',  'r', InputOption::VALUE_REQUIRED, 'Right align')
+            ->addOption('thumbnails_count', 'c', InputOption::VALUE_REQUIRED, 'Total thumbnails')
+            ->addOption('thumbnails_first_frame', 'a', InputOption::VALUE_NONE, 'If set, will start thumbnail collection at first frame')
             ->setName('job:encoder:transcode')
         ;
     }
@@ -53,16 +53,57 @@ class TranscodeJob extends AbstractJob
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $watermarkInfo = array_filter($input->getOptions());
-        $output->writeln('<info>Encoding ... </info>');
+        try {
+            $this->checkWatermarkOptions($input);
+            $watermarkInfo = array_filter($input->getOptions());
+            $output->writeln('<info>Encoding ... </info>');
+            $videoFile = $input->getArgument('input');
+            $transcoder = new Transcoder();
+            $result = $transcoder->process($videoFile, $watermarkInfo);
+            //$output->writeln($result);
+            $output->writeln('<info>done</info>');
+        } Catch (Exception $e) {
+            $output->writeln('<Error>'.$e->getMessage().'</Error>');
+        }
 
-        $videoFile = $input->getArgument('video');
-        $videoEncoder = new VideoEncoder();
-        $result = $videoEncoder->process($videoFile, $watermarkInfo);
-
-        $output->writeln('<info>done</info>');
 
     }
 
+    /**
+     * @param InputInterface $input
+     * @return bool
+     */
+    protected function checkWatermarkOptions(InputInterface $input)
+    {
+        $wmInput  = $input->getOption('watermark_input');
+        $wmTop    = $input->getOption('watermark_top');
+        $wmBottom = $input->getOption('watermark_bottom');
+        $wmLeft   = $input->getOption('watermark_left');
+        $wmRight  = $input->getOption('watermark_right');
+        $errors = [];
+
+        if (!$wmInput) {
+            return true;
+        }
+
+        if ($wmTop && $wmBottom) {
+            $errors[] = 'You cannot set both top and bottom watermark points';
+        }
+
+        if ($wmLeft && $wmRight) {
+            $errors[] = 'You cannot set both left and right watermark points';
+        }
+
+        if (!(($wmTop || $wmBottom)
+            && ($wmLeft || $wmRight))
+        ) {
+            $errors[] = 'You must provide a top or bottom point and also a left or right point';
+        }
+
+        if (count($errors)) {
+            $errorMessage = implode(','.PHP_EOL, $errors);
+            throw new Exception($errorMessage);
+        }
+    }
 }
 
