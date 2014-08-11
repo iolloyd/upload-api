@@ -9,7 +9,7 @@
  * @license    Proprietary
  */
 
-namespace CloudEncoder\PHPFFmpeg;
+namespace CloudEncoder;
 
 use CloudEncoder\PHPFFmpeg\Filters\Video\ThumbnailFilter;
 use FFMpeg\FFMpeg;
