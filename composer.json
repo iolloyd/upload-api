@@ -52,8 +52,7 @@
         "jms/serializer": "dev-master",
 
         "zencoder/zencoder-php": "~2.1.2",
-        "php-ffmpeg/php-ffmpeg": "~0.4",
-        "symfony/browser-kit": "~2.6"
+        "php-ffmpeg/php-ffmpeg": "~0.4"
 
     },
 

@@ -15,42 +15,37 @@ use CloudEncoder\PHPFFmpeg\Filters\Video\WatermarkFilter;
 use CloudEncoder\PHPFFmpeg\Filters\Video\ThumbnailFilter;
 use FFMpeg\FFMpeg;
 use FFMpeg\Format\Video\X264;
+use Exception;
 
 /**
  * Class Transcoder 
- *
  */
 class Transcoder 
 {
-   /**
-     * @param       $videoFile
-     * @param array $watermarkInfo
-     * @return \FFMpeg\Media\Video
+    /**
+     * @param       $input
+     * @param array $params
+     * @throws \Exception
      */
-    public function process($videoFile, array $params = [])
+    public function process($input, $output, array $params)
     {
-        $ffmpeg = FFMpeg::create()->open($videoFile);
+        $ffmpeg = FFMpeg::create()->open($input);
 
         $watermarkParams = $this->paramsByPartialKey('watermark', $params);
         if (count($watermarkParams)) {
             $ffmpeg->addFilter(new WatermarkFilter($watermarkParams));
         }
 
-        $thumbnailParams = $this->paramsByPartialKey('thumbnails', $params);
-        if (count($thumbnailParams)) {
-            $ffmpeg->addFilter(new ThumbnailFilter($thumbnailParams));
+        $thumbParams = $this->paramsByPartialKey('thumbnails', $params);
+        if (count($thumbParams)) {
+            $ffmpeg->addFilter(new ThumbnailFilter($thumbParams['count'], $thumbParams['first_frame']));
         }
 
-        // TODO For testing only
-        $output = 'marked.mp4';
-        if (file_exists($output)) {
-            unlink($output);
-        };
-
-        $result = $ffmpeg->save(new X264(), $output);
-
-        return $result;
-
+        try {
+            $ffmpeg->save(new X264(), $output);
+        } catch (Exception $e) {
+            throw $e;
+        }
     }
 
     /**
@@ -60,12 +55,22 @@ class Transcoder
      */
     protected function paramsByPartialKey($partialKey, $params)
     {
+        if (isset($params[$partialKey])) {
+            return $params[$partialKey];
+        }
+
         $filtered = array_filter(array_keys($params), function ($x) use ($partialKey) {
-                return $partialKey == substr($x, 0, strlen($partialKey));
-            });
+            return $partialKey == substr($x, 0, strlen($partialKey));
+        });
         $filteredParams = array_intersect_key($params, array_flip($filtered));
 
-        return $filteredParams;
+        $mappedParams = [];
+        foreach ($filteredParams as $key => $value) {
+            $key = str_replace($partialKey . '_', '', $key);
+            $mappedParams[$key] = $value;
+        }
+
+        return $mappedParams;
     }
 
 }
