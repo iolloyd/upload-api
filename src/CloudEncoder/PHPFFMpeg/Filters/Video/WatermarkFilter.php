@@ -15,6 +15,9 @@ use FFMpeg\Format\VideoInterface;
 use FFMpeg\Filters\Video\VideoFilterInterface;
 use FFMpeg\Media\Video;
 
+/**
+ * Class WatermarkFilter
+ */
 class WatermarkFilter implements VideoFilterInterface
 {
     protected $imagePath;
@@ -64,7 +67,7 @@ class WatermarkFilter implements VideoFilterInterface
 
         return [
             '-vf',
-            sprintf($commandString, $info['watermark'], $x, $y),
+            sprintf($commandString, $info['input'], $x, $y),
         ];
     }
 }

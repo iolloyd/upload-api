@@ -9,57 +9,48 @@
  * @license    Proprietary
  */
 
-use CloudEncoder\PHPFFmpeg\ThumbnailCreator;
-use CloudEncoder\PHPFFmpeg\VideoEncoder;
-use CloudEncoder\PHPFFmpeg\VideoValidator;
+use CloudEncoder\S3VideoDownloader;
+use CloudEncoder\S3VideoUploader;
+use CloudEncoder\Transcoder;
+use CloudEncoder\VideoValidator;
+
 use Symfony\Component\HttpFoundation\Request;
 
-/*
- * /encoder/jobs
+/**
+ * Downloads, validates, transcodes and uploads an amazon s3 video
  */
-
-// List all jobs
-$app->get('/encoder/jobs', function () use ($app)
-{
-
-});
-
-// Create a job
 $app->post('/encoder/jobs', function (Request $request) use ($app)
 {
-    $video = $request->get('params');
-    $validator = new VideoValidator();
-    $result = $validator->process($video);
-    return $app['single.response.json']($result, ['details']);
+    $params = $request->request;
+    $input  = $params->get('input');
+    $output = $params->get('output');
 
-    // TODO push payload onto queue
-    
-    // TODO store temporary copy of video
+    $s3     = $app['aws']['s3'];
+    $bucket = $app['config']['aws']['bucket'];
 
+    try {
+        $downloader = new S3VideoDownloader();
+        $downloader->process($s3, $bucket, $input);
+
+        $validator = new VideoValidator();
+        $metadata  = $validator->process($input);
+
+        $transcoder = new Transcoder();
+        $transcoder->process($input, $params->all());
+
+        $uploader = new S3VideoUploader();
+        $uploader->process($s3, $bucket, $output);
+
+        return $app['single.response.json']($metadata, ['details']);
+
+    } catch (\Exception $e) {
+        // return a helpful error
+    }
 });
 
-/*
- * /encoder/jobs/{job}/encode
- */
-
-// Encode a job
-$app->get('/encoder/jobs/{job}/transcode', function ($job) use ($app)
+$app->get('/encoder/jobs', function (Request $request) use ($app)
 {
-    $encoder = new VideoEncoder();
-    $result = $encoder->process($job);
-    return $app['single.response.json']($result, ['details']);
+    // TODO query resque for jobs and their status
+});
 
-})
-->convert('job', 'converter.encoding_job:convert');
-
-
-/*
- * /encoder/jobs/{job}
- */
-
-// Retrieve and encoding job
-$app->get('/encoder/jobs/{job}', function ($job) use ($app)
-{
-})
-->convert('job', 'converter.encoding_job:convert');
 
