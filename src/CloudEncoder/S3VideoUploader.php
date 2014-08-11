@@ -11,32 +11,32 @@
 
 namespace CloudEncoder;
 
-use GuzzleHttp\Client;
 use Exception;
 
 /**
- * Class S3VideoDownloader
+ * Class S3VideoUploader
  */
-class S3VideoDownloader
+class S3VideoUploader
 {
     /**
-     * @param $s3
+     * @param $client
      * @param $bucket
      * @param $input
      * @return mixed
      * @throws \Exception
      */
-    public function process($s3, $bucket, $input)
+    public function process($client, $bucket, $input)
     {
-        
-        $inputUrl = $s3->getObjectUrl($bucket, $input, '+1 hour');
-        $client = new Client();
-        $result = $client->get($inputUrl, [ 'save_to' => $input]);
+        $result = $client->putObject([
+            'Key'        => $input,
+            'Bucket'     => $bucket,
+            'SourceFile' => $input,
+        ]);
+
         if (!$result) {
-            throw new Exception("could not retrieve " . $input);
+            throw new Exception('Could not upload ' . $input);
         }
-
-        return $input;
+        return $result;
     }
-
 }
+
