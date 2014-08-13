@@ -13,15 +13,15 @@ namespace CloudEncoder\Job;
 
 use FFMpeg\FFProbe;
 use Cloud\Job\AbstractJob;
-use CloudEncoder\PHPFFmpeg\VideoValidator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Exception;
 
 /**
  * Class ValidateJob
  *
+ * Used to check a video and return metadata
  */
 class ValidateJob extends AbstractJob
 {
@@ -39,19 +39,35 @@ class ValidateJob extends AbstractJob
     }
 
     /**
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     * @return int|null|void
+     * {@inheritdoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $video = $input->getArgument('input');
-        $output->writeln(sprintf('<info>Validating %s</info>', $video));
-        $validator = new VideoValidator();
-        $videoMetadata = $validator->process($video);
-        foreach ($videoMetadata as $key => $value) {
-            $output->writeLn(sprintf('<info>%s: %s</info>', $key, $value));
+        $infile = $input->getArgument('input');
+
+        $ffprobe = FFProbe::create();
+        $streams = $ffprobe->streams($infile);
+        $videoStreams = $streams->videos();
+        $audioStreams = $streams->audios();
+        $output = [
+            'video' => [],
+            'audio' => []
+        ];
+
+        if (!$videoStreams) {
+            throw new Exception("Could not probe video: " . $infile);
         }
+
+        foreach ($videoStreams as $stream) {
+            $output['video'][] = $stream->all();
+        }
+
+        foreach ($audioStreams as $stream) {
+            $output['audio'][] = $stream->all();
+        }
+
+        print_r($output);
+
     }
 }
 
