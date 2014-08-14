@@ -12,7 +12,6 @@
 namespace CloudEncoder\Job;
 
 use Cloud\Job\AbstractJob;
-use CloudEncoder\Transcoder;
 use FFMpeg\FFMpeg;
 use FFMpeg\Coordinate\Dimension;
 use FFMpeg\Filters\Video\ResizeFilter;
@@ -22,20 +21,19 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use Exception;
-
-/**
- * Class TranscodeJob 
- */
 class TranscodeJob extends AbstractJob
 {
     /**
-     * Configures this job
+     * {@inheritdoc}
      */
     protected function configure()
     {
         $this
             ->setName('job:encoder:transcode')
+            ->setDescription(
+                'Provides the ability to process a video, including extracting 
+                thumbnails, adding watermarks and resizing the output video'
+            )
 
             ->addArgument('input',  InputArgument::REQUIRED, 'The video source')
             ->addArgument('output', InputArgument::REQUIRED, 'The video destination')
@@ -54,11 +52,13 @@ class TranscodeJob extends AbstractJob
         $outfile = $input->getArgument('output');
         $width   = $input->getOption('width');
         $height  = $input->getOption('height');
+        $mode    = 'fit';
+        $ffmpeg  = FFMpeg::create()->open($infile);
 
-        $ffmpeg = FFMpeg::create()->open($infile);
-
-        $mode = 'fit';
-
+        /*
+         * We have to ensure that both height and width are a positive
+         * integer to avoid Dimension throwing an exception
+         */
         if ($height && !$width) {
             $mode = 'width';
             $width = 1;
@@ -69,7 +69,8 @@ class TranscodeJob extends AbstractJob
         }
 
         if ($width > 0 && $height > 0) {
-            $ffmpeg->addFilter(new ResizeFilter(new Dimension($width, $height), $mode));
+            $dimension = new Dimension($width, $height);
+            $ffmpeg->addFilter(new ResizeFilter($dimension, $mode));
         }
 
         $ffmpeg->save(new X264(), $outfile);
