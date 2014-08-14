@@ -35,16 +35,14 @@ class TranscodeJob extends AbstractJob
     protected function configure()
     {
         $this
-            ->setDefinition([
-                new InputArgument('input',  InputArgument::REQUIRED, 'The video source'),
-                new InputArgument('output', InputArgument::REQUIRED, 'The video destination'),
-                
-                // TODO possibly add these as options
-                new InputArgument('width',  InputArgument::REQUIRED, 'The video width'),
-                new InputArgument('height', InputArgument::REQUIRED, 'The video height'),
-            ])
             ->setName('job:encoder:transcode')
-            ;
+
+            ->addArgument('input',  InputArgument::REQUIRED, 'The video source')
+            ->addArgument('output', InputArgument::REQUIRED, 'The video destination')
+
+            ->addOption('width',  null, InputOption::VALUE_REQUIRED, 'The video width',  0)
+            ->addOption('height', null, InputOption::VALUE_REQUIRED, 'The video height', 0)
+        ;
     }
 
     /**
@@ -54,11 +52,26 @@ class TranscodeJob extends AbstractJob
     {
         $infile  = $input->getArgument('input');
         $outfile = $input->getArgument('output');
-        $width   = $input->getArgument('width');
-        $height  = $input->getArgument('height');
+        $width   = $input->getOption('width');
+        $height  = $input->getOption('height');
 
         $ffmpeg = FFMpeg::create()->open($infile);
-        $ffmpeg->addFilter(new ResizeFilter(new Dimension($width, $height)));
+
+        $mode = 'fit';
+
+        if ($height && !$width) {
+            $mode = 'width';
+            $width = 1;
+
+        } elseif ($width && !$height) {
+            $mode = 'height';
+            $height = 1;
+        }
+
+        if ($width > 0 && $height > 0) {
+            $ffmpeg->addFilter(new ResizeFilter(new Dimension($width, $height), $mode));
+        }
+
         $ffmpeg->save(new X264(), $outfile);
     }
 }
