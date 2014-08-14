@@ -40,8 +40,10 @@ use Symfony\Component\DomCrawler\Crawler as DomCrawler;
  * - title: 80 chars
  * - keywords: Enter keywords separated by a space. Use only letters, figures and dashes. 20 keywords maximum.
  */
-class DemoCombined extends AbstractJob
+final class DemoCombined extends AbstractJob
 {
+    public function isEnabled() { return false; }
+
     const STATUS_QUEUED   = 'Queued for encoding';
     const STATUS_ENCODING = 'Encoding process';
     const STATUS_ONLINE   = 'Online';
@@ -110,6 +112,8 @@ class DemoCombined extends AbstractJob
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        throw new \Exception('Disabled');
+
         $outbound = $this->em->find('cx:videoOutbound', $input->getArgument('videooutbound'));
 
         if (!$outbound) {
