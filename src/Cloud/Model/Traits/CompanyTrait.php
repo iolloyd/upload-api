@@ -18,6 +18,7 @@ trait CompanyTrait
     /**
      * @ORM\JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Cloud\Model\Company")
+     * @JMS\ReadOnly
      * @CX\Company
      */
     protected $company;
