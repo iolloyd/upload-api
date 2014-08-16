@@ -11,6 +11,7 @@
 
 use Cloud\Model\Company;
 use Cloud\Model\Site;
+use Cloud\Model\User;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -28,11 +29,14 @@ $app->post('/company', function (Request $request) use ($app)
 {
     $company = $app->company();
 
-    $app['em']->transactional(function () use ($app, $site, $request) {
+    $company = $app->transactional(function ($em) use ($app, $request, $company) {
+        return $em->merge($app->deserialize($request, $company));
     });
 
-    return $app->serialize($site, ['details', 'details.site']);
+    return $app->serialize($company, ['details', 'details.company']);
 });
+
+//////////////////////////////////////////////////////////////////////////////
 
 /**
  * Get a list of sites
@@ -50,7 +54,7 @@ $app->get('/company/sites/{site}', function (Site $site, Request $request) use (
     return $app->serialize($site, ['details', 'details.site']);
 })
 ->assert('site', '\d+')
-->convert('site', 'converter.site.deserialize:convert')
+->convert('site', 'converter.site:convert')
 ;
 
 /**
@@ -58,11 +62,17 @@ $app->get('/company/sites/{site}', function (Site $site, Request $request) use (
  */
 $app->post('/company/sites/{site}', function (Site $site, Request $request) use ($app)
 {
+    $site = $app->transactional(function ($em) use ($app, $request, $site) {
+        return $em->merge($app->deserialize($request, $site));
+    });
+
     return $app->serialize($site, ['details', 'details.site']);
 })
 ->assert('site', '\d+')
-->convert('site', 'converter.site.deserialize:convert')
+->convert('site', 'converter.site:convert')
 ;
+
+//////////////////////////////////////////////////////////////////////////////
 
 /**
  * List tubesite users of the given site
@@ -74,10 +84,53 @@ $app->get('/company/sites/{site}/tubesite-users', function (Site $site, Request 
         ->findBy(['site' => $site])
     ;
 
-    return $app->json($app['serializer'](
-        $tubeusers, ['list', 'list.tubesiteusers']
-    ));
+    return $app->serialize($tubeusers, ['list', 'list.tubesiteusers']);
 })
 ->assert('site', '\d+')
 ->convert('site', 'converter.site:convert')
+;
+
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Get the logged in user
+ */
+$app->get('/company/user', function (Request $request) use ($app)
+{
+    return $app->serialize($app->user(), ['details', 'details.user']);
+});
+
+/**
+ * Update the logged in user
+ */
+$app->post('/company/user', function (Request $request) use ($app)
+{
+    $user = $app->user();
+
+    $user = $app->transactional(function ($em) use ($app, $request, $user) {
+        return $em->merge($app->deserialize($request, $user));
+    });
+
+    return $app->serialize($user, ['details', 'details.user']);
+});
+
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Get a list of users
+ */
+$app->get('/company/users', function (Request $request) use ($app)
+{
+    return $app->serialize($app->company()->getUsers(), ['list', 'list.users']);
+});
+
+/**
+ * Get a user
+ */
+$app->get('/company/users/{user}', function (User $user, Request $request) use ($app)
+{
+    return $app->serialize($user, ['details', 'details.user']);
+})
+->assert('user', '\d+')
+->convert('user', 'converter.user:convert')
 ;
