@@ -49,8 +49,9 @@
         "kriswallsmith/spork": "dev-master",
         "pagerfanta/pagerfanta": "~1.0",
         "jms/serializer": "dev-master",
-
-        "zencoder/zencoder-php": "~2.2"
+        "raven/raven": "~0.9",
+        "zencoder/zencoder-php": "~2.2",
+        "chh/cache-service-provider": "~1.1"
     },
 
     "require-dev": {
