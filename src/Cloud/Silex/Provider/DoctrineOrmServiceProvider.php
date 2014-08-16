@@ -12,8 +12,9 @@
 namespace Cloud\Silex\Provider;
 
 use Cloud\Doctrine\ManagerRegistry;
-use Silex\Application;
 use Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider as BaseDoctrineOrmServiceProvider;
+use Doctrine\Common\Cache\Cache;
+use Silex\Application;
 
 /**
  * Doctrine ORM service extensions
@@ -30,6 +31,25 @@ class DoctrineOrmServiceProvider extends BaseDoctrineOrmServiceProvider
     public function register(Application $app)
     {
         parent::register($app);
+
+        $cacheLocator = $app['orm.cache.locator'];
+
+        $app['orm.cache.locator'] = $app->protect(function($name, $cacheName, $options) use ($app, $cacheLocator)
+        {
+            $cacheNameKey = $cacheName . '_cache';
+
+            if (!isset($options[$cacheNameKey])) {
+                $options[$cacheNameKey] = $app['orm.default_cache'];
+            }
+
+            if (isset($options[$cacheNameKey])
+                && $options[$cacheNameKey] instanceof Cache
+            ) {
+                return $options[$cacheNameKey];
+            }
+
+            return $cacheLocator($name, $cacheName, $options);
+        });
 
         $app['orm.manager_registry'] = $app->share(function ($app)
         {
