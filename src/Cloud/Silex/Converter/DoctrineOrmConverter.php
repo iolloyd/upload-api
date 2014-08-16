@@ -12,6 +12,7 @@
 namespace Cloud\Silex\Converter;
 
 use Doctrine\ORM\EntityManager;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class DoctrineOrmConverter
@@ -46,6 +47,10 @@ class DoctrineOrmConverter
      */
     public function convert($id)
     {
+        if (!is_numeric($id)) {
+            throw new BadRequestHttpException('Identifier must be numeric');
+        }
+
         $id = (int) $id;
 
         $entity = $this->em->find($this->entityName, $id);
