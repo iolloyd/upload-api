@@ -18,25 +18,30 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  */
 $app->get('/beta/news', function (Request $request) use ($app)
 {
-    $client   = new Client();
+    $cache = $app['cache'];
 
-    $response = $client->get('https://cloudxxx.squarespace.com/beta/news?format=RSS');
-    $feed     = $response->xml();
+    if (false === $entries = $cache->fetch('cx.betanews.feed')) {
+        $client   = new Client();
+        $response = $client->get('https://cloudxxx.squarespace.com/beta/news?format=RSS');
+        $feed     = $response->xml();
 
-    $num      = ((int) $request->get('num')) ?: 5;
-    $entries  = [];
+        $num      = ((int) $request->get('num')) ?: 5;
+        $entries  = [];
 
-    foreach ($feed->channel->item as $item) {
-        if (count($entries) >= $num) {
-            break;
+        foreach ($feed->channel->item as $item) {
+            if (count($entries) >= $num) {
+                break;
+            }
+
+            $entries[] = [
+                'title'         => (string) $item->title,
+                'link'          => (string) $item->link,
+                'publishedDate' => (string) $item->pubDate,
+                'content'       => (string) $item->description,
+            ];
         }
 
-        $entries[] = [
-            'title'         => (string) $item->title,
-            'link'          => (string) $item->link,
-            'publishedDate' => (string) $item->pubDate,
-            'content'       => (string) $item->description,
-        ];
+        $cache->save('cx.betanews.feed', $entries, 1800);
     }
 
     $response = new JsonResponse([
