@@ -15,6 +15,7 @@ trait CreatedAtTrait
 {
     /**
      * @ORM\Column(type="datetime")
+     * @JMS\ReadOnly
      * @CX\CreatedAt
      */
     protected $createdAt;
