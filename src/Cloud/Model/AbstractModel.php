@@ -16,8 +16,6 @@ use JMS\Serializer\Annotation as JMS;
 /**
  * Basis for all model classes
  *
- * @JMS\ReadOnly
- * @JMS\ExclusionPolicy("all")
  * @JMS\AccessType("public_method")
  */
 abstract class AbstractModel
