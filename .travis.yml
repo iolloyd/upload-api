@@ -54,12 +54,12 @@ deploy:
       branch: prod
 
 env:
-  - NOKOGIRI_USE_SYSTEM_LIBRARIES=true COMPOSER_CACHE_DIR=.composer/cache/
+  - NOKOGIRI_USE_SYSTEM_LIBRARIES=true
 
 cache:
   directories:
     - vendor
-    - .composer
+    - $HOME/.composer
 
 branches:
   only:
