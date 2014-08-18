@@ -15,6 +15,7 @@ trait UpdatedAtTrait
 {
     /**
      * @ORM\Column(type="datetime")
+     * @JMS\ReadOnly
      * @CX\UpdatedAt
      */
     protected $updatedAt;
