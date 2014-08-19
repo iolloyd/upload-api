@@ -300,6 +300,20 @@ class DemoCombined extends AbstractJob
                 'x' => '-0', 'y' => '-0', 'width' => $targetWidth, 'height' => $targetHeight,
             ];
         }
+        if ($outbound->getVideo()->getSite()->getSlug() == 'paradisefilms') {
+            // Manica: paradisefilms
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/paradisefilms-youporn.png',
+                'x' => '-0', 'y' => '-0', 'width' => $targetWidth, 'height' => $targetHeight,
+            ];
+        }
+        if ($outbound->getVideo()->getSite()->getSlug() == 'lustcinema') {
+            // Manica: lustcinema
+            $watermarks[] = [
+                'url' => 'https://s3.amazonaws.com/cldsys-dev/static/watermarks/lustcinema-youporn.png',
+                'x' => '-0', 'y' => '-0', 'width' => $targetWidth, 'height' => $targetHeight,
+            ];
+        }
 
         $job = $zencoder->jobs->create([
             // options

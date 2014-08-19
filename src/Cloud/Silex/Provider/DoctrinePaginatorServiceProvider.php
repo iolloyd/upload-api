@@ -74,20 +74,10 @@ class DoctrinePaginatorServiceProvider implements ServiceProviderInterface
         });
 
         $app['paginator.serializer'] = $app->protect(function($results, $groups = []) use ($app) {
-            $serializer = SerializerBuilder::create()
-                ->setDebug($app['debug'])
-                ->build();
+            $serializer = $app['serializer'];
+            $context    = $app['serializer.serialization_context']($groups);
 
-            $context = SerializationContext::create()
-                ->setSerializeNull(true);
-
-            if (count($groups)) {
-                $context->setGroups($groups);
-            }
-
-            $jsonContent = $serializer->serialize($results, 'json', $context);
-
-            return json_decode($jsonContent);
+            return $serializer->serialize($results, 'raw', $context);
         });
 
         $app['single.response.json'] = $app->protect(function ($model, $groups, $headerLink = true) use ($app) {

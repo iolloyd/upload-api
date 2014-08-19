@@ -16,6 +16,7 @@ use InvalidArgumentException;
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity
@@ -32,6 +33,7 @@ class Site extends AbstractModel
     /**
      * @ORM\Column(type="string")
      * @JMS\Groups({"list.sites", "details.sites", "details.session", "details", "list.tubesiteusers"})
+     * @Assert\NotBlank
      */
     protected $title;
 
