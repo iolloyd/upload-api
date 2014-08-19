@@ -32,6 +32,11 @@ class UserRepository extends EntityRepository
             throw new UsernameNotFoundException(sprintf('User with email "%s" not found', $username));
         }
 
+        $this
+            ->getEntityManager()
+            ->detach($user)
+        ;
+
         return $user;
     }
 

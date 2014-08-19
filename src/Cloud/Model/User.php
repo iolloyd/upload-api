@@ -21,6 +21,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Cloud\Doctrine\Annotation as CX;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity
@@ -41,18 +42,22 @@ class User extends AbstractModel implements AdvancedUserInterface, EquatableInte
      * )
      * @CX\Company(allowAnonymous=true)
      * @JMS\Groups({"details.user"})
+     * @JMS\Readonly
      */
     protected $company;
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"details.user", "details.session", "details.company"})
+     * @JMS\Groups({"list.users", "details.user", "details.session", "details.company"})
+     * @Assert\NotBlank
      */
     protected $name;
 
     /**
      * @ORM\Column(type="string", unique=true)
-     * @JMS\Groups({"details.user", "details.session", "details.company"})
+     * @JMS\Groups({"list.users", "details.user", "details.session", "details.company"})
+     * @JMS\Readonly
+     * @Assert\Email
      */
     protected $email;
 
@@ -64,13 +69,14 @@ class User extends AbstractModel implements AdvancedUserInterface, EquatableInte
 
     /**
      * #OneToMany(targetEntity="Video", mappedBy="created_by")
-     * @JMS\Groups({"details.user"})
+     * @JMS\Readonly
      */
     protected $videos;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
-     * @JMS\Groups({"details.user", "details.company"})
+     * @JMS\Groups({"list.users", "details.user", "details.company"})
+     * @JMS\Readonly
      */
     protected $lastLoginAt;
 
