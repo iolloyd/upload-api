@@ -19,6 +19,7 @@ trait CreatedByTrait
      * #JoinColumn(nullable=false)
      * @ORM\ManyToOne(targetEntity="Cloud\Model\User")
      * @JMS\Groups({"list", "details"})
+     * @JMS\ReadOnly
      * @CX\CreatedBy
      */
     protected $createdBy;

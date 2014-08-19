@@ -24,3 +24,5 @@ mysql-connector-license.txt
 .idea
 development.log
 data/*
+
+.phpcomplete_extended
