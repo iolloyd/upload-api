@@ -41,6 +41,7 @@ class Company extends AbstractModel
      *   cascade={"persist", "remove"}
      * )
      * @JMS\Groups({"details.company"})
+     * @JMS\ReadOnly
      */
     protected $users;
 
@@ -51,6 +52,7 @@ class Company extends AbstractModel
      *   cascade={"persist", "remove"}
      * )
      * @JMS\Groups({"details.company"})
+     * @JMS\ReadOnly
      */
     protected $sites;
 

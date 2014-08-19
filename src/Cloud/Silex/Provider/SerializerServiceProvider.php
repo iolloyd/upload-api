@@ -11,11 +11,13 @@
 
 namespace Cloud\Silex\Provider;
 
+use Cloud\Serializer\Construction\DoctrineObjectConstructor;
+use Cloud\Serializer\Construction\ContextObjectConstructor;
 use JMS\Serializer\SerializerBuilder;
 use JMS\Serializer\SerializationContext;
+use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Builder\CallbackDriverFactory;
 use JMS\Serializer\Builder\DefaultDriverFactory;
-use JMS\Serializer\Construction\DoctrineObjectConstructor;
 use JMS\Serializer\Construction\UnserializeObjectConstructor;
 use JMS\Serializer\EventDispatcher\EventDispatcher;
 use JMS\Serializer\EventDispatcher\Subscriber\DoctrineProxySubscriber;
@@ -49,9 +51,9 @@ class SerializerServiceProvider implements ServiceProviderInterface
             return $app['serializer.metadata_driver_factory.doctrine_orm'];
         };
 
-        // context
+        // serialization context
 
-        $app['serializer.context._factory'] = $app->protect(function (array $groups = null) use ($app) {
+        $app['serializer.serialization_context'] = $app->protect(function (array $groups = null) use ($app) {
             $context = new SerializationContext();
 
             $context->setSerializeNull(true);
@@ -68,6 +70,20 @@ class SerializerServiceProvider implements ServiceProviderInterface
                 $groups[] = 'Discriminator';
                 $context->setGroups($groups);
             }
+
+            return $context;
+        });
+
+        // deserialization context
+
+        $app['serializer.deserialization_context'] = $app->protect(function () use ($app) {
+            $context = new DeserializationContext();
+
+            if (isset($app['serializer.version'])) {
+                $context->setVersion($app['serializer.version']);
+            }
+
+            $context->setAttribute('validation_groups', ['Default']);
 
             return $context;
         });
@@ -98,25 +114,17 @@ class SerializerServiceProvider implements ServiceProviderInterface
                 }
             });
 
-            $builder->setObjectConstructor(
-                new DoctrineObjectConstructor(
-                    $app['orm.manager_registry'],
-                    new UnserializeObjectConstructor()
-                )
-            );
+            $defaultConstructor  = new UnserializeObjectConstructor();
+            $doctrineConstructor = new DoctrineObjectConstructor($app['orm.manager_registry'], $defaultConstructor);
+            $contextConstructor  = new ContextObjectConstructor($doctrineConstructor);
+
+            $builder->setObjectConstructor($contextConstructor);
 
             return $builder;
         };
 
         $app['serializer'] = $app->share(function ($app) {
             return $app['serializer.builder']->build();
-        });
-
-        // serialize
-
-        $app['serializer.serialize'] = $app->protect(function ($data, $format, array $groups) use ($app) {
-            $context = $app['serializer.context._factory']($groups);
-            return $app['serializer']->serialize($data, $format, $context);
         });
     }
 

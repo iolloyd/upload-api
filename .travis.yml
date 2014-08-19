@@ -59,6 +59,7 @@ env:
 cache:
   directories:
     - vendor
+    - $HOME/.composer
 
 branches:
   only:
