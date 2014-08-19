@@ -14,6 +14,19 @@ $app['route_class'] = 'Cloud\Silex\Route';
 $app['env'] = getenv('CLOUD_ENV') ?: 'development';
 $app['debug'] = ($app['env'] == 'development');
 
+// cache
+$app->register(new CHH\Silex\CacheServiceProvider(), [
+    'cache.options' => [
+        'default' => $app['debug']
+            ? [ 'driver' => 'php_file', 'directory' => 'data/cache/default/' ]
+            : [ 'driver' => 'apc' ],
+
+        'doctrine' => $app['debug']
+            ? [ 'driver' => 'array' ]
+            : [ 'driver' => 'apc' ],
+    ],
+]);
+
 // config
 $configs = [
     $app['env'] . '.ini',
@@ -76,10 +89,7 @@ $app->register(new Cloud\Silex\Provider\DoctrineOrmServiceProvider(), [
             ],
         ],
     ],
-    'orm.default_cache' => $app['debug']
-            ? 'array'
-            : 'apc',
-
+    'orm.default_cache' => $app['caches']['doctrine'],
     'orm.auto_generate_proxies' => $app['debug'],
     'orm.proxies_dir' => 'data/cache/doctrine/proxies',
 ]);
