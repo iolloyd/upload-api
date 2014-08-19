@@ -11,6 +11,7 @@
 
 namespace CloudEncoder\Job;
 
+use Exception;
 use Cloud\Job\AbstractJob;
 use GuzzleHttp\Client;
 use Symfony\Component\Console\Input\InputArgument;
@@ -41,12 +42,15 @@ class DownloadJob extends AbstractJob
         $infile  = $input->getArgument('input');
         $outfile = $input->getArgument('output');
         $client  = new Client();
-        $result  = $client->get($infile, [
-            'save_to' => $outfile,
-        ]);
+
+        try {
+            $result  = $client->get($infile, [
+                'save_to' => $outfile,
+            ]);
+        } catch (Exception $e) {
+            throw $e;
+        }
 
         return $result;
-
     }
 }
-
