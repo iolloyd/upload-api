@@ -31,7 +31,7 @@ class TranscodeJob extends AbstractJob
         $this
             ->setName('job:encoder:transcode')
             ->setDescription(
-                'Provides the ability to process a video, including extracting 
+                'Provides the ability to process a video, including extracting
                 thumbnails, adding watermarks and resizing the output video'
             )
 
