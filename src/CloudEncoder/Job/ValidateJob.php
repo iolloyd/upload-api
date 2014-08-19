@@ -5,34 +5,31 @@
  * Copyright (C) 2014 Really Useful Limited.
  * Proprietary code. Usage restrictions apply.
  *
- * @copyright  Copyright (C) 2014 Really Useful Limited
- * @license    Proprietary
+ * @copyright Copyright (C) 2014 Really Useful Limited
+ * @license   Proprietary
  */
 
 namespace CloudEncoder\Job;
 
-use FFMpeg\FFProbe;
+use RuntimeException;
 use Cloud\Job\AbstractJob;
+use FFMpeg\FFProbe;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Exception;
 
-/**
- * Class ValidateJob
- *
- * Used to check a video and return metadata
- */
 class ValidateJob extends AbstractJob
 {
     /**
-     * Configures this job
+     * {@inheritdoc}
      */
     protected function configure()
     {
         $this
             ->setName('job:encoder:validate')
-            ->addArgument('input', InputArgument::REQUIRED, 'The url of the video to validate')
+            ->setDescription("Validates a video file and returns metadata")
+
+            ->addArgument('input', InputArgument::REQUIRED, 'The video to validate')
         ;
     }
 
@@ -42,13 +39,15 @@ class ValidateJob extends AbstractJob
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $infile = $input->getArgument('input');
+
         if (!file_exists($infile)) {
-            throw new Exception("Could not find file: " . $infile);
+            throw new RuntimeException('Could not find file: ' . $infile);
         }
 
+        $ffprobe = FFProbe::create();
+        
         // Make sure we can parse the file
         try {
-            $ffprobe      = FFProbe::create();
             $streams      = $ffprobe->streams($infile);
             $videoStreams = $streams->videos();
             $audioStreams = $streams->audios();
@@ -58,7 +57,7 @@ class ValidateJob extends AbstractJob
 
         // Make sure we have at least one video stream
         if (!$videoStreams) {
-            throw new Exception("Could not find a video stream for file: " . $infile . PHP_EOL);
+            throw new RuntimeException('Could not find a video stream for file: ' . $infile);
         }
 
         $output = [
@@ -70,25 +69,15 @@ class ValidateJob extends AbstractJob
             $metadata = $stream->all();
             
             // Skip anything that is too short.
-            // Some images have a recognized codec_type of video
-            // but images only last a second at most
             if ($metadata['duration_ts'] <= 1) {
                 continue;
             }
 
-            $output['video'][] = $stream->all();
+            $output['video'][] = $metadata;
         }
 
-        if (!$output['video']) {
-            // Try to give a more helpful message by
-            // checking if the selected file is an image
-            $isImage = $this->isImage($infile);
-            if ($isImage) {
-                $message = 'Detected an image type for file ' . $infile;
-            } else {
-                $message = 'Could not find a video stream for file ' . $infile;
-            }
-            throw new Exception($message);
+        if (!count($output['video'])) {
+            throw new RuntimeException('Could not find a video stream for file ' . $infile);
         }
 
         foreach ($audioStreams as $stream) {
@@ -96,19 +85,6 @@ class ValidateJob extends AbstractJob
         }
 
         print_r($output);
-    }
-
-    protected function isImage($path)
-    {
-        $a = getimagesize($path);
-        $type = $a[2];
-        $acceptedTypes = [IMAGETYPE_GIF , IMAGETYPE_JPEG ,IMAGETYPE_PNG , IMAGETYPE_BMP];
-
-        if (in_array($type, $acceptedTypes)) { 
-            return true;
-        }
-
-        return false;
     }
 }
 
