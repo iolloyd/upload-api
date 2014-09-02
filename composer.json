@@ -50,10 +50,11 @@
         "kriswallsmith/spork": "dev-master",
         "pagerfanta/pagerfanta": "~1.0",
         "jms/serializer": "dev-master",
-        "php-ffmpeg/php-ffmpeg": "~0.4"
+        "php-ffmpeg/php-ffmpeg": "~0.4",
         "raven/raven": "~0.9",
         "zencoder/zencoder-php": "~2.2",
-        "chh/cache-service-provider": "~1.1"
+        "chh/cache-service-provider": "~1.1",
+        "sybio/image-workshop": "~2.0"
     },
 
     "require-dev": {
