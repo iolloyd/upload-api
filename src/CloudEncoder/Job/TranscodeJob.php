@@ -11,11 +11,15 @@
 
 namespace CloudEncoder\Job;
 
+use InvalidArgumentException;
+use CloudEncoder\PHPFFmpeg\Filters\Video\WatermarkFilter;
+use CloudEncoder\PHPFFmpeg\Filters\Video\ThumbnailFilter;
 use Cloud\Job\AbstractJob;
 use FFMpeg\FFMpeg;
 use FFMpeg\Coordinate\Dimension;
 use FFMpeg\Filters\Video\ResizeFilter;
 use FFMpeg\Format\Video\X264;
+use FFMpeg\Media\Video as FFMpegVideo;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -37,9 +41,47 @@ class TranscodeJob extends AbstractJob
 
             ->addArgument('input',  InputArgument::REQUIRED, 'The video source')
             ->addArgument('output', InputArgument::REQUIRED, 'The video destination')
+        ;
 
-            ->addOption('width',  null, InputOption::VALUE_REQUIRED, 'The video width',  0)
-            ->addOption('height', null, InputOption::VALUE_REQUIRED, 'The video height', 0)
+        $this->configureThumbnails();
+        $this->configureWatermark();
+        $this->configureScaling();
+    }
+
+    protected function configureThumbnails()
+    {
+        $this
+            ->addOption('thumbnail_first',    null, InputOption::VALUE_NONE,     'Whether to select from the first frame, default is false')
+            ->addOption('thumbnail_number',   null, InputOption::VALUE_REQUIRED, 'Number of thumbnails to select evenly through video')
+            ->addOption('thumbnail_interval', null, InputOption::VALUE_REQUIRED, 'Take thumbnails periodically')
+            ->addOption(
+                'thumbnail_times', 
+                null, 
+                InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 
+                'Thumbnail by selected times'
+            )
+        ;
+
+    }
+
+    protected function configureWatermark() 
+    {
+        $this
+            ->addOption('watermark_input',  null, InputOption::VALUE_REQUIRED, 'Watermark image')
+            ->addOption('watermark_top',    null, InputOption::VALUE_REQUIRED, 'Top align in pixels')
+            ->addOption('watermark_bottom', null, InputOption::VALUE_REQUIRED, 'Bottom align in pixels')
+            ->addOption('watermark_left',   null, InputOption::VALUE_REQUIRED, 'Left align in pixels')
+            ->addOption('watermark_right',  null, InputOption::VALUE_REQUIRED, 'Right align in pixels')
+            ->addOption('watermark_width',  null, InputOption::VALUE_REQUIRED, 'Watermark width in pixels')
+            ->addOption('watermark_height', null, InputOption::VALUE_REQUIRED, 'Watermark height in pixels')
+        ;
+    }
+
+    protected function configureScaling()
+    {
+        $this
+            ->addOption('width',  null, InputOption::VALUE_REQUIRED, 'Video width')
+            ->addOption('height', null, InputOption::VALUE_REQUIRED, 'Video height')
         ;
     }
 
@@ -48,17 +90,28 @@ class TranscodeJob extends AbstractJob
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $infile  = $input->getArgument('input');
-        $outfile = $input->getArgument('output');
-        $width   = $input->getOption('width');
-        $height  = $input->getOption('height');
-        $mode    = 'fit';
-        $ffmpeg  = FFMpeg::create()->open($infile);
+        /** @var $ffmpeg \FFMpeg\Media\Video */
+        $ffmpeg = FFMpeg::create()->open($input->getArgument('input'));
 
-        /*
-         * We have to ensure that both height and width are a positive
-         * integer to avoid Dimension throwing an exception
-         */
+        $this->executeThumbnails($ffmpeg, $input, $output);
+        $this->executeWatermark($ffmpeg, $input, $output);
+        $this->executeScaling($ffmpeg, $input, $output);
+
+        $ffmpeg->save(new X264(), $input->getArgument('output'));
+    }
+
+
+    /**
+     * @param FFMpegVideo     $ffmpeg
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     */
+    protected function executeScaling(FFMpegVideo $ffmpeg, InputInterface $input, OutputInterface $output)
+    {
+        $width  = $input->getOption('width');
+        $height = $input->getOption('height');
+        $mode   = 'fit';
+
         if ($height && !$width) {
             $mode = 'width';
             $width = 1;
@@ -72,8 +125,30 @@ class TranscodeJob extends AbstractJob
             $dimension = new Dimension($width, $height);
             $ffmpeg->addFilter(new ResizeFilter($dimension, $mode));
         }
-
-        $ffmpeg->save(new X264(), $outfile);
     }
-}
 
+    protected function executeThumbnails(FFMpegVideo $ffmpeg, InputInterface $input, OutputInterface $output)
+    {
+        $params = [
+            'thumbnail_number'   => $input->getOption('thumbnail_number'),
+            'thumbnail_interval' => $input->getOption('thumbnail_interval'),
+            'thumbnail_times'    => $input->getOption('thumbnail_times'),
+            'thumbnail_first'    => $input->getOption('thumbnail_first'),
+        ];
+        $ffmpeg->addFilter(new ThumbnailFilter($params));
+    }
+
+    /**
+     * @param FFMpegVideo     $ffmpeg
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     */
+    protected function executeWatermark(FFMpegVideo $ffmpeg, InputInterface $input, OutputInterface $output)
+    {
+        if ($input->getOption('watermark_input')) {
+            $ffmpeg->addFilter(new WatermarkFilter($input->getOptions()));
+        }
+        return;
+    }
+
+}
