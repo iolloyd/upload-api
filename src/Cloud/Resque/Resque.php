@@ -11,13 +11,13 @@
 
 namespace Cloud\Resque;
 
-use JsonSerializable;
 use Redis;
 use RedisException;
 use Cloud\Resque\Serializer\Normalizer\ResqueNormalizer;
 use Cloud\Resque\Storage\Jobs as JobsStorage;
 use Cloud\Resque\Storage\Queues as QueuesStorage;
 use Cloud\Resque\Storage\Workers as WorkersStorage;
+use Cloud\Resque\Job;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -108,7 +108,7 @@ class Resque
      * @param  string|object $class  name or instance of the job class to queue
      * @param  mixed         $args   payload arguments
      *
-     * @return void
+     * @return Job
      */
     public function enqueue($class, $args = null)
     {
@@ -131,7 +131,7 @@ class Resque
      * @param  string|object $class  name or instance of the job class to queue
      * @param  mixed         $args   payload arguments
      *
-     * @return void
+     * @return Job
      */
     public function enqueueTo($queue, $class, $args = null)
     {
