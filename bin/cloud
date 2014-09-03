@@ -38,10 +38,14 @@ foreach ($finder as $file) {
     }
 }
 
+$cli->add(new \CloudEncoder\Job\DownloadJob());
+$cli->add(new \CloudEncoder\Job\TranscodeJob());
+$cli->add(new \CloudEncoder\Job\UploadJob());
+$cli->add(new \CloudEncoder\Job\ValidateJob());
+
 $cli->add(new \CloudOutbound\YouPorn\Job\DemoCombined());
 $cli->add(new \CloudOutbound\XHamster\Job\DemoCombined());
 $cli->add(new \CloudOutbound\XVideos\Job\DemoCombined());
-
 // run
 
 $app->boot();
