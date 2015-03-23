@@ -121,11 +121,7 @@ $app->register(new Cloud\Silex\Provider\SerializerServiceProvider(), [
 $app->register(new Aws\Silex\AwsServiceProvider(), [
     'aws.config' => $app['config']['aws'],
 ]);
-<<<<<<< HEAD
-
-=======
 $app->register(new Cloud\Silex\Provider\LogServiceProvider());
->>>>>>> feature/logging-improvement
 $app->register(new Cloud\Silex\Provider\ZencoderServiceProvider());
 $app->register(new Cloud\Silex\Provider\ResqueServiceProvider(), [
     'resque.logger' => $app['monolog']('worker'),

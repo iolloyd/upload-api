@@ -12,75 +12,83 @@
 namespace Cloud\Silex\Provider;
 
 use Cloud\Monolog\Formatter\LineFormatter;
-use Monolog\Handler\LogEntriesHandler;
-use Monolog\Handler\StreamHandler;
+use Cloud\Monolog\Handler\LogEntriesHandler;
 use Monolog\Logger;
+use Monolog\Handler\GroupHandler;
+use Monolog\Handler\StreamHandler;
 use Silex\Application;
-use Silex\Provider\MonologServiceProvider;
 use Silex\ServiceProviderInterface;
+use Silex\Provider\MonologServiceProvider;
 
 class LogServiceProvider implements ServiceProviderInterface
 {
+    /**
+     * @param Application $app
+     */
     public function register(Application $app)
     {
         $app->register(new MonologServiceProvider(), [
-            'monolog.name'    => 'cloudxxx',
-            'monolog.logfile' => 'data/logs/development.log',
-            'monolog.level'   => Logger::DEBUG,
+            'monolog.name' => 'cloudxxx',
         ]);
 
-        // Handler for logentries
+
+        // default handler
+        $app['monolog.handler'] = function () use ($app) {
+            return new GroupHandler([
+                $app['monolog.handler.logentries'],
+            ]);
+        };
+
+        // handler to send logs to logentries.com
         $app['monolog.handler.logentries'] = function() use ($app)
         {
             $token = $app['config']['logentries']['token'];
-            $handler = new LogEntriesHandler($token);
+            $handler = new LogEntriesHandler($token, Logger::WARNING, true);
             $handler->setFormatter(new LineFormatter());
+
             return $handler;
         };
 
-        // Handler for stderr
-        $app['monolog.handler.debug'] = function() use ($app)
+        // handler to send logs to local terminal on stderr
+        $app['monolog.handler.local'] = function() use ($app)
         {
-            $handler = new StreamHandler(fopen('php://stderr', 'w'), Logger::WARNING);
+            $handler = new StreamHandler(fopen('php://stderr', 'w'), Logger::DEBUG, true);
             $handler->setFormatter(new LineFormatter());
             return $handler;
         };
-
-        // Processor for all logging channels
-        $app['monolog.processor'] = $app->protect(function ($record) use ($app)
-        {
-            $record['extra']['user']    = empty($app['user']) ? 0 : $app['user']->getId();
-            $record['extra']['company'] = empty($app['user']) ? 0 : $app['user']->getCompany()->getId();
-            $record['extra']['host']    = gethostname();
-            foreach ($record['context'] as $k => $v) {
-                $record['extra'][$k] = $v;
-            }
-
-            return $record;
-        });
 
         $app['monolog']->pushHandler($app['monolog.handler.logentries']);
-        $app['monolog']->pushHandler($app['monolog.handler.debug']);
-        $app['monolog']->pushProcessor($app['monolog.processor']);
 
-        // Factory for component level logging channels
+        // define a factory to allow setup of namespaced loggers or 'channels'
         $app['monolog.factory'] = $app->protect(function($name) use ($app)
         {
+            /** @var $logger \Monolog\Logger */
             $logger = new $app['monolog.logger.class']($name);
-            $logger->pushHandler($app['monolog.handler.logentries']);
+            $logger->pushHandler($app['monolog.handler']);
 
-            if ($app['debug'] && isset($app['monolog.handler.debug'])) {
-                $logger->pushHandler($app['monolog.handler.debug']);
+            if ($app['debug'] && isset($app['monolog.handler.local'])) {
+                $logger->pushHandler($app['monolog.handler.local']);
             }
 
-            $logger->pushProcessor($app['monolog.processor']);
+            $logger->pushProcessor(function($record) use ($app) {
+                $record['extra']['user']    = empty($app['user']) ? 0 : $app['user']->getId();
+                $record['extra']['company'] = empty($app['user']) ? 0 : $app['user']->getCompany()->getId();
+                $record['extra']['host']    = gethostname();
+                foreach ($record['context'] as $k => $v) {
+                    $record['extra'][$k] = $v;
+                }
+
+                return $record;
+            });
 
             return $logger;
         });
     }
 
+    /**
+     * @param Application $app
+     */
     public function boot(Application $app)
     {
->>>>>>> feature/logging-improvement
     }
 }
