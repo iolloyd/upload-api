@@ -33,10 +33,18 @@ class VideoFixture extends AbstractFixture implements DependentFixtureInterface
         foreach (range(1, 5) as $x) {
             $video = new Video($this->getReference('site-foo'));
 
+            $video->setCreatedBy(
+                $this->getReference('user')
+            );
+            $video->setCompany(
+                $this->getReference('cumulus')
+            );
+            $video->setSite(
+                $this->getReference('site-foo')
+            );
+
             $video->setTitle('Eye iz vidayo' . $x);
             $video->setDescription('Me iz dizcreyeber' . $x);
-            $video->setCreatedBy($this->getReference('user'));
-            $video->setCompany($this->getReference('cumulus'));
 
             $thumbnails = ['foo', 'bar', 'waz', 'kim', 'yas', 'bot', 'tir'];
             $video->setThumbnail($thumbnails[rand(1, count($thumbnails)-1)].'.png');
