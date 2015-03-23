@@ -1,14 +1,4 @@
 <?php
-/**
- * cloudxxx-api (http://www.cloud.xxx)
- *
- * Copyright (C) 2014 Really Useful Limited.
- * Proprietary code. Usage restrictions apply.
- *
- * @copyright  Copyright (C) 2014 Really Useful Limited
- * @license    Proprietary
- */
-
 namespace Cloud\Model;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -30,6 +20,12 @@ class Category extends AbstractModel
      */
     protected $title;
 
+
+    public function __toString()
+    {
+        return (string) $this->id;
+    }
+
     /**
      * Gets the title
      *
@@ -43,11 +39,14 @@ class Category extends AbstractModel
     /**
      * @param string $title
      *
+     * @return Tag
      * @return Category
      */
     public function setTitle($title)
     {
       $this->title = $title;
+
       return $this;
     }
+
 }
